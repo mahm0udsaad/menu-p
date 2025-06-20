@@ -60,103 +60,106 @@ interface Restaurant {
   }
 }
 
-// Enhanced styles with color palette support and QR code integration
+// Updated styles to match React component
 const styles = StyleSheet.create({
   page: {
     fontFamily: "Cairo",
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f8fafc", // Match React's bg-gray-50
     padding: 0,
     margin: 0,
-  },
-  documentContainer: {
-    padding: 20,
     minHeight: "100vh",
   },
+  documentContainer: {
+    maxWidth: 1152, // Match React's max-w-6xl
+    marginHorizontal: "auto",
+    padding: 32, // Match React's p-8
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
+  },
+  // Header styling to match React component
   header: {
     textAlign: "center",
-    marginBottom: 30,
-    paddingBottom: 20,
+    marginBottom: 48, // Match React's mb-12
+    paddingBottom: 32, // Match React's pb-8
     borderBottomWidth: 2,
-    borderBottomColor: "#e5e7eb",
+    borderBottomColor: "#10b981", // Will be overridden by color palette
     position: "relative",
-  },
-  qrCodeContainer: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    width: 60,
-    height: 60,
-    backgroundColor: "#ffffff",
-    padding: 5,
-    borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  qrCodeImage: {
-    width: 50,
-    height: 50,
-  },
-  qrCodeLabel: {
-    fontSize: 6,
-    color: "#6b7280",
-    textAlign: "center",
-    marginTop: 2,
-    fontFamily: "NotoKufiArabic",
+    alignItems: "center",
+    justifyContent: "center",
   },
   logoContainer: {
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 16,
   },
   logoImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 96, // Match React's w-24 h-24
+    height: 96,
+    borderRadius: 48,
     objectFit: "cover",
+    borderWidth: 0,
+    marginBottom: 16,
   },
   logoText: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
     backgroundColor: "#10b981",
     color: "#ffffff",
-    fontSize: 24,
+    fontSize: 24, // Match React's text-2xl
     fontWeight: "bold",
     textAlign: "center",
-    lineHeight: 80,
-    fontFamily: "Cairo",
+    lineHeight: 96,
+    fontFamily: "Cairo", // Match React's font-serif
+    marginBottom: 16,
   },
+  // Updated title styling to match React
   title: {
-    fontSize: 28,
+    fontSize: 48, // Match React's text-5xl
     color: "#1f2937",
     fontWeight: "bold",
-    marginBottom: 8,
+    marginBottom: 12, // Match React's mb-3
     textAlign: "center",
-    fontFamily: "NotoKufiArabic",
+    fontFamily: "Cairo", // Match React's font-serif
+    letterSpacing: 0.5,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 18, // Match React's text-lg
     color: "#6b7280",
-    marginBottom: 4,
+    marginBottom: 8, // Match React's mb-2
     textAlign: "center",
     fontFamily: "Cairo",
+    fontStyle: "italic",
   },
   tagline: {
-    fontSize: 12,
-    color: "#9ca3af",
+    fontSize: 14, // Match React's text-sm
+    color: "#6b7280",
     textAlign: "center",
     fontFamily: "Cairo",
   },
+  // Main content container to match React's white card
+  mainContent: {
+    backgroundColor: "#ffffff",
+    borderRadius: 8, // Match React's rounded-lg
+    padding: 48, // Match React's p-12
+    marginBottom: 32,
+    // Shadow effect (approximated for PDF)
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  // Category styling to match React component
   categoryContainer: {
-    marginBottom: 25,
+    marginBottom: 32, // Increased spacing
+    pageBreakInside: "avoid",
   },
   categoryHeader: {
     position: "relative",
-    marginBottom: 15,
-    height: 80,
-    borderRadius: 8,
+    marginBottom: 24,
+    height: 120, // Increased height
+    borderRadius: 16, // Increased border radius
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
   },
   categoryBackgroundImage: {
     position: "absolute",
@@ -174,174 +177,216 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
-    padding: 15,
+    padding: 24,
   },
   categoryTitle: {
-    fontSize: 20,
+    fontSize: 28, // Increased font size
     color: "#ffffff",
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 8,
+    marginBottom: 12,
     fontFamily: "NotoKufiArabic",
+    letterSpacing: 0.5,
+    textShadow: "0 2px 4px rgba(0,0,0,0.3)",
   },
   categoryDivider: {
-    width: 60,
-    height: 3,
+    width: 100, // Increased width
+    height: 4,
     backgroundColor: "#10b981",
     borderRadius: 2,
   },
+  // Items container
   itemsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
+    paddingHorizontal: 8,
   },
   itemWrapper: {
-    width: "100%",
-    marginBottom: 12,
-    paddingBottom: 10,
-    borderBottomColor: "#e5e7eb",
-    borderBottomWidth: 0.5,      
+    marginBottom: 20, // Increased spacing
+    paddingBottom: 20,
+    borderBottomColor: "#f3f4f6",
+    borderBottomWidth: 1,
+    pageBreakInside: "avoid",
   },
   itemWrapperFull: {
-    width: "100%",
-    marginBottom: 12,
-    paddingBottom: 10,
-    borderBottomColor: "#e5e7eb",
-    borderBottomWidth: 0.5,      
+    marginBottom: 20,
+    paddingBottom: 20,
+    borderBottomColor: "#f3f4f6",
+    borderBottomWidth: 1,
+    pageBreakInside: "avoid",
   },
-  // Layout for LTR (Left-to-Right) languages
+  // Enhanced LTR layout
   itemHeaderLTR: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 4,
+    marginBottom: 8,
   },
   itemNameLTR: {
-    fontSize: 13,
+    fontSize: 16, // Slightly larger
     color: "#1f2937",
     fontWeight: "bold",
     flex: 1,
-    paddingRight: 8,
+    paddingRight: 16,
     textAlign: "left",
     fontFamily: "Cairo",
+    lineHeight: 1.4,
   },
-  // Layout for RTL (Right-to-Left) languages
+  // Enhanced RTL layout
   itemHeaderRTL: {
     flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 4,
+    marginBottom: 8,
   },
   itemNameRTL: {
-    fontSize: 13,
+    fontSize: 16,
     color: "#1f2937",
     fontWeight: "bold",
     flex: 1,
-    paddingLeft: 8,
+    paddingLeft: 16,
     textAlign: "right",
     fontFamily: "NotoKufiArabic",
+    lineHeight: 1.4,
   },
   priceContainer: {
     flexDirection: "row",
     alignItems: "center",
-    minWidth: 60,
+    minWidth: 100,
+    justifyContent: "flex-end",
   },
   priceDots: {
-    width: 15,
-    borderBottomColor: "#9ca3af",
+    flex: 1,
+    maxWidth: 80,
+    borderBottomColor: "#d1d5db",
     borderBottomWidth: 1,
     borderStyle: "dotted",
-    marginHorizontal: 5,
+    marginHorizontal: 12,
+    height: 1,
   },
   itemPrice: {
-    fontSize: 13,
+    fontSize: 16, // Larger price font
     color: "#d97706",
     fontWeight: "bold",
     fontFamily: "Cairo",
+    minWidth: 60,
+    textAlign: "right",
+    backgroundColor: "#fef3c7",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
   },
   itemDescriptionLTR: {
-    fontSize: 10,
+    fontSize: 12,
     color: "#6b7280",
-    lineHeight: 1.3,
+    lineHeight: 1.5,
     textAlign: "left",
     fontFamily: "Cairo",
+    marginTop: 6,
+    paddingLeft: 4,
   },
   itemDescriptionRTL: {
-    fontSize: 10,
+    fontSize: 12,
     color: "#6b7280",
-    lineHeight: 1.3,
+    lineHeight: 1.5,
     textAlign: "right",
     fontFamily: "NotoKufiArabic",
+    marginTop: 6,
+    paddingRight: 4,
   },
+  featuredBadge: {
+    fontSize: 14,
+    color: "#f59e0b",
+    marginLeft: 6,
+    marginRight: 6,
+  },
+  // Footer styling to match React component
   footer: {
-    marginTop: 20,
-    padding: 15,
-    backgroundColor: "#f8f9fa",
-    borderRadius: 6,
+    marginTop: 32,
+    backgroundColor: "#ffffff",
+    padding: 24,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
     position: "relative",
   },
   footerGrid: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 16,
   },
   footerSection: {
     width: "30%",
+    paddingHorizontal: 12,
   },
   footerTitle: {
-    fontSize: 12,
+    fontSize: 14,
     color: "#1f2937",
     fontWeight: "bold",
-    marginBottom: 6,
+    marginBottom: 8,
     textAlign: "center",
-    fontFamily: "NotoKufiArabic",
+    fontFamily: "Cairo", // Match React's font-serif
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+    paddingBottom: 4,
   },
   footerText: {
-    fontSize: 9,
+    fontSize: 12,
     color: "#6b7280",
-    marginBottom: 2,
+    marginBottom: 4,
     textAlign: "center",
     fontFamily: "Cairo",
+    lineHeight: 1.4,
   },
   footerNote: {
-    fontSize: 8,
+    fontSize: 10,
     color: "#9ca3af",
     textAlign: "center",
-    marginTop: 10,
+    marginTop: 16,
     fontFamily: "Cairo",
+    fontStyle: "italic",
+    borderTopWidth: 1,
+    borderTopColor: "#e5e7eb",
+    paddingTop: 12,
   },
-  footerQrSection: {
-    position: "absolute",
-    bottom: 15,
-    right: 15,
+  // Page break indicator (for visual reference)
+  pageBreakIndicator: {
+    marginVertical: 32,
+    position: "relative",
     alignItems: "center",
   },
-  footerQrCode: {
-    width: 40,
-    height: 40,
-    marginBottom: 4,
+  pageBreakLine: {
+    width: "100%",
+    height: 2,
+    backgroundColor: "#3b82f6",
+    borderStyle: "dashed",
   },
-  footerQrText: {
-    fontSize: 7,
-    color: "#6b7280",
-    textAlign: "center",
-    fontFamily: "NotoKufiArabic",
+  pageBreakText: {
+    position: "absolute",
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    fontSize: 12,
+    color: "#3b82f6",
+    fontWeight: "500",
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#93c5fd",
   },
 })
 
-// Hardcoded section images for PDF generation
-const sectionImages = {
-  appetizers: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=300&fit=crop",
-  mains: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&h=300&fit=crop",
-  beverages: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop",
-  desserts: "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400&h=300&fit=crop",
-}
-
 // Helper to get section image based on category name
 const getSectionImage = (categoryName: string) => {
+  const sectionImages = {
+    appetizers: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=300&fit=crop",
+    mains: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&h=300&fit=crop",
+    beverages: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop",
+    desserts: "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400&h=300&fit=crop",
+  }
+
   const lowerCaseName = categoryName.toLowerCase()
   if (lowerCaseName.includes("appetizer") || lowerCaseName.includes("starter") || lowerCaseName.includes("مقبلات")) return sectionImages.appetizers
   if (lowerCaseName.includes("main") || lowerCaseName.includes("أطباق رئيسية")) return sectionImages.mains
@@ -351,17 +396,10 @@ const getSectionImage = (categoryName: string) => {
   return sectionImages.mains // Default fallback
 }
 
-// Helper to generate QR code URL
-const generateQrCodeUrl = (restaurantId: string, menuUrl?: string) => {
-  const baseUrl = menuUrl || `https://menu-p.com/menus/${restaurantId}`
-  // Using a QR code service for better PDF compatibility
-  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(baseUrl)}&bgcolor=FFFFFF&color=000000&format=png&margin=10`
-}
-
 const MenuSectionPDF = ({
   title,
   sectionData,
-  columns = 2,
+  columns = 1,
   colorPalette,
 }: {
   title: string
@@ -392,13 +430,10 @@ const MenuSectionPDF = ({
     return (
       <View style={styles.categoryContainer}>
         <View style={styles.categoryHeader} wrap={false}>
-          {/* Use custom background image if available */}
-          {sectionData.background_image_url && (
-            <Image
-              src={sectionData.background_image_url}
-              style={styles.categoryBackgroundImage} 
-            />
-          )}
+          <Image
+            src={sectionData.background_image_url || getSectionImage(title)}
+            style={styles.categoryBackgroundImage} 
+          />
           <View style={[styles.categoryOverlay, colorPalette ? { backgroundColor: `${colorPalette.primary}90` } : {}]}>
             <Text style={styles.categoryTitle}>{title}</Text>
             <View style={[styles.categoryDivider, colorPalette ? { backgroundColor: colorPalette.accent } : {}]} />
@@ -409,40 +444,40 @@ const MenuSectionPDF = ({
     )
   }
 
-  const isRTL = getTextDirection(title) === 'rtl';
-
   return (
-    <View style={styles.categoryContainer}>
-      <View style={styles.categoryHeader} wrap={false}>
-        {/* Use custom background image if available */}
-        {sectionData.background_image_url && (
-          <Image
-            src={sectionData.background_image_url}
-            style={styles.categoryBackgroundImage} 
-          />
-        )}
+    <View style={styles.categoryContainer} wrap={false}>
+      <View style={styles.categoryHeader}>
+        <Image
+          src={sectionData.background_image_url || getSectionImage(title)}
+          style={styles.categoryBackgroundImage} 
+        />
         <View style={[styles.categoryOverlay, colorPalette ? { backgroundColor: `${colorPalette.primary}90` } : {}]}>
           <Text style={styles.categoryTitle}>{title}</Text>
           <View style={[styles.categoryDivider, colorPalette ? { backgroundColor: colorPalette.accent } : {}]} />
         </View>
       </View>
 
-      <View style={columns === 2 ? styles.itemsContainer : {}}>
-        {validItems.map((item) => {
+      <View style={styles.itemsContainer}>
+        {validItems.map((item, index) => {
           const itemIsRTL = getTextDirection(item.name) === 'rtl';
           const ItemWrapper = columns === 2 ? styles.itemWrapper : styles.itemWrapperFull;
 
           return (
-            <View key={item.id} style={ItemWrapper} wrap={false}>
+            <View key={item.id} style={ItemWrapper}>
               <View style={itemIsRTL ? styles.itemHeaderRTL : styles.itemHeaderLTR}>
-                <Text style={itemIsRTL ? styles.itemNameRTL : styles.itemNameLTR}>
-                  {item.is_featured ? `⭐ ${item.name}` : item.name}
-                </Text>
+                <View style={{ flexDirection: itemIsRTL ? 'row-reverse' : 'row', flex: 1, alignItems: 'center' }}>
+                  {item.is_featured && (
+                    <Text style={styles.featuredBadge}>⭐</Text>
+                  )}
+                  <Text style={itemIsRTL ? styles.itemNameRTL : styles.itemNameLTR}>
+                    {item.name}
+                  </Text>
+                </View>
                 <View style={styles.priceContainer}>
                   <View style={styles.priceDots} />
-                                      <Text style={[styles.itemPrice, colorPalette ? { color: colorPalette.secondary } : {}]}>
-                      ${item.price!.toFixed(2)}
-                    </Text>
+                  <Text style={[styles.itemPrice, colorPalette ? { color: colorPalette.secondary, backgroundColor: `${colorPalette.secondary}15` } : {}]}>
+                    ${item.price!.toFixed(2)}
+                  </Text>
                 </View>
               </View>
               {item.description && (
@@ -462,18 +497,20 @@ export const CafeMenuPDF = ({
   restaurant, 
   categories, 
   qrCodeUrl, 
-  showQrCode = true 
+  showQrCode = false, // Default to false to match React component
+  pageBreaks = [] as number[] // Add page breaks array
 }: { 
   restaurant: Restaurant; 
   categories: MenuCategory[];
   qrCodeUrl?: string;
   showQrCode?: boolean;
+  pageBreaks?: number[];
 }) => {
   // Safety checks
   if (!restaurant || !restaurant.name) {
     return (
       <Document>
-        <Page size="A4" style={styles.page} wrap>
+        <Page size="A4" style={styles.page}>
           <View style={styles.documentContainer}>
             <Text style={styles.title}>خطأ: بيانات المطعم غير متوفرة</Text>    
           </View>
@@ -485,7 +522,7 @@ export const CafeMenuPDF = ({
   if (!categories || !Array.isArray(categories)) {
     return (
       <Document>
-        <Page size="A4" style={styles.page} wrap>
+        <Page size="A4" style={styles.page}>
           <View style={styles.documentContainer}>
             <Text style={styles.title}>خطأ: فئات القائمة غير متوفرة</Text>      
           </View>
@@ -514,7 +551,7 @@ export const CafeMenuPDF = ({
   if (validCategories.length === 0) {
     return (
       <Document>
-        <Page size="A4" style={styles.page} wrap>
+        <Page size="A4" style={styles.page}>
           <View style={styles.documentContainer}>
             <Text style={styles.title}>لا توجد عناصر متاحة في القائمة</Text>  
           </View>
@@ -523,77 +560,86 @@ export const CafeMenuPDF = ({
     )
   }
 
-  // Generate QR code URL for the menu
-  const menuQrCodeUrl = qrCodeUrl || generateQrCodeUrl(restaurant.id, restaurant.website)
-
   return (
     <Document>
-      <Page size="A4" style={styles.page} wrap>
+      <Page size="A4" style={styles.page}>
         <View style={styles.documentContainer}>
-          {/* Header with QR Code */}
-          <View style={styles.header}>
-            {/* QR Code in top-right corner */}
-            {showQrCode && (
-              <View style={styles.qrCodeContainer}>
-                <Image src={menuQrCodeUrl} style={styles.qrCodeImage} />
-                <Text style={styles.qrCodeLabel}>امسح للقائمة</Text>
-              </View>
-            )}
-            
+          {/* Header matching React component */}
+          <View style={[styles.header, restaurant.color_palette ? { borderBottomColor: restaurant.color_palette.primary } : {}]}>
             <View style={styles.logoContainer}>
               {restaurant.logo_url ? (
                 <Image src={restaurant.logo_url} style={styles.logoImage} />
               ) : (
-                                  <Text style={[styles.logoText, restaurant.color_palette ? { backgroundColor: restaurant.color_palette.primary } : {}]}>
-                    {restaurant.name.substring(0, 2).toUpperCase()}
-                  </Text>
+                <Text style={[styles.logoText, restaurant.color_palette ? { backgroundColor: restaurant.color_palette.primary } : {}]}>
+                  {restaurant.name.substring(0, 2).toUpperCase()}
+                </Text>
               )}
             </View>
-                          <Text style={[styles.title, restaurant.color_palette ? { color: restaurant.color_palette.primary } : {}]}>
-                {restaurant.name}
-              </Text>
+            <Text style={[styles.title, restaurant.color_palette ? { color: restaurant.color_palette.primary } : {}]}>
+              {restaurant.name}
+            </Text>
             <Text style={styles.subtitle}>Fine Dining & Artisan Coffee</Text>
             <Text style={styles.tagline}>Est. 2018 | Farm to Table | Locally Sourced</Text>
           </View>
 
-          {/* All Categories - let react-pdf handle page breaks automatically */}
-          {validCategories.map((category) => (
-            <MenuSectionPDF
-              key={category.id}
-              title={category.name}
-              sectionData={category}
-              columns={1}
-              colorPalette={restaurant.color_palette}
-            />
-          ))}
+          {/* Main content container matching React's white card */}
+          <View style={styles.mainContent}>
+            {/* All Categories with page break indicators */}
+            {validCategories.map((category, index) => (
+              <View key={category.id}>
+                {/* Page Break Indicator */}
+                {pageBreaks.includes(index) && index > 0 && (
+                  <View style={styles.pageBreakIndicator}>
+                    <View style={styles.pageBreakLine} />
+                    <Text style={styles.pageBreakText}>
+                      📄 صفحة جديدة في PDF - Page {pageBreaks.indexOf(index) + 1}
+                    </Text>
+                  </View>
+                )}
+                
+                <MenuSectionPDF
+                  title={category.name}
+                  sectionData={category}
+                  columns={
+                    category.name.toLowerCase().includes("appetizer") ||
+                    category.name.toLowerCase().includes("starter") ||
+                    category.name.toLowerCase().includes("beverage") ||
+                    category.name.toLowerCase().includes("dessert")
+                      ? 2
+                      : 1
+                  }
+                  colorPalette={restaurant.color_palette}
+                />
+              </View>
+            ))}
+          </View>
 
-          {/* Footer with contact info and QR code */}
-          <View style={styles.footer} wrap={false}>
+          {/* Footer matching React component */}
+          <View style={styles.footer}>
             <View style={styles.footerGrid}>
               <View style={styles.footerSection}>
-                <Text style={styles.footerTitle}>ساعات العمل</Text>
-                <Text style={styles.footerText}>السبت - الخميس: 8:00 ص - 10:00 م</Text>
-                <Text style={styles.footerText}>الجمعة: 2:00 م - 10:00 م</Text>
+                <Text style={styles.footerTitle}>Hours</Text>
+                <Text style={styles.footerText}>Monday - Thursday: 7:00 AM - 9:00 PM</Text>
+                <Text style={styles.footerText}>Friday - Saturday: 7:00 AM - 10:00 PM</Text>
+                <Text style={styles.footerText}>Sunday: 8:00 AM - 8:00 PM</Text>
               </View>
               <View style={styles.footerSection}>
-                <Text style={styles.footerTitle}>تواصل معنا</Text>
-                <Text style={styles.footerText}>{restaurant.phone || "+966 11 123 4567"}</Text>
-                <Text style={styles.footerText}>info@restaurant.com</Text>
+                <Text style={styles.footerTitle}>Location</Text>
+                <Text style={styles.footerText}>425 Heritage Boulevard</Text>
+                <Text style={styles.footerText}>Downtown Arts District</Text>
+                <Text style={styles.footerText}>Reservations: (555) 234-5678</Text>
               </View>
               <View style={styles.footerSection}>
-                <Text style={styles.footerTitle}>العنوان</Text>
-                <Text style={styles.footerText}>{restaurant.address || "شارع الملك فهد"}</Text>
-                <Text style={styles.footerText}>الرياض، المملكة العربية السعودية</Text>
+                <Text style={styles.footerTitle}>Notes</Text>
+                <Text style={styles.footerText}>Gluten-free options available</Text>
+                <Text style={styles.footerText}>Locally sourced ingredients</Text>
+                <Text style={styles.footerText}>18% gratuity added to parties of 6+</Text>
               </View>
             </View>
             
-            {/* Small QR code in footer */}
-            {showQrCode && (
-              <View style={styles.footerQrSection}>
-                <Image src={menuQrCodeUrl} style={styles.footerQrCode} />
-                <Text style={styles.footerQrText}>قائمة رقمية</Text>
-              </View>
-            )}
+            <Text style={styles.footerNote}>
+              Please inform your server of any allergies or dietary restrictions
+            </Text>
           </View>
         </View>
       </Page>

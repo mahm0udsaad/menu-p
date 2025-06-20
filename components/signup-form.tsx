@@ -36,9 +36,7 @@ function SubmitButton() {
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [state, formAction] = useActionState(async (prevState: { error: string | null, success: string | null }, formData: FormData) => {
-    return await signUp(formData)
-  }, { error: null, success: null })
+  const [state, formAction] = useActionState(signUp, { error: null, success: null })
 
   return (
     <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-slate-700 w-full max-w-md">

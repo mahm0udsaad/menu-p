@@ -91,7 +91,7 @@ function SubmitButton() {
 export default function OnboardingForm() {
   const [selectedCategory, setSelectedCategory] = useState("restaurant")
   const [selectedPalette, setSelectedPalette] = useState("emerald")
-  const [state, formAction] = useActionState(onboardRestaurant, { error: null })
+  const [state, formAction] = useActionState(onboardRestaurant, { error: "" })
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">

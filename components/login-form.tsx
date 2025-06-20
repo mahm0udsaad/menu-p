@@ -35,9 +35,7 @@ function SubmitButton() {
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
-  const [state, formAction] = useActionState(async (prevState: { error: string }, formData: FormData) => {
-    return await signIn(formData)
-  }, { error: "" })
+  const [state, formAction] = useActionState(signIn, { error: "" })
 
   return (
     <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-slate-700 w-full max-w-md">

@@ -4,7 +4,9 @@ import { useState, useCallback, useEffect } from "react"
 import { DndProvider } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
 import { Button } from "@/components/ui/button"
-import { Plus, Trash2, Edit, Upload, FileText } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Plus, Trash2, Edit, Upload, FileText, Palette } from "lucide-react"
 import { quickAddItem, quickDeleteItem, reorderMenuItems } from "@/lib/actions/editor/quick-menu-actions"
 import { quickUpdateCategory, quickDeleteCategory, quickAddCategory } from "@/lib/actions/editor/quick-category-actions"
 import InlineEditable from "../inline-editable"
@@ -40,6 +42,13 @@ interface Restaurant {
   name: string
   category: string
   logo_url: string | null
+  color_palette?: {
+    id: string
+    name: string
+    primary: string
+    secondary: string
+    accent: string
+  } | null
 }
 
 interface ProfessionalCafeMenuPreviewProps {
@@ -47,6 +56,58 @@ interface ProfessionalCafeMenuPreviewProps {
   categories: MenuCategory[]
   onRefresh: () => void
 }
+
+// Color palette options - same as onboarding
+const colorPalettes = [
+  {
+    id: "emerald",
+    name: "زمردي كلاسيكي",
+    primary: "#10b981",
+    secondary: "#059669",
+    accent: "#34d399",
+    preview: ["#10b981", "#059669", "#34d399", "#a7f3d0"]
+  },
+  {
+    id: "amber",
+    name: "عنبري دافئ",
+    primary: "#f59e0b",
+    secondary: "#d97706",
+    accent: "#fbbf24",
+    preview: ["#f59e0b", "#d97706", "#fbbf24", "#fde68a"]
+  },
+  {
+    id: "rose",
+    name: "وردي أنيق",
+    primary: "#e11d48",
+    secondary: "#be185d",
+    accent: "#f43f5e",
+    preview: ["#e11d48", "#be185d", "#f43f5e", "#fda4af"]
+  },
+  {
+    id: "blue",
+    name: "أزرق احترافي",
+    primary: "#3b82f6",
+    secondary: "#2563eb",
+    accent: "#60a5fa",
+    preview: ["#3b82f6", "#2563eb", "#60a5fa", "#93c5fd"]
+  },
+  {
+    id: "purple",
+    name: "بنفسجي ملكي",
+    primary: "#8b5cf6",
+    secondary: "#7c3aed",
+    accent: "#a78bfa",
+    preview: ["#8b5cf6", "#7c3aed", "#a78bfa", "#c4b5fd"]
+  },
+  {
+    id: "teal",
+    name: "تيل عصري",
+    primary: "#14b8a6",
+    secondary: "#0d9488",
+    accent: "#2dd4bf",
+    preview: ["#14b8a6", "#0d9488", "#2dd4bf", "#7dd3fc"]
+  }
+]
 
 // Hardcoded section images for the live preview (since category images are not in DB)
 const previewSectionImages = {
@@ -76,6 +137,7 @@ const MenuSectionPreview = ({
   moveItem,
   onUpdateCategory,
   onDeleteCategory,
+  colorPalette,
 }: {
   title: string
   sectionData: MenuCategory
@@ -86,6 +148,7 @@ const MenuSectionPreview = ({
   moveItem: (categoryId: string, dragIndex: number, hoverIndex: number) => void
   onUpdateCategory: (categoryId: string, field: string, value: string | null) => void
   onDeleteCategory: (categoryId: string) => void
+  colorPalette: { primary: string; secondary: string; accent: string }
 }) => {
   const [isUploadingBg, setIsUploadingBg] = useState(false)
 
@@ -168,7 +231,7 @@ const MenuSectionPreview = ({
               className="text-4xl font-serif text-white mb-2 category-name-editable"
             inputClassName="text-center"
           />
-          <div className="w-16 h-px bg-amber-400 mx-auto"></div>
+          <div className="w-16 h-px mx-auto" style={{ backgroundColor: colorPalette.accent }}></div>
         </div>
       </div>
         <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover/category-section:opacity-100 transition-opacity z-20">
@@ -228,7 +291,7 @@ const MenuSectionPreview = ({
                     onSave={(value) =>
                       editableItemProps.onUpdate({ ...editableItemProps.item, price: Number.parseFloat(value) || null })
                     }
-                    className="font-serif text-lg text-amber-700"
+                    className="font-serif text-lg price-color"
                     placeholder="0.00"
                     type="number"
                   />
@@ -260,7 +323,20 @@ const MenuSectionPreview = ({
           onClick={() => onAddItem(sectionData.id)}
           variant="outline"
           size="sm"
-          className="border-emerald-500 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+          className="hover:text-white"
+          style={{ 
+            borderColor: colorPalette.primary, 
+            color: colorPalette.primary,
+            backgroundColor: 'transparent'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = colorPalette.primary
+            e.currentTarget.style.color = 'white'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent'
+            e.currentTarget.style.color = colorPalette.primary
+          }}
         >
           <Plus className="h-4 w-4 mr-2" />
           إضافة عنصر إلى {sectionData.name}
@@ -281,6 +357,9 @@ export default function ProfessionalCafeMenuPreview({
   const [currentPage, setCurrentPage] = useState(1)
   const [showPagination, setShowPagination] = useState(false)
   const [isLoadingDummy, setIsLoadingDummy] = useState(false)
+  const [showColorModal, setShowColorModal] = useState(false)
+  const [selectedPalette, setSelectedPalette] = useState(restaurant.color_palette?.id || "emerald")
+  const [isUpdatingPalette, setIsUpdatingPalette] = useState(false)
 
   useEffect(() => {
     setCategories(initialCategories)
@@ -566,6 +645,42 @@ export default function ProfessionalCafeMenuPreview({
     }
   }
 
+  // Get current color palette or default
+  const currentPalette = restaurant.color_palette || colorPalettes.find(p => p.id === "emerald")!
+
+  const handleUpdateColorPalette = async (paletteId: string) => {
+    setIsUpdatingPalette(true)
+    try {
+      const palette = colorPalettes.find(p => p.id === paletteId)
+      if (!palette) throw new Error('Invalid palette')
+
+      const { error } = await supabase
+        .from('restaurants')
+        .update({ 
+          color_palette: {
+            id: palette.id,
+            name: palette.name,
+            primary: palette.primary,
+            secondary: palette.secondary,
+            accent: palette.accent
+          }
+        })
+        .eq('id', restaurant.id)
+
+      if (error) throw error
+
+      setSelectedPalette(paletteId)
+      setShowColorModal(false)
+      onRefresh() // Refresh to get updated restaurant data
+      alert('تم تحديث لوحة الألوان بنجاح!')
+    } catch (error) {
+      console.error('Error updating color palette:', error)
+      alert('فشل في تحديث لوحة الألوان')
+    } finally {
+      setIsUpdatingPalette(false)
+    }
+  }
+
   const handleLoadDummyData = async () => {
     if (!confirm("هل تريد تحميل بيانات تجريبية؟ سيتم إضافة أقسام وعناصر جديدة للقائمة.")) return
     
@@ -590,7 +705,7 @@ export default function ProfessionalCafeMenuPreview({
             name: category.name,
             description: category.description,
             is_active: true,
-            display_order: categories.length + dummyData.categories.indexOf(category)
+            sort_order: categories.length + dummyData.categories.indexOf(category)
           })
           .select()
           .single()
@@ -605,6 +720,7 @@ export default function ProfessionalCafeMenuPreview({
           const { error: itemError } = await supabase
             .from('menu_items')
             .insert({
+              restaurant_id: restaurant.id, // Add restaurant_id for RLS compliance
               category_id: newCategory.id,
               name: item.name,
               description: item.description,
@@ -636,11 +752,19 @@ export default function ProfessionalCafeMenuPreview({
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="min-h-screen bg-gray-50 font-sans">
+        {/* Dynamic CSS for color palette */}
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            .price-color {
+              color: ${currentPalette.secondary} !important;
+            }
+          `
+        }} />
         <div className="max-w-6xl mx-auto p-8">
           {/* Header */}
-          <div className="text-center mb-12 border-b-2 border-amber-600 pb-8 flex flex-col items-center justify-center">
+          <div className="text-center mb-12 border-b-2 pb-8 flex flex-col items-center justify-center" style={{ borderColor: currentPalette.primary }}>
             <div className="mb-4">
-              <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-amber-600 flex items-center justify-center shadow-lg overflow-hidden relative group">
+              <div className="w-24 h-24 mx-auto mb-4 rounded-full flex items-center justify-center shadow-lg overflow-hidden relative group" style={{ backgroundColor: currentPalette.primary }}>
                 {restaurant.logo_url ? (
                   <Image
                     src={restaurant.logo_url || "/placeholder.svg"}
@@ -760,6 +884,80 @@ export default function ProfessionalCafeMenuPreview({
               </div>
               
               <div className="flex items-center gap-2">
+                <Dialog open={showColorModal} onOpenChange={setShowColorModal}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-purple-600 text-purple-600 hover:bg-purple-50"
+                    >
+                      <Palette className="h-3 w-3 mr-1" />
+                      تغيير الألوان
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle className="text-right">اختر لوحة الألوان</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      {colorPalettes.map((palette) => (
+                        <div key={palette.id} className="flex items-center space-x-2 space-x-reverse">
+                          <input
+                            type="radio"
+                            name="colorPalette"
+                            value={palette.id}
+                            id={`modal-${palette.id}`}
+                            checked={selectedPalette === palette.id}
+                            onChange={() => setSelectedPalette(palette.id)}
+                            className="sr-only"
+                          />
+                          <Label
+                            htmlFor={`modal-${palette.id}`}
+                            className={`cursor-pointer p-4 rounded-xl border transition-all duration-300 flex-1 ${
+                              selectedPalette === palette.id
+                                ? 'border-blue-400 bg-blue-50'
+                                : 'border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="font-medium">{palette.name}</span>
+                              <div className="flex space-x-1 space-x-reverse">
+                                {palette.preview.map((color, index) => (
+                                  <div
+                                    key={index}
+                                    className="w-4 h-4 rounded-full border border-gray-200"
+                                    style={{ backgroundColor: color }}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex justify-end gap-2 mt-6">
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowColorModal(false)}
+                        disabled={isUpdatingPalette}
+                      >
+                        إلغاء
+                      </Button>
+                      <Button
+                        onClick={() => handleUpdateColorPalette(selectedPalette)}
+                        disabled={isUpdatingPalette || selectedPalette === restaurant.color_palette?.id}
+                        style={{ backgroundColor: colorPalettes.find(p => p.id === selectedPalette)?.primary }}
+                        className="text-white"
+                      >
+                        {isUpdatingPalette ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        ) : null}
+                        {isUpdatingPalette ? "جاري التحديث..." : "تطبيق الألوان"}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                
                 <Button
                   onClick={handleLoadDummyData}
                   disabled={isLoadingDummy}
@@ -829,7 +1027,14 @@ export default function ProfessionalCafeMenuPreview({
                   <div className="flex flex-col items-center gap-4">
                   <Button
                     onClick={handleAddCategory}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3"
+                    className="text-white px-6 py-3"
+                    style={{ backgroundColor: currentPalette.primary }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = currentPalette.secondary
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = currentPalette.primary
+                    }}
                   >
                     <Plus className="h-5 w-5 mr-2" />
                     Add First Category
@@ -894,6 +1099,7 @@ export default function ProfessionalCafeMenuPreview({
                         moveItem={moveItem}
                         onUpdateCategory={handleUpdateCategory}
                         onDeleteCategory={handleDeleteCategory}
+                        colorPalette={currentPalette}
                       />
                     </div>
                       </div>
@@ -906,7 +1112,20 @@ export default function ProfessionalCafeMenuPreview({
                     <Button
                       onClick={handleAddCategory}
                       variant="outline"
-                      className="border-emerald-600 text-emerald-600 hover:bg-emerald-50"
+                      className="hover:text-white"
+                      style={{ 
+                        borderColor: currentPalette.primary, 
+                        color: currentPalette.primary,
+                        backgroundColor: 'transparent'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = currentPalette.primary
+                        e.currentTarget.style.color = 'white'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                        e.currentTarget.style.color = currentPalette.primary
+                      }}
                     >
                       <Plus className="h-4 w-4 mr-2" />
                       Add New Category
