@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import { useState } from "react"
 import { useActionState } from "react"
 import { useFormStatus } from "react-dom"
 import { Button } from "@/components/ui/button"
@@ -9,29 +9,79 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Upload, Loader2, Coffee, UtensilsCrossed, Building2, QrCode, ArrowRight } from "lucide-react"
-import { createRestaurant } from "@/lib/actions/restaurant"
-import { useState, useRef } from "react"
-import Image from "next/image"
+import { Upload, Loader2, Coffee, UtensilsCrossed, Building2, QrCode, ArrowRight, Palette, MapPin, Phone } from "lucide-react"
+import { onboardRestaurant } from "@/lib/actions"
+
+// Color palette options
+const colorPalettes = [
+  {
+    id: "emerald",
+    name: "زمردي كلاسيكي",
+    primary: "#10b981",
+    secondary: "#059669",
+    accent: "#34d399",
+    preview: ["#10b981", "#059669", "#34d399", "#a7f3d0"]
+  },
+  {
+    id: "amber",
+    name: "عنبري دافئ",
+    primary: "#f59e0b",
+    secondary: "#d97706",
+    accent: "#fbbf24",
+    preview: ["#f59e0b", "#d97706", "#fbbf24", "#fde68a"]
+  },
+  {
+    id: "rose",
+    name: "وردي أنيق",
+    primary: "#e11d48",
+    secondary: "#be185d",
+    accent: "#f43f5e",
+    preview: ["#e11d48", "#be185d", "#f43f5e", "#fda4af"]
+  },
+  {
+    id: "blue",
+    name: "أزرق احترافي",
+    primary: "#3b82f6",
+    secondary: "#2563eb",
+    accent: "#60a5fa",
+    preview: ["#3b82f6", "#2563eb", "#60a5fa", "#93c5fd"]
+  },
+  {
+    id: "purple",
+    name: "بنفسجي ملكي",
+    primary: "#8b5cf6",
+    secondary: "#7c3aed",
+    accent: "#a78bfa",
+    preview: ["#8b5cf6", "#7c3aed", "#a78bfa", "#c4b5fd"]
+  },
+  {
+    id: "teal",
+    name: "تيل عصري",
+    primary: "#14b8a6",
+    secondary: "#0d9488",
+    accent: "#2dd4bf",
+    preview: ["#14b8a6", "#0d9488", "#2dd4bf", "#7dd3fc"]
+  }
+]
 
 function SubmitButton() {
   const { pending } = useFormStatus()
-
+  
   return (
     <Button
       type="submit"
       disabled={pending}
-      className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white py-6 text-lg font-medium rounded-xl transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-emerald-500/25"
+      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-6 text-lg rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
     >
       {pending ? (
         <>
           <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-          جاري إنشاء الملف الشخصي...
+          جاري الإعداد...
         </>
       ) : (
         <>
-          إكمال الإعداد
-          <ArrowRight className="ml-2 h-5 w-5" />
+          <ArrowRight className="mr-2 h-5 w-5" />
+          بدء إنشاء القائمة
         </>
       )}
     </Button>
@@ -39,103 +89,33 @@ function SubmitButton() {
 }
 
 export default function OnboardingForm() {
-  const [state, formAction] = useActionState(createRestaurant, null)
-  const [selectedImage, setSelectedImage] = useState<string | null>(null)
-  const [selectedCategory, setSelectedCategory] = useState<string>("")
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setSelectedImage(e.target?.result as string)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const handleImageClick = () => {
-    fileInputRef.current?.click()
-  }
+  const [selectedCategory, setSelectedCategory] = useState("restaurant")
+  const [selectedPalette, setSelectedPalette] = useState("emerald")
+  const [state, formAction] = useActionState(onboardRestaurant, { error: null })
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Floating Background Icons */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-20 animate-bounce delay-100">
-          <Coffee className="h-8 w-8 text-emerald-400/10" />
-        </div>
-        <div className="absolute top-40 left-32 animate-pulse delay-300">
-          <UtensilsCrossed className="h-12 w-12 text-emerald-300/10" />
-        </div>
-        <div className="absolute top-60 right-1/3 animate-bounce delay-500">
-          <QrCode className="h-10 w-10 text-emerald-500/10" />
-        </div>
-        <div className="absolute bottom-40 left-20 animate-pulse delay-700">
-          <Building2 className="h-14 w-14 text-emerald-400/10" />
-        </div>
-        <div className="absolute bottom-60 right-20 animate-bounce delay-1000">
-          <Coffee className="h-8 w-8 text-emerald-300/10" />
-        </div>
-      </div>
-
-      <Card className="w-full max-w-2xl bg-slate-800/50 border-slate-700 backdrop-blur shadow-2xl rounded-2xl relative z-10">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+      <Card className="w-full max-w-4xl bg-slate-800/50 border-slate-700 backdrop-blur-sm">
         <CardHeader className="text-center pb-8">
-          <div className="flex items-center justify-center mb-6">
-            <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-3 rounded-2xl shadow-lg">
-              <QrCode className="h-8 w-8 text-white" />
-            </div>
+          <div className="mx-auto mb-6 w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl flex items-center justify-center">
+            <QrCode className="h-8 w-8 text-white" />
           </div>
-          <CardTitle className="text-3xl font-bold text-white mb-2">إعداد مطعمك</CardTitle>
-          <p className="text-slate-300 text-lg">دعنا نجهز قائمتك الرقمية في خطوات بسيطة</p>
+          <CardTitle className="text-3xl font-bold text-white mb-2">
+            مرحباً بك في Menu-P
+          </CardTitle>
+          <p className="text-slate-400 text-lg">
+            لنبدأ بإعداد مطعمك وإنشاء قائمة طعامك الرقمية
+          </p>
         </CardHeader>
-
+        
         <CardContent className="space-y-8">
-          <form action={formAction} className="space-y-8">
-            {state?.error && (
-              <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl text-center">
-                {state.error}
-              </div>
-            )}
-
-            {/* Logo Upload */}
-            <div className="space-y-4">
-              <Label className="text-white text-lg font-medium">شعار المطعم</Label>
-              <div className="flex flex-col items-center space-y-4">
-                <div
-                  onClick={handleImageClick}
-                  className="w-32 h-32 border-2 border-dashed border-slate-600 rounded-2xl flex items-center justify-center cursor-pointer hover:border-emerald-400 transition-all duration-300 bg-slate-700/50 hover:bg-slate-700/70 group"
-                >
-                  {selectedImage ? (
-                    <Image
-                      src={selectedImage || "/placeholder.svg"}
-                      alt="Restaurant logo preview"
-                      width={128}
-                      height={128}
-                      className="w-full h-full object-cover rounded-2xl"
-                    />
-                  ) : (
-                    <div className="text-center">
-                      <Upload className="h-8 w-8 text-slate-400 mx-auto mb-2 group-hover:text-emerald-400 transition-colors" />
-                      <p className="text-sm text-slate-400 group-hover:text-emerald-400 transition-colors">
-                        اضغط للرفع
-                      </p>
-                    </div>
-                  )}
-                </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  name="logo"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
-                <p className="text-sm text-slate-400 text-center">اختياري: ارفع شعار مطعمك (أقصى حجم 5 ميجابايت)</p>
-              </div>
+          {state?.error && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+              <p className="text-red-400 text-center">{state.error}</p>
             </div>
-
+          )}
+          
+          <form action={formAction} className="space-y-8">
             {/* Restaurant Name */}
             <div className="space-y-3">
               <Label htmlFor="name" className="text-white text-lg font-medium">
@@ -149,6 +129,37 @@ export default function OnboardingForm() {
                 required
                 className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 text-lg py-6 rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 transition-all duration-200"
               />
+            </div>
+
+            {/* Contact Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <Label htmlFor="address" className="text-white text-lg font-medium">
+                  <MapPin className="inline h-5 w-5 ml-2" />
+                  العنوان
+                </Label>
+                <Input
+                  id="address"
+                  name="address"
+                  type="text"
+                  placeholder="عنوان المطعم"
+                  className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 text-lg py-6 rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 transition-all duration-200"
+                />
+              </div>
+              
+              <div className="space-y-3">
+                <Label htmlFor="phone" className="text-white text-lg font-medium">
+                  <Phone className="inline h-5 w-5 ml-2" />
+                  رقم الهاتف
+                </Label>
+                <Input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  placeholder="+966 5X XXX XXXX"
+                  className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 text-lg py-6 rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 transition-all duration-200"
+                />
+              </div>
             </div>
 
             {/* Category Selection */}
@@ -169,7 +180,7 @@ export default function OnboardingForm() {
                     <Coffee className="h-6 w-6 text-emerald-400" />
                     <div>
                       <div className="text-white font-medium">مقهى</div>
-                      <div className="text-sm text-slate-400">قهوة، معجنات، وجبات خفيفة</div>
+                      <div className="text-sm text-slate-400">قهوة، معجنات، ووجبات خفيفة</div>
                     </div>
                   </Label>
                 </div>
@@ -202,6 +213,55 @@ export default function OnboardingForm() {
                   </Label>
                 </div>
               </RadioGroup>
+            </div>
+
+            {/* Color Palette Selection */}
+            <div className="space-y-4">
+              <Label className="text-white text-lg font-medium">
+                <Palette className="inline h-5 w-5 ml-2" />
+                اختر لوحة الألوان لقائمتك
+              </Label>
+              <p className="text-slate-400 text-sm">ستظهر هذه الألوان في قائمة طعامك وملف PDF</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {colorPalettes.map((palette) => (
+                  <div key={palette.id} className="flex items-center space-x-2 space-x-reverse">
+                    <input
+                      type="radio"
+                      name="colorPalette"
+                      value={JSON.stringify(palette)}
+                      id={palette.id}
+                      checked={selectedPalette === palette.id}
+                      onChange={() => setSelectedPalette(palette.id)}
+                      className="sr-only"
+                    />
+                    <Label
+                      htmlFor={palette.id}
+                      className={`cursor-pointer p-4 rounded-xl border transition-all duration-300 flex-1 ${
+                        selectedPalette === palette.id
+                          ? 'border-emerald-400 bg-slate-700/50'
+                          : 'border-slate-600 bg-slate-700/30 hover:bg-slate-700/40'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-white font-medium">{palette.name}</span>
+                        <div className="flex space-x-1 space-x-reverse">
+                          {palette.preview.map((color, index) => (
+                            <div
+                              key={index}
+                              className="w-4 h-4 rounded-full"
+                              style={{ backgroundColor: color }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <div className="text-xs text-slate-400">
+                        مناسبة للمطاعم العصرية والتقليدية
+                      </div>
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <SubmitButton />

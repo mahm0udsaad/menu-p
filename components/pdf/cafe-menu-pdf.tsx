@@ -23,118 +23,140 @@ Font.register({
   ]
 });
 
+// Helper function to detect text direction (RTL for Arabic)
+const getTextDirection = (text: string) => {
+  const arabicPattern = /[\u0600-\u06FF]/
+  return arabicPattern.test(text) ? 'rtl' : 'ltr'
+}
+
+// Define types for better type safety
 interface MenuItem {
   id: string
   name: string
-  description: string | null
-  price: number | null
-  image_url: string | null
+  description?: string
+  price: number
   is_available: boolean
   is_featured: boolean
-  dietary_info: string[]
 }
 
 interface MenuCategory {
   id: string
   name: string
-  description: string | null
   menu_items: MenuItem[]
-  background_image_url?: string | null
+  background_image_url?: string
 }
 
 interface Restaurant {
   id: string
   name: string
-  category: string
-  logo_url: string | null
+  logo_url?: string
+  address?: string
+  phone?: string
+  website?: string
+  color_palette?: {
+    primary: string
+    secondary: string
+    accent: string
+  }
 }
 
-// Helper function to detect if text contains Arabic characters
-const isArabicText = (text: string): boolean => {
-  const arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
-  return arabicRegex.test(text);
-}
-
-// Helper function to get text direction
-const getTextDirection = (text: string): 'ltr' | 'rtl' => {
-  return isArabicText(text) ? 'rtl' : 'ltr';
-}
-
-// Define styles for the PDF with proper multilingual support
+// Enhanced styles with color palette support and QR code integration
 const styles = StyleSheet.create({
   page: {
-    backgroundColor: "#f9f9f9",
-    padding: 20,
     fontFamily: "Cairo",
+    backgroundColor: "#ffffff",
+    padding: 0,
+    margin: 0,
   },
   documentContainer: {
-    backgroundColor: "white",
-    padding: 30,
-    borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    flexGrow: 1,
+    padding: 20,
+    minHeight: "100vh",
   },
   header: {
-    alignItems: "center",
+    textAlign: "center",
     marginBottom: 30,
     paddingBottom: 20,
-    borderBottomColor: "#d97706",
     borderBottomWidth: 2,
+    borderBottomColor: "#e5e7eb",
+    position: "relative",
   },
-  logoContainer: {
+  qrCodeContainer: {
+    position: "absolute",
+    top: 10,
+    right: 10,
     width: 60,
     height: 60,
-    backgroundColor: "#d97706",
-    borderRadius: 30,
+    backgroundColor: "#ffffff",
+    padding: 5,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  qrCodeImage: {
+    width: 50,
+    height: 50,
+  },
+  qrCodeLabel: {
+    fontSize: 6,
+    color: "#6b7280",
+    textAlign: "center",
+    marginTop: 2,
+    fontFamily: "NotoKufiArabic",
+  },
+  logoContainer: {
     alignItems: "center",
-    justifyContent: "center",
     marginBottom: 15,
-    overflow: "hidden",
   },
   logoImage: {
-    width: "100%",
-    height: "100%",
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     objectFit: "cover",
   },
   logoText: {
-    color: "white",
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#10b981",
+    color: "#ffffff",
     fontSize: 24,
     fontWeight: "bold",
+    textAlign: "center",
+    lineHeight: 80,
     fontFamily: "Cairo",
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     color: "#1f2937",
-    marginBottom: 8,
     fontWeight: "bold",
+    marginBottom: 8,
     textAlign: "center",
-    fontFamily: "Cairo",
+    fontFamily: "NotoKufiArabic",
   },
   subtitle: {
     fontSize: 14,
     color: "#6b7280",
-    marginBottom: 5,
+    marginBottom: 4,
     textAlign: "center",
     fontFamily: "Cairo",
   },
   tagline: {
-    fontSize: 10,
+    fontSize: 12,
     color: "#9ca3af",
     textAlign: "center",
     fontFamily: "Cairo",
   },
-  // Category styles
   categoryContainer: {
     marginBottom: 25,
   },
   categoryHeader: {
-    marginBottom: 20,
-    alignItems: "center",
     position: "relative",
-    height: 60,
+    marginBottom: 15,
+    height: 80,
+    borderRadius: 8,
+    overflow: "hidden",
   },
   categoryBackgroundImage: {
     position: "absolute",
@@ -142,33 +164,38 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    width: "100%",
+    height: "100%",
     objectFit: "cover",
   },
   categoryOverlay: {
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    flexDirection: "column",
     justifyContent: "center",
-    zIndex: 10,
+    alignItems: "center",
+    padding: 15,
   },
   categoryTitle: {
     fontSize: 20,
-    color: "white",
+    color: "#ffffff",
     fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 8,
     fontFamily: "NotoKufiArabic",
   },
   categoryDivider: {
-    width: 30,
-    height: 1,
-    backgroundColor: "#fbbf24",
-    marginTop: 5,
+    width: 60,
+    height: 3,
+    backgroundColor: "#10b981",
+    borderRadius: 2,
   },
-  // Menu item styles - optimized for space
   itemsContainer: {
+    flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
   },
@@ -177,14 +204,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingBottom: 10,
     borderBottomColor: "#e5e7eb",
-    borderBottomWidth: 0.5,
+    borderBottomWidth: 0.5,      
   },
   itemWrapperFull: {
     width: "100%",
     marginBottom: 12,
     paddingBottom: 10,
     borderBottomColor: "#e5e7eb",
-    borderBottomWidth: 0.5,
+    borderBottomWidth: 0.5,      
   },
   // Layout for LTR (Left-to-Right) languages
   itemHeaderLTR: {
@@ -255,6 +282,7 @@ const styles = StyleSheet.create({
     padding: 15,
     backgroundColor: "#f8f9fa",
     borderRadius: 6,
+    position: "relative",
   },
   footerGrid: {
     flexDirection: "row",
@@ -285,6 +313,23 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontFamily: "Cairo",
   },
+  footerQrSection: {
+    position: "absolute",
+    bottom: 15,
+    right: 15,
+    alignItems: "center",
+  },
+  footerQrCode: {
+    width: 40,
+    height: 40,
+    marginBottom: 4,
+  },
+  footerQrText: {
+    fontSize: 7,
+    color: "#6b7280",
+    textAlign: "center",
+    fontFamily: "NotoKufiArabic",
+  },
 })
 
 // Hardcoded section images for PDF generation
@@ -306,14 +351,23 @@ const getSectionImage = (categoryName: string) => {
   return sectionImages.mains // Default fallback
 }
 
+// Helper to generate QR code URL
+const generateQrCodeUrl = (restaurantId: string, menuUrl?: string) => {
+  const baseUrl = menuUrl || `https://menu-p.com/menus/${restaurantId}`
+  // Using a QR code service for better PDF compatibility
+  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(baseUrl)}&bgcolor=FFFFFF&color=000000&format=png&margin=10`
+}
+
 const MenuSectionPDF = ({
   title,
   sectionData,
   columns = 2,
+  colorPalette,
 }: {
   title: string
   sectionData: MenuCategory
   columns?: 1 | 2
+  colorPalette?: Restaurant['color_palette']
 }) => {
   // Safety checks
   if (!sectionData || !sectionData.menu_items || !Array.isArray(sectionData.menu_items)) {
@@ -325,10 +379,10 @@ const MenuSectionPDF = ({
   }
 
   // Filter valid items
-  const validItems = sectionData.menu_items.filter((item) => 
-    item && 
-    item.id && 
-    item.name && 
+  const validItems = sectionData.menu_items.filter((item) =>
+    item &&
+    item.id &&
+    item.name &&
     item.is_available &&
     item.price !== null &&
     typeof item.price === 'number'
@@ -340,14 +394,14 @@ const MenuSectionPDF = ({
         <View style={styles.categoryHeader} wrap={false}>
           {/* Use custom background image if available */}
           {sectionData.background_image_url && (
-            <Image 
-              src={sectionData.background_image_url} 
+            <Image
+              src={sectionData.background_image_url}
               style={styles.categoryBackgroundImage} 
             />
           )}
-          <View style={styles.categoryOverlay}>
+          <View style={[styles.categoryOverlay, colorPalette ? { backgroundColor: `${colorPalette.primary}90` } : {}]}>
             <Text style={styles.categoryTitle}>{title}</Text>
-            <View style={styles.categoryDivider} />
+            <View style={[styles.categoryDivider, colorPalette ? { backgroundColor: colorPalette.accent } : {}]} />
           </View>
         </View>
         <Text style={styles.itemDescriptionLTR}>No available items in this category</Text>
@@ -362,14 +416,14 @@ const MenuSectionPDF = ({
       <View style={styles.categoryHeader} wrap={false}>
         {/* Use custom background image if available */}
         {sectionData.background_image_url && (
-          <Image 
-            src={sectionData.background_image_url} 
+          <Image
+            src={sectionData.background_image_url}
             style={styles.categoryBackgroundImage} 
           />
         )}
-        <View style={styles.categoryOverlay}>
+        <View style={[styles.categoryOverlay, colorPalette ? { backgroundColor: `${colorPalette.primary}90` } : {}]}>
           <Text style={styles.categoryTitle}>{title}</Text>
-          <View style={styles.categoryDivider} />
+          <View style={[styles.categoryDivider, colorPalette ? { backgroundColor: colorPalette.accent } : {}]} />
         </View>
       </View>
 
@@ -377,16 +431,18 @@ const MenuSectionPDF = ({
         {validItems.map((item) => {
           const itemIsRTL = getTextDirection(item.name) === 'rtl';
           const ItemWrapper = columns === 2 ? styles.itemWrapper : styles.itemWrapperFull;
-          
+
           return (
             <View key={item.id} style={ItemWrapper} wrap={false}>
               <View style={itemIsRTL ? styles.itemHeaderRTL : styles.itemHeaderLTR}>
                 <Text style={itemIsRTL ? styles.itemNameRTL : styles.itemNameLTR}>
-                  {item.is_featured ? `★ ${item.name}` : item.name}
+                  {item.is_featured ? `⭐ ${item.name}` : item.name}
                 </Text>
                 <View style={styles.priceContainer}>
                   <View style={styles.priceDots} />
-                  <Text style={styles.itemPrice}>${item.price!.toFixed(2)}</Text>
+                                      <Text style={[styles.itemPrice, colorPalette ? { color: colorPalette.secondary } : {}]}>
+                      ${item.price!.toFixed(2)}
+                    </Text>
                 </View>
               </View>
               {item.description && (
@@ -402,14 +458,24 @@ const MenuSectionPDF = ({
   )
 }
 
-export const CafeMenuPDF = ({ restaurant, categories }: { restaurant: Restaurant; categories: MenuCategory[] }) => {
+export const CafeMenuPDF = ({ 
+  restaurant, 
+  categories, 
+  qrCodeUrl, 
+  showQrCode = true 
+}: { 
+  restaurant: Restaurant; 
+  categories: MenuCategory[];
+  qrCodeUrl?: string;
+  showQrCode?: boolean;
+}) => {
   // Safety checks
   if (!restaurant || !restaurant.name) {
     return (
       <Document>
         <Page size="A4" style={styles.page} wrap>
           <View style={styles.documentContainer}>
-            <Text style={styles.title}>خطأ: بيانات المطعم غير متوفرة</Text>
+            <Text style={styles.title}>خطأ: بيانات المطعم غير متوفرة</Text>    
           </View>
         </Page>
       </Document>
@@ -421,7 +487,7 @@ export const CafeMenuPDF = ({ restaurant, categories }: { restaurant: Restaurant
       <Document>
         <Page size="A4" style={styles.page} wrap>
           <View style={styles.documentContainer}>
-            <Text style={styles.title}>خطأ: فئات القائمة غير متوفرة</Text>
+            <Text style={styles.title}>خطأ: فئات القائمة غير متوفرة</Text>      
           </View>
         </Page>
       </Document>
@@ -429,16 +495,16 @@ export const CafeMenuPDF = ({ restaurant, categories }: { restaurant: Restaurant
   }
 
   // Filter valid categories with items
-  const validCategories = categories.filter((category) => 
-    category && 
-    category.id && 
-    category.name && 
-    category.menu_items && 
-    Array.isArray(category.menu_items) && 
+  const validCategories = categories.filter((category) =>
+    category &&
+    category.id &&
+    category.name &&
+    category.menu_items &&
+    Array.isArray(category.menu_items) &&
     category.menu_items.some((item) => 
-      item && 
-      item.id && 
-      item.name && 
+      item &&
+      item.id &&
+      item.name &&
       item.is_available &&
       item.price !== null &&
       typeof item.price === 'number'
@@ -450,27 +516,42 @@ export const CafeMenuPDF = ({ restaurant, categories }: { restaurant: Restaurant
       <Document>
         <Page size="A4" style={styles.page} wrap>
           <View style={styles.documentContainer}>
-            <Text style={styles.title}>لا توجد عناصر متاحة في القائمة</Text>
+            <Text style={styles.title}>لا توجد عناصر متاحة في القائمة</Text>  
           </View>
         </Page>
       </Document>
     )
   }
 
+  // Generate QR code URL for the menu
+  const menuQrCodeUrl = qrCodeUrl || generateQrCodeUrl(restaurant.id, restaurant.website)
+
   return (
     <Document>
       <Page size="A4" style={styles.page} wrap>
         <View style={styles.documentContainer}>
-          {/* Header */}
+          {/* Header with QR Code */}
           <View style={styles.header}>
+            {/* QR Code in top-right corner */}
+            {showQrCode && (
+              <View style={styles.qrCodeContainer}>
+                <Image src={menuQrCodeUrl} style={styles.qrCodeImage} />
+                <Text style={styles.qrCodeLabel}>امسح للقائمة</Text>
+              </View>
+            )}
+            
             <View style={styles.logoContainer}>
               {restaurant.logo_url ? (
                 <Image src={restaurant.logo_url} style={styles.logoImage} />
               ) : (
-                <Text style={styles.logoText}>{restaurant.name.substring(0, 2).toUpperCase()}</Text>
+                                  <Text style={[styles.logoText, restaurant.color_palette ? { backgroundColor: restaurant.color_palette.primary } : {}]}>
+                    {restaurant.name.substring(0, 2).toUpperCase()}
+                  </Text>
               )}
             </View>
-            <Text style={styles.title}>{restaurant.name}</Text>
+                          <Text style={[styles.title, restaurant.color_palette ? { color: restaurant.color_palette.primary } : {}]}>
+                {restaurant.name}
+              </Text>
             <Text style={styles.subtitle}>Fine Dining & Artisan Coffee</Text>
             <Text style={styles.tagline}>Est. 2018 | Farm to Table | Locally Sourced</Text>
           </View>
@@ -482,10 +563,11 @@ export const CafeMenuPDF = ({ restaurant, categories }: { restaurant: Restaurant
               title={category.name}
               sectionData={category}
               columns={1}
+              colorPalette={restaurant.color_palette}
             />
           ))}
 
-          {/* Footer */}
+          {/* Footer with contact info and QR code */}
           <View style={styles.footer} wrap={false}>
             <View style={styles.footerGrid}>
               <View style={styles.footerSection}>
@@ -495,15 +577,23 @@ export const CafeMenuPDF = ({ restaurant, categories }: { restaurant: Restaurant
               </View>
               <View style={styles.footerSection}>
                 <Text style={styles.footerTitle}>تواصل معنا</Text>
-                <Text style={styles.footerText}>+966 11 123 4567</Text>
+                <Text style={styles.footerText}>{restaurant.phone || "+966 11 123 4567"}</Text>
                 <Text style={styles.footerText}>info@restaurant.com</Text>
               </View>
               <View style={styles.footerSection}>
                 <Text style={styles.footerTitle}>العنوان</Text>
-                <Text style={styles.footerText}>شارع الملك فهد</Text>
+                <Text style={styles.footerText}>{restaurant.address || "شارع الملك فهد"}</Text>
                 <Text style={styles.footerText}>الرياض، المملكة العربية السعودية</Text>
               </View>
             </View>
+            
+            {/* Small QR code in footer */}
+            {showQrCode && (
+              <View style={styles.footerQrSection}>
+                <Image src={menuQrCodeUrl} style={styles.footerQrCode} />
+                <Text style={styles.footerQrText}>قائمة رقمية</Text>
+              </View>
+            )}
           </View>
         </View>
       </Page>
