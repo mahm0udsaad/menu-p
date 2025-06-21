@@ -2,6 +2,7 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import PricingPlans from "@/components/pricing-plans"
 import {
   QrCode,
   Menu,
@@ -16,6 +17,7 @@ import {
   LayoutDashboard,
 } from "lucide-react" // Added LayoutDashboard icon
 import Link from "next/link"
+import PaymentButton from "@/components/payment-button"
 
 export default async function LandingPage() {
   // Made async
@@ -27,6 +29,17 @@ export default async function LandingPage() {
   } = await supabase.auth.getSession()
 
   const user = session?.user
+
+  // Get user's restaurant data if logged in
+  let restaurantData = null;
+  if (user) {
+    const { data: restaurant } = await supabase
+      .from('restaurants')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+    restaurantData = restaurant;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir="rtl">
@@ -142,7 +155,7 @@ export default async function LandingPage() {
               </div>
               <h3 className="text-xl font-semibold text-white mb-3">محسّن للجوال</h3>
               <p className="text-slate-300">
-                قوائم جميلة ومتجاوبة تعمل بشكل مثالي ��لى أي جهاز. لا حاجة لتحميل تطبيقات.
+                قوائم جميلة ومتجاوبة تعمل بشكل مثالي على أي جهاز. لا حاجة لتحميل تطبيقات.
               </p>
             </CardContent>
           </Card>
@@ -358,9 +371,20 @@ export default async function LandingPage() {
                 </div>
               </div>
 
-              <Button className="w-full bg-emerald-500 hover:bg-emerald-600" asChild>
-                <Link href="/auth/sign-up">ابدأ الآن</Link>
-              </Button>
+              {user ? (
+                <PaymentButton
+                  amount={8000}
+                  planName="Pro Plan"
+                  restaurantId={restaurantData?.id}
+                  userEmail={user?.email}
+                  userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
+                  className="w-full bg-emerald-500 hover:bg-emerald-600"
+                />
+              ) : (
+                <Button className="w-full bg-emerald-500 hover:bg-emerald-600" asChild>
+                  <Link href="/auth/sign-up">ابدأ الآن</Link>
+                </Button>
+              )}
             </CardContent>
           </Card>
 
