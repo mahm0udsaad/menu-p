@@ -4,13 +4,11 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
 interface MenuPageProps {
-  params: {
-    menuId: string
-  }
+  params: Promise<{ menuId: string }>
 }
 
-export default async function MenuPage({ params }: MenuPageProps) {
-  const { menuId } = params
+export default async function MenuPage({ params  }: MenuPageProps) {
+  const { menuId } = await params
   const supabase = createClient()
 
   const { data: publishedMenu, error } = await supabase

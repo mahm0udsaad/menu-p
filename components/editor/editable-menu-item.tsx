@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Edit, Save, X, Trash2, Star, GripVertical } from "lucide-react"
 import { updateMenuItemData, quickUpdateItem } from "@/lib/actions/editor/quick-menu-actions"
+import { toast } from "sonner"
 
 const ItemTypes = {
   MENU_ITEM: "menu_item",
@@ -29,9 +30,21 @@ interface EditableMenuItemProps {
   onUpdate: (updatedItem: MenuItem) => void
   onDelete: (itemId: string) => void
   moveItem: (dragIndex: number, hoverIndex: number) => void
+  customRender?: (props: {
+    item: MenuItem;
+    onUpdate: (updatedItem: MenuItem) => void;
+    onDelete: (itemId: string) => void;
+  }) => React.ReactNode;
 }
 
-export default function EditableMenuItem({ item, index, onUpdate, onDelete, moveItem }: EditableMenuItemProps) {
+export default function EditableMenuItem({ 
+  item, 
+  index, 
+  onUpdate, 
+  onDelete, 
+  moveItem, 
+  customRender 
+}: EditableMenuItemProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editData, setEditData] = useState({
     name: item.name,
@@ -94,8 +107,9 @@ export default function EditableMenuItem({ item, index, onUpdate, onDelete, move
     if (result.success && result.item) {
       onUpdate(result.item as MenuItem)
       setIsEditing(false)
+      toast.success("تم حفظ التغييرات بنجاح")
     } else {
-      alert(result.error || "Failed to save.")
+      toast.error(result.error || "فشل في حفظ التغييرات")
     }
     setIsSaving(false)
   }
@@ -114,9 +128,19 @@ export default function EditableMenuItem({ item, index, onUpdate, onDelete, move
     const result = await quickUpdateItem(item.id, "is_featured", newFeaturedState)
     if (result.success) {
       onUpdate({ ...item, is_featured: newFeaturedState })
+      toast.success(newFeaturedState ? "تم إضافة العنصر للمميزات" : "تم إزالة العنصر من المميزات")
     } else {
-      alert(result.error)
+      toast.error(result.error || "فشل في تحديث حالة العنصر")
     }
+  }
+
+  // If custom render is provided, use it
+  if (customRender) {
+    return customRender({
+      item,
+      onUpdate,
+      onDelete,
+    })
   }
 
   const opacity = isDragging ? 0 : 1

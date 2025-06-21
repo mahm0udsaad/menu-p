@@ -21,6 +21,7 @@ interface MenuCategory {
   id: string
   name: string
   description: string | null
+  background_image_url?: string | null
   menu_items: MenuItem[]
 }
 
@@ -29,6 +30,13 @@ interface Restaurant {
   name: string
   category: string
   logo_url: string | null
+  color_palette?: {
+    id: string
+    name: string
+    primary: string
+    secondary: string
+    accent: string
+  }
 }
 
 interface PdfPreviewModalProps {
@@ -74,8 +82,39 @@ export default function PdfPreviewModal({ isOpen, onClose, restaurant, categorie
       setLoading(true)
       setError(null)
       
+      // Ensure restaurant has all required properties for PDF generation
+      const restaurantForPdf = {
+        ...restaurant,
+        logo_url: restaurant.logo_url || undefined,
+        color_palette: restaurant.color_palette || {
+          id: "emerald",
+          name: "Emerald",
+          primary: "#10b981",
+          secondary: "#059669", 
+          accent: "#34d399"
+        }
+      }
+      
+      // Ensure categories have proper structure for PDF
+      const categoriesForPdf = validCategories.map(cat => ({
+        ...cat,
+        description: cat.description || undefined,
+        background_image_url: cat.background_image_url || undefined,
+        menu_items: cat.menu_items.map(item => ({
+          ...item,
+          description: item.description || undefined,
+          price: item.price || 0,
+          image_url: item.image_url || undefined
+        }))
+      }))
+      
       // Generate PDF blob
-      const blob = await pdf(<CafeMenuPDF restaurant={restaurant} categories={validCategories} />).toBlob()
+      const blob = await pdf(
+        <CafeMenuPDF 
+          restaurant={restaurantForPdf} 
+          categories={categoriesForPdf} 
+        />
+      ).toBlob()
       
       // Create object URL for iframe
       const url = URL.createObjectURL(blob)

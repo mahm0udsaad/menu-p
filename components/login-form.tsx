@@ -102,7 +102,7 @@ export default function LoginForm() {
 
       {/* Forgot Password Link */}
       <div className="text-center mt-4">
-        <Link href="#" className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">
+        <Link href="/auth/forgot-password" className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">
           نسيت كلمة المرور؟
         </Link>
       </div>

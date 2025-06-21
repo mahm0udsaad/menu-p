@@ -38,11 +38,35 @@ interface Template {
   preview_image_url: string | null
 }
 
-interface MenuEditorClientProps {
-  restaurant: Restaurant
+interface MenuCategory {
+  id: string
+  name: string
+  description: string | null
+  menu_items: MenuItem[]
 }
 
-export default function MenuEditorClient({ restaurant }: MenuEditorClientProps) {
+interface MenuItem {
+  id: string
+  name: string
+  description: string | null
+  price: number | null
+  image_url: string | null
+  is_available: boolean
+  is_featured: boolean
+  dietary_info: string[]
+}
+
+interface MenuEditorClientProps {
+  restaurant: Restaurant
+  initialMenuData: MenuCategory[]
+  initialTemplates: Template[]
+}
+
+export default function MenuEditorClient({ 
+  restaurant, 
+  initialMenuData, 
+  initialTemplates 
+}: MenuEditorClientProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -108,102 +132,109 @@ export default function MenuEditorClient({ restaurant }: MenuEditorClientProps) 
       </div>
 
       {/* Header */}
-      <header className="border-b border-slate-700 bg-slate-800/50 backdrop-blur relative z-10">
+      <header className="border-b border-slate-700 bg-slate-800/50 backdrop-blur sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center space-x-4 space-x-reverse">
+              <Button variant="ghost" asChild className="text-slate-400 hover:text-white">
               <Link href="/dashboard">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-xl"
-                >
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   العودة للوحة التحكم
+                </Link>
                 </Button>
-              </Link>
-
-              <div className="h-6 w-px bg-slate-600" />
-
+              <div className="w-px h-6 bg-slate-600"></div>
+              <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-2 rounded-xl shadow-lg">
+                <FileText className="h-6 w-6 text-white" />
+              </div>
               <div>
-                <h1 className="text-xl font-bold text-white">محرر القائمة</h1>
-                <p className="text-sm text-slate-400">{restaurant.name}</p>
+                <h1 className="text-2xl font-bold text-white">محرر القائمة</h1>
+                <p className="text-slate-300">{restaurant.name}</p>
               </div>
             </div>
-
-            <div className="flex items-center gap-3">
-              {selectedTemplate && (
-                <>
-                  <Badge
-                    variant="secondary"
-                    className="bg-emerald-600/20 text-emerald-400 border-emerald-400/30 rounded-lg"
-                  >
-                    {selectedTemplate.name}
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="bg-emerald-600/20 text-emerald-400 border-emerald-400/30">
+                {restaurant.category === "both" ? "مطعم ومقهى" : restaurant.category}
                   </Badge>
-
-                  {totalPages > 1 && (
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={!canNavigatePrev}
-                        className="text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </Button>
-
-                      <span className="text-sm text-slate-300 px-2">
-                        صفحة {currentPage} من {totalPages}
-                      </span>
-
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={!canNavigateNext}
-                        className="text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg"
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-
-                  <Button 
-                    variant="outline" 
-                    className="border-slate-600 hover:bg-slate-700/50 rounded-xl"
-                    onClick={() => setSelectedTemplate(null)}
-                  >
-                    تغيير القالب
-                  </Button>
-                </>
-              )}
             </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-2 relative z-10">
-        {!selectedTemplate ? (
-          // Template Selection - Compact Layout
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-white mb-2">اختر قالب قائمتك</h2>
-              <p className="text-slate-400">ابدأ بتحديد القالب المناسب لمطعمك</p>
-            </div>
+      <main className="container mx-auto px-4 py-8 relative z-10">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="bg-slate-800/50 border border-slate-700 rounded-xl p-1">
+            <TabsTrigger
+              value="template"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-emerald-700 data-[state=active]:text-white rounded-lg"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              اختر القالب
+            </TabsTrigger>
+            <TabsTrigger
+              value="editor"
+              disabled={!selectedTemplate}
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-emerald-700 data-[state=active]:text-white rounded-lg disabled:opacity-50"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              محرر القائمة
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="template">
             <TemplateSelector
               restaurantCategory={restaurant.category}
               onTemplateSelect={handleTemplateSelect}
-              selectedTemplateId={selectedTemplate ? selectedTemplate.id : undefined}
+              selectedTemplateId={selectedTemplate?.id}
+              initialTemplates={initialTemplates}
             />
+          </TabsContent>
+
+          <TabsContent value="editor">
+            {selectedTemplate && (
+              <div className="space-y-6">
+                {/* Page Navigation */}
+                {totalPages > 1 && (
+                  <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          disabled={!canNavigatePrev}
+                          className="border-slate-600"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                          السابق
+                        </Button>
+                        <span className="text-white px-4">
+                          صفحة {currentPage} من {totalPages}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          disabled={!canNavigateNext}
+                          className="border-slate-600"
+                        >
+                          التالي
+                          <ChevronRight className="h-4 w-4 ml-2" />
+                        </Button>
+                      </div>
+                      <div className="text-slate-400 text-sm">
+                        تحرير قالب: {selectedTemplate.name}
+                      </div>
+                    </div>
           </div>
-        ) : (
-          // Live Menu Editor - Full Layout
-          <div className="h-[calc(100vh-120px)]">
-            <LiveMenuEditor restaurant={restaurant} />
+                )}
+
+                {/* Live Menu Editor */}
+                <LiveMenuEditor restaurant={restaurant} initialMenuData={initialMenuData} />
           </div>
         )}
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   )

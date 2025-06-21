@@ -4,6 +4,11 @@ import { createServerActionClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
+export type MenuItemFormState = {
+  error?: string
+  success?: boolean
+} | null
+
 export async function signUp(prevState: any, formData: FormData) {
   const email = formData.get("email") as string
   const password = formData.get("password") as string
@@ -43,6 +48,7 @@ export async function signIn(prevState: any, formData: FormData) {
     return { error: "البريد الإلكتروني وكلمة المرور مطلوبان" }
   }
 
+  try {
   const supabase = createServerActionClient({ cookies })
 
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -51,7 +57,17 @@ export async function signIn(prevState: any, formData: FormData) {
   })
 
   if (error) {
+      // Handle rate limiting specifically
+      if (error.message.includes('rate limit') || error.status === 429) {
+        return { error: "تم تجاوز حد المحاولات. يرجى المحاولة مرة أخرى بعد دقيقة." }
+      }
+      
+      // Handle other auth errors
+      if (error.message.includes('Invalid login credentials')) {
     return { error: "بيانات تسجيل الدخول غير صحيحة" }
+      }
+      
+      return { error: "خطأ في تسجيل الدخول. يرجى المحاولة مرة أخرى." }
   }
 
   // Check if user has completed onboarding
@@ -66,6 +82,72 @@ export async function signIn(prevState: any, formData: FormData) {
   }
 
   redirect("/dashboard")
+  } catch (error) {
+    console.error("Sign in error:", error)
+    return { error: "حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى." }
+  }
+}
+
+export async function forgotPassword(prevState: any, formData: FormData) {
+  const email = formData.get("email") as string
+
+  if (!email) {
+    return { error: "البريد الإلكتروني مطلوب" }
+  }
+
+  try {
+    const supabase = createServerActionClient({ cookies })
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/reset-password`,
+    })
+
+    if (error) {
+      if (error.message.includes('rate limit') || error.status === 429) {
+        return { error: "تم تجاوز حد المحاولات. يرجى المحاولة مرة أخرى بعد دقيقة." }
+      }
+      return { error: "حدث خطأ أثناء إرسال رابط إعادة تعيين كلمة المرور" }
+    }
+
+    return { success: "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني" }
+  } catch (error) {
+    console.error("Forgot password error:", error)
+    return { error: "حدث خطأ أثناء إرسال رابط إعادة تعيين كلمة المرور" }
+  }
+}
+
+export async function resetPassword(prevState: any, formData: FormData) {
+  const password = formData.get("password") as string
+  const confirmPassword = formData.get("confirmPassword") as string
+
+  if (!password || !confirmPassword) {
+    return { error: "جميع الحقول مطلوبة" }
+  }
+
+  if (password !== confirmPassword) {
+    return { error: "كلمات المرور غير متطابقة" }
+  }
+
+  if (password.length < 6) {
+    return { error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" }
+  }
+
+  try {
+    const supabase = createServerActionClient({ cookies })
+
+    const { error } = await supabase.auth.updateUser({
+      password: password
+    })
+
+    if (error) {
+      return { error: "فشل في إعادة تعيين كلمة المرور. يرجى المحاولة مرة أخرى." }
+    }
+
+    redirect("/dashboard")
+  } catch (error) {
+    console.error("Reset password error:", error)
+    return { error: "فشل في إعادة تعيين كلمة المرور. يرجى المحاولة مرة أخرى." }
+  }
 }
 
 export async function signOut() {

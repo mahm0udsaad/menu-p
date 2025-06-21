@@ -4,13 +4,13 @@ import { useState, useCallback, useEffect } from "react"
 import { DndProvider } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
 import { Button } from "@/components/ui/button"
-import { Plus, Trash2, Edit } from "lucide-react"
+import { Plus, Trash2, Edit, Leaf, Wheat } from "lucide-react"
 import { quickAddItem, quickDeleteItem, reorderMenuItems } from "@/lib/actions/editor/quick-menu-actions"
 import { quickUpdateCategory, quickDeleteCategory, quickAddCategory } from "@/lib/actions/editor/quick-category-actions"
-import InlineEditable from "../inline-editable" // Adjusted path
-import EditableMenuItem from "./editable-menu-item" // Adjusted path
+import InlineEditable from "../inline-editable"
+import EditableMenuItem from "./editable-menu-item"
 import Image from "next/image"
-import { Leaf, Wheat } from "lucide-react"
+import { toast } from "sonner"
 
 interface MenuItem {
   id: string
@@ -62,8 +62,9 @@ export default function InteractiveMenuPreview({
           cat.id === categoryId ? { ...cat, menu_items: [...cat.menu_items, result.item as MenuItem] } : cat,
         ),
       )
+      toast.success("تم إضافة عنصر جديد للقائمة")
     } else {
-      alert(result.error)
+      toast.error(result.error || "فشل في إضافة العنصر")
     }
   }
 
@@ -77,8 +78,11 @@ export default function InteractiveMenuPreview({
   }
 
   const handleDeleteItem = async (itemId: string) => {
-    if (!confirm("Delete this item?")) return
-    const result = await quickDeleteItem(itemId)
+    toast.promise(
+      quickDeleteItem(itemId),
+      {
+        loading: 'جاري حذف العنصر...',
+        success: (result) => {
     if (result.success) {
       setCategories((prev) =>
         prev.map((cat) => ({
@@ -86,9 +90,14 @@ export default function InteractiveMenuPreview({
           menu_items: cat.menu_items.filter((item) => item.id !== itemId),
         })),
       )
+            return 'تم حذف العنصر بنجاح'
     } else {
-      alert(result.error)
+            throw new Error(result.error || 'فشل في حذف العنصر')
+          }
+        },
+        error: (error) => error.message || 'فشل في حذف العنصر'
     }
+    )
   }
 
   const handleUpdateCategory = async (categoryId: string, field: string, value: string | null) => {
@@ -96,27 +105,36 @@ export default function InteractiveMenuPreview({
     if (result.success) {
       setCategories((prev) => prev.map((cat) => (cat.id === categoryId ? { ...cat, [field]: value } : cat)))
     } else {
-      alert(result.error)
+      toast.error(result.error || "فشل في تحديث القسم")
       onRefresh() // Revert on error
     }
   }
 
   const handleDeleteCategory = async (categoryId: string) => {
-    if (!confirm("Delete this entire category and all its items?")) return
-    const result = await quickDeleteCategory(categoryId)
+    toast.promise(
+      quickDeleteCategory(categoryId),
+      {
+        loading: 'جاري حذف القسم...',
+        success: (result) => {
     if (result.success) {
       setCategories((prev) => prev.filter((cat) => cat.id !== categoryId))
+            return 'تم حذف القسم وجميع عناصره بنجاح'
     } else {
-      alert(result.error)
+            throw new Error(result.error || 'فشل في حذف القسم')
+          }
+        },
+        error: (error) => error.message || 'فشل في حذف القسم'
     }
+    )
   }
 
   const handleAddCategory = async () => {
-    const result = await quickAddCategory(restaurant.id, "New Category")
+    const result = await quickAddCategory(restaurant.id, "قسم جديد")
     if (result.success && result.category) {
       setCategories((prev) => [...prev, { ...result.category, menu_items: [] }])
+      toast.success("تم إضافة قسم جديد")
     } else {
-      alert(result.error)
+      toast.error(result.error || "فشل في إضافة القسم")
     }
   }
 
@@ -188,11 +206,11 @@ export default function InteractiveMenuPreview({
           {categories.length === 0 ? (
             <div className="text-center py-20 text-slate-400">
               <div className="text-8xl mb-6">🍽️</div>
-              <h3 className="text-2xl font-semibold mb-4 text-slate-600">Your menu awaits</h3>
-              <p className="text-lg mb-6">Start building your delicious menu</p>
+              <h3 className="text-2xl font-semibold mb-4 text-slate-600">قائمتك في انتظارك</h3>
+              <p className="text-lg mb-6">ابدأ في بناء قائمة طعامك اللذيذة</p>
               <Button onClick={handleAddCategory} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3">
                 <Plus className="h-5 w-5 mr-2" />
-                Add First Category
+                إضافة أول قسم
               </Button>
             </div>
           ) : (
@@ -207,12 +225,12 @@ export default function InteractiveMenuPreview({
                           value={category.name}
                           onSave={(value) => handleUpdateCategory(category.id, "name", value)}
                           className="text-3xl font-bold text-slate-800 hover:bg-slate-100 uppercase tracking-wider"
-                          placeholder="Category name"
+                          placeholder="اسم القسم"
                         />
                         <InlineEditable
                           value={category.description || ""}
                           onSave={(value) => handleUpdateCategory(category.id, "description", value || null)}
-                          placeholder="Add category description..."
+                          placeholder="إضافة وصف للقسم..."
                           className="text-slate-600 text-base mt-2 hover:bg-slate-100 italic"
                         />
                       </div>
@@ -223,7 +241,6 @@ export default function InteractiveMenuPreview({
                           className="text-slate-500 hover:text-slate-700 hover:bg-slate-50"
                           title="تعديل القسم"
                           onClick={(e) => {
-                            // Trigger edit mode for category name
                             const parentDiv = e.currentTarget.closest('.space-y-6');
                             const nameElement = parentDiv?.querySelector('.text-3xl.font-bold');
                             if (nameElement) {
@@ -258,17 +275,19 @@ export default function InteractiveMenuPreview({
                         moveItem={(dragIndex, hoverIndex) => moveItem(category.id, dragIndex, hoverIndex)}
                       />
                     ))}
-                    <div className="mt-6 text-center">
+                  </div>
+
+                  {/* Add Item Button */}
+                  <div className="text-center pt-4">
                       <Button
                         onClick={() => handleAddItem(category.id)}
                         variant="outline"
                         size="sm"
-                        className="border-emerald-500 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+                      className="border-emerald-600 text-emerald-600 hover:bg-emerald-50"
                       >
                         <Plus className="h-4 w-4 mr-2" />
-                        Add Item to {category.name}
+                      إضافة عنصر إلى {category.name}
                       </Button>
-                    </div>
                   </div>
                 </div>
               ))}
@@ -281,7 +300,7 @@ export default function InteractiveMenuPreview({
                   className="border-emerald-600 text-emerald-600 hover:bg-emerald-50"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Add New Category
+                  إضافة قسم جديد
                 </Button>
               </div>
             </>

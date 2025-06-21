@@ -1,9 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from "@/components/ui/drawer"
 import { Loader2, Check, Eye, X } from "lucide-react"
 import { supabase } from "@/lib/supabase/client"
@@ -22,22 +20,27 @@ interface TemplateSelectorProps {
   restaurantCategory: string
   onTemplateSelect: (template: Template) => void
   selectedTemplateId?: string
+  initialTemplates?: Template[]
 }
 
 export default function TemplateSelector({
   restaurantCategory,
   onTemplateSelect,
   selectedTemplateId,
+  initialTemplates = [],
 }: TemplateSelectorProps) {
-  const [templates, setTemplates] = useState<Template[]>([])
-  const [loading, setLoading] = useState(true)
+  const [templates, setTemplates] = useState<Template[]>(initialTemplates)
+  const [loading, setLoading] = useState(!initialTemplates.length)
   const [error, setError] = useState<string | null>(null)
   const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   useEffect(() => {
-    fetchTemplates()
-  }, [restaurantCategory])
+    // Only fetch if we don't have initial data
+    if (!initialTemplates.length) {
+      fetchTemplates()
+    }
+  }, [restaurantCategory, initialTemplates.length])
 
   const fetchTemplates = async () => {
     try {
@@ -102,72 +105,66 @@ export default function TemplateSelector({
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {templates.map((template) => (
-            <Card
-              key={template.id}
-              className={`bg-slate-800/50 border-slate-700 backdrop-blur cursor-pointer transition-all hover:border-emerald-400 ${
-                selectedTemplateId === template.id ? "border-emerald-400 ring-2 ring-emerald-400/20" : ""
-              }`}
-              onClick={() => onTemplateSelect(template)}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-white text-lg">{template.name}</CardTitle>
-                  {selectedTemplateId === template.id && <Check className="h-5 w-5 text-emerald-400" />}
-                </div>
-                <Badge variant="secondary" className="w-fit bg-emerald-600/20 text-emerald-400 border-emerald-400/30">
-                  {template.category === "both" ? "Universal" : template.category}
-                </Badge>
-              </CardHeader>
-
-              <CardContent className="space-y-4">
-                {template.preview_image_url && (
-                  <div className="relative group">
-                    {/* Larger image preview */}
-                    <div className="aspect-[3/4] relative rounded-lg overflow-hidden bg-slate-700">
-                      <Image
-                        src={template.preview_image_url || "/placeholder.svg?height=400&width=300"}
-                        alt={`${template.name} preview`}
-                        fill
-                        className="object-cover transition-transform group-hover:scale-105"
-                      />
-                      
-                      {/* Preview overlay button */}
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          className="bg-white/20 backdrop-blur border-white/30 text-white hover:bg-white/30"
-                          onClick={(e) => handlePreview(template, e)}
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          Preview
-                        </Button>
-                      </div>
-                    </div>
+            <div key={template.id} className="relative group cursor-pointer" onClick={() => onTemplateSelect(template)}>
+              {/* Full Image Card */}
+              <div className={`relative w-full h-[500px] rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-[1.02] ${
+                selectedTemplateId === template.id ? "ring-2 ring-emerald-400" : ""
+              }`}>
+                
+                {/* Template Image - Full Coverage */}
+                <Image 
+                  src={template.preview_image_url || "/placeholder.svg?height=400&width=300"}
+                  alt={template.name}
+                  fill
+                  className="object-cover object-center transition-transform duration-700 group-hover:scale-110"
+                />
+                
+                {/* Overlay for Better Button Visibility */}
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                {/* Content Overlay - Bottom */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-6">
+                  <div className="text-right space-y-2 mb-4">
+                    <h2 className="text-white text-2xl font-bold drop-shadow-lg">
+                      {template.name}
+                    </h2>
+                    <p className="text-white/90 text-base drop-shadow-md">
+                      {template.description}
+                    </p>
                   </div>
-                )}
-
-                <p className="text-slate-300 text-sm">{template.description}</p>
-
-                <div className="flex items-center justify-between text-xs text-slate-400">
-                  <span>{template.layout_config.pages || 1} page(s)</span>
-                  <span>{template.layout_config.sections?.length || 0} sections</span>
                 </div>
-
-                {/* Preview button for mobile or as alternative */}
-                {template.preview_image_url && (
+                
+                {/* Floating Action Buttons - Center */}
+                <div className="absolute inset-0 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0">
+                  
+                  {/* Preview Button */}
                   <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
                     onClick={(e) => handlePreview(template, e)}
+                    className="flex items-center gap-3 px-6 py-3 bg-white/95 backdrop-blur-sm rounded-xl font-semibold text-gray-800 shadow-lg hover:shadow-xl hover:bg-white transition-all duration-300 hover:scale-105"
                   >
-                    <Eye className="h-4 w-4 mr-2" />
-                    Full Preview
+                    <Eye className="w-5 h-5" />
+                    <span>معاينة</span>
                   </Button>
-                )}
-              </CardContent>
-            </Card>
+                  
+                  {/* Select Button */}
+                  <Button
+                    onClick={() => onTemplateSelect(template)}
+                    className="flex items-center gap-3 px-6 py-3 bg-blue-600 rounded-xl font-semibold text-white shadow-lg hover:shadow-xl hover:bg-blue-700 transition-all duration-300 hover:scale-105"
+                  >
+                    <Check className="w-5 h-5" />
+                    <span>اختيار</span>
+                  </Button>
+                </div>
+                
+                {/* Category Badge - Top Right */}
+                <div className="absolute top-4 right-4 bg-emerald-600/20 text-emerald-400 px-3 py-1 rounded-full text-sm font-medium shadow-lg border border-emerald-400/30">
+                  {template.category === "both" ? "Universal" : template.category}
+                </div>
+                
+                {/* Subtle Frame Effect */}
+                <div className="absolute inset-0 rounded-2xl ring-1 ring-black/10 pointer-events-none"></div>
+              </div>
+            </div>
           ))}
         </div>
 

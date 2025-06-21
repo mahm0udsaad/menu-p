@@ -20,6 +20,19 @@ export const createClient = cache(() => {
         getUser: () => Promise.resolve({ data: { user: null }, error: null }),
         getSession: () => Promise.resolve({ data: { session: null }, error: null }),
       },
+      from: () => ({
+        select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: null, error: new Error("Supabase not configured") }) }) }),
+        insert: () => Promise.resolve({ data: null, error: new Error("Supabase not configured") }),
+        update: () => ({ eq: () => Promise.resolve({ data: null, error: new Error("Supabase not configured") }) }),
+        delete: () => ({ eq: () => Promise.resolve({ data: null, error: new Error("Supabase not configured") }) }),
+      }),
+      storage: {
+        from: () => ({
+          upload: () => Promise.resolve({ data: null, error: new Error("Supabase not configured") }),
+          getPublicUrl: () => ({ data: { publicUrl: "" } }),
+          remove: () => Promise.resolve({ data: null, error: new Error("Supabase not configured") }),
+        }),
+      },
     }
   }
 

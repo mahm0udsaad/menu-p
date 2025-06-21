@@ -6,13 +6,16 @@ import { HTML5Backend } from "react-dnd-html5-backend"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { Plus, Trash2, Edit, Upload, FileText, Palette } from "lucide-react"
+import { Plus, Trash2, Edit, Upload, FileText, Palette, Image as ImageIcon } from "lucide-react"
 import { quickAddItem, quickDeleteItem, reorderMenuItems } from "@/lib/actions/editor/quick-menu-actions"
 import { quickUpdateCategory, quickDeleteCategory, quickAddCategory } from "@/lib/actions/editor/quick-category-actions"
 import InlineEditable from "../inline-editable"
 import EditableMenuItem from "./editable-menu-item"
 import Image from "next/image"
 import { supabase } from "@/lib/supabase/client"
+import NotificationModal from "@/components/ui/notification-modal"
+import ConfirmationModal from "@/components/ui/confirmation-modal"
+import ImageUploadModal from "@/components/ui/image-upload-modal"
 
 interface MenuItem {
   id: string
@@ -109,120 +112,102 @@ const colorPalettes = [
   }
 ]
 
-// Hardcoded section images for the live preview (since category images are not in DB)
-const previewSectionImages = {
-  appetizers: "/placeholder.svg?height=300&width=400",
-  mains: "/placeholder.svg?height=300&width=400",
-  beverages: "/placeholder.svg?height=300&width=400",
-  desserts: "/placeholder.svg?height=300&width=400",
-}
-
-const getPreviewSectionImage = (categoryName: string) => {
-  const lowerCaseName = categoryName.toLowerCase()
-  if (lowerCaseName.includes("appetizer") || lowerCaseName.includes("starter")) return previewSectionImages.appetizers
-  if (lowerCaseName.includes("main")) return previewSectionImages.mains
-  if (lowerCaseName.includes("beverage") || lowerCaseName.includes("coffee") || lowerCaseName.includes("drink"))
-    return previewSectionImages.beverages
-  if (lowerCaseName.includes("dessert")) return previewSectionImages.desserts
-  return previewSectionImages.mains // Default fallback
-}
-
 const MenuSectionPreview = ({
   title,
   sectionData,
-  columns = 1,
   onAddItem,
   onUpdateItem,
   onDeleteItem,
   moveItem,
   onUpdateCategory,
   onDeleteCategory,
+  onRefresh,
   colorPalette,
 }: {
   title: string
   sectionData: MenuCategory
-  columns?: 1 | 2
   onAddItem: (categoryId: string) => void
   onUpdateItem: (updatedItem: MenuItem) => void
   onDeleteItem: (itemId: string) => void
   moveItem: (categoryId: string, dragIndex: number, hoverIndex: number) => void
   onUpdateCategory: (categoryId: string, field: string, value: string | null) => void
   onDeleteCategory: (categoryId: string) => void
+  onRefresh: () => void
   colorPalette: { primary: string; secondary: string; accent: string }
 }) => {
+  const [showImageUpload, setShowImageUpload] = useState(false)
   const [isUploadingBg, setIsUploadingBg] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [notification, setNotification] = useState<{
+    show: boolean
+    type: "success" | "error" | "warning" | "info"
+    title: string
+    description: string
+  }>({
+    show: false,
+    type: "info",
+    title: "",
+    description: ""
+  })
 
-  const handleBgImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+  const showNotification = (type: "success" | "error" | "warning" | "info", title: string, description: string) => {
+    setNotification({ show: true, type, title, description })
+  }
 
+  const handleBgImageUpload = async (file: File) => {
     setIsUploadingBg(true)
     try {
       const fileExt = file.name.split('.').pop()
-      const fileName = `${sectionData.id}-bg-${Date.now()}.${fileExt}`
+      const fileName = `templates/category-backgrounds/${sectionData.id}-bg-${Date.now()}.${fileExt}`
 
       const { error: uploadError } = await supabase.storage
         .from('restaurant-logos')
-        .upload(fileName, file)
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        })
 
-      if (uploadError) throw uploadError
+      if (uploadError) {
+        console.error('Upload error details:', uploadError)
+        throw new Error(`Upload failed: ${uploadError.message}`)
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('restaurant-logos')
         .getPublicUrl(fileName)
 
       // Update category background image
-      onUpdateCategory(sectionData.id, 'background_image_url', publicUrl)
+      await onUpdateCategory(sectionData.id, 'background_image_url', publicUrl)
+      showNotification("success", "تم رفع الصورة بنجاح", "تم تحديث صورة خلفية القسم")
     } catch (error) {
       console.error('Background upload error:', error)
-      alert('فشل في رفع صورة الخلفية. حاول مرة أخرى.')
+      const errorMessage = error instanceof Error ? error.message : 'حدث خطأ غير متوقع'
+      showNotification("error", "فشل في رفع الصورة", errorMessage)
     } finally {
       setIsUploadingBg(false)
     }
   }
 
+  const handleDeleteCategory = () => {
+    setShowDeleteConfirm(false)
+    onDeleteCategory(sectionData.id)
+  }
+
   return (
-    <div className="mb-16 group/category-section" data-category-id={sectionData.id}>
-    {/* Section Header with Background Image */}
-      <div className="relative mb-8 h-32 rounded-lg overflow-hidden group/header">
-      <div
-          className="absolute inset-0 bg-cover bg-center transition-all"
+    <>
+      <div className="mb-12 group/category-section" data-category-id={sectionData.id}>
+        {/* Category Header with Background Image */}
+        <div 
+          className="relative h-32 mb-8 rounded-xl overflow-hidden group/category-header"
           style={{ 
             backgroundImage: sectionData.background_image_url 
-              ? `url(${sectionData.background_image_url})` 
-              : `url(${getPreviewSectionImage(title)})` 
+              ? `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${sectionData.background_image_url})`
+              : `linear-gradient(135deg, ${colorPalette.primary}, ${colorPalette.secondary})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
           }}
-      />
-      <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-        
-        {/* Upload Overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-70 opacity-0 group-hover/header:opacity-100 transition-opacity flex items-center justify-center z-10">
-          <label htmlFor={`bg-upload-${sectionData.id}`} className="cursor-pointer">
-            <div className="flex flex-col items-center text-white">
-              <Upload className="h-8 w-8 mb-2" />
-              <span className="text-sm">تغيير صورة الخلفية</span>
-            </div>
-            <input
-              id={`bg-upload-${sectionData.id}`}
-              type="file"
-              accept="image/*"
-              onChange={handleBgImageUpload}
-              className="hidden"
-              disabled={isUploadingBg}
-            />
-          </label>
-        </div>
-
-        {/* Loading Overlay */}
-        {isUploadingBg && (
-          <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center z-30">
-            <div className="text-center text-white">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
-              <span className="text-sm">جاري رفع الصورة...</span>
-            </div>
-          </div>
-        )}
-
+        >
       <div className="relative z-10 flex items-center justify-center h-full">
         <div className="text-center">
           <InlineEditable
@@ -234,14 +219,24 @@ const MenuSectionPreview = ({
           <div className="w-16 h-px mx-auto" style={{ backgroundColor: colorPalette.accent }}></div>
         </div>
       </div>
+          
+          {/* Edit Controls */}
         <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover/category-section:opacity-100 transition-opacity z-20">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-white hover:text-white hover:bg-white/20 shadow-lg"
+              title="تحديث صورة الخلفية"
+              onClick={() => setShowImageUpload(true)}
+            >
+              <ImageIcon className="h-4 w-4" />
+            </Button>
           <Button
             size="sm"
             variant="ghost"
             className="text-white hover:text-white hover:bg-white/20 shadow-lg"
             title="تعديل القسم"
             onClick={() => {
-              // Trigger edit mode for category name
               const nameElement = document.querySelector(`[data-category-id="${sectionData.id}"] .category-name-editable`);
               if (nameElement) {
                 (nameElement as HTMLElement).click();
@@ -251,7 +246,7 @@ const MenuSectionPreview = ({
             <Edit className="h-4 w-4" />
           </Button>
         <Button
-          onClick={() => onDeleteCategory(sectionData.id)}
+              onClick={() => setShowDeleteConfirm(true)}
           size="sm"
           variant="ghost"
           className="text-white hover:text-red-300 hover:bg-red-500/20 shadow-lg"
@@ -261,8 +256,8 @@ const MenuSectionPreview = ({
       </div>
     </div>
 
-    {/* Menu Items */}
-    <div className={`grid gap-6 ${columns === 2 ? "md:grid-cols-2" : ""}`}>
+        {/* Menu Items - Single Column Layout */}
+        <div className="space-y-6">
       {sectionData.menu_items.map((item, index) => (
         <div key={item.id} className="border-b border-gray-200 pb-4 last:border-b-0">
           <EditableMenuItem
@@ -318,6 +313,8 @@ const MenuSectionPreview = ({
           />
         </div>
       ))}
+          
+          {/* Add Item Button */}
       <div className="mt-6 text-center">
         <Button
           onClick={() => onAddItem(sectionData.id)}
@@ -344,6 +341,38 @@ const MenuSectionPreview = ({
       </div>
     </div>
   </div>
+
+      {/* Image Upload Modal */}
+      <ImageUploadModal
+        isOpen={showImageUpload}
+        onClose={() => setShowImageUpload(false)}
+        onUpload={handleBgImageUpload}
+        title="تحديث صورة خلفية القسم"
+        description="اختر صورة لتكون خلفية لرأس القسم"
+        currentImageUrl={sectionData.background_image_url}
+        isUploading={isUploadingBg}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteCategory}
+        title="حذف القسم"
+        description={`هل أنت متأكد من حذف قسم "${sectionData.name}" وجميع عناصره؟ لا يمكن التراجع عن هذا الإجراء.`}
+        confirmText="حذف القسم"
+        type="danger"
+      />
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={notification.show}
+        onClose={() => setNotification(prev => ({ ...prev, show: false }))}
+        title={notification.title}
+        description={notification.description}
+        type={notification.type}
+      />
+    </>
 )
 }
 
@@ -361,152 +390,57 @@ export default function ProfessionalCafeMenuPreview({
   const [selectedPalette, setSelectedPalette] = useState(restaurant.color_palette?.id || "emerald")
   const [isUpdatingPalette, setIsUpdatingPalette] = useState(false)
 
+  // Local state for current palette to enable real-time updates
+  const [currentPalette, setCurrentPalette] = useState(() => 
+    restaurant.color_palette || colorPalettes.find(p => p.id === "emerald")!
+  )
+  
+  // Modal states
+  const [notification, setNotification] = useState<{
+    show: boolean
+    type: "success" | "error" | "warning" | "info"
+    title: string
+    description: string
+  }>({
+    show: false,
+    type: "info",
+    title: "",
+    description: ""
+  })
+  
+  const [confirmAction, setConfirmAction] = useState<{
+    show: boolean
+    title: string
+    description: string
+    action: () => void
+    type?: "danger" | "warning" | "success" | "info"
+  }>({
+    show: false,
+    title: "",
+    description: "",
+    action: () => {},
+    type: "warning"
+  })
+
+  const showNotification = (type: "success" | "error" | "warning" | "info", title: string, description: string) => {
+    setNotification({ show: true, type, title, description })
+  }
+
+  const showConfirmation = (title: string, description: string, action: () => void, type: "danger" | "warning" | "success" | "info" = "warning") => {
+    setConfirmAction({ show: true, title, description, action, type })
+  }
+
   useEffect(() => {
     setCategories(initialCategories)
   }, [initialCategories])
 
-  // Constants for page size calculations (A4 in points) - matching PDF logic
-  const PAGE_CONSTANTS = {
-    A4_HEIGHT: 842,
-    A4_WIDTH: 595,
-    MARGIN: 40,
-    HEADER_HEIGHT: 150,
-    FOOTER_HEIGHT: 80,
-    CATEGORY_HEADER_HEIGHT: 75,
-    ITEM_HEIGHT_SINGLE_COLUMN: 35,
-    ITEM_HEIGHT_DOUBLE_COLUMN: 30,
-    ITEM_WITH_DESCRIPTION_EXTRA: 15,
-  }
-
-  // Calculate available space for content on a page
-  const getAvailablePageHeight = (hasHeader: boolean, hasFooter: boolean): number => {
-    let availableHeight = PAGE_CONSTANTS.A4_HEIGHT - (PAGE_CONSTANTS.MARGIN * 2);
-    
-    if (hasHeader) {
-      availableHeight -= PAGE_CONSTANTS.HEADER_HEIGHT;
-    }
-    
-    if (hasFooter) {
-      availableHeight -= PAGE_CONSTANTS.FOOTER_HEIGHT;
-    }
-    
-    return availableHeight;
-  }
-
-  // Estimate the height needed for a category - matching PDF logic
-  const estimateCategoryHeight = (category: MenuCategory, useDoubleColumn: boolean = true): number => {
-    const validItems = category.menu_items.filter((item) => 
-      item && 
-      item.id && 
-      item.name && 
-      item.is_available &&
-      item.price !== null &&
-      typeof item.price === 'number'
-    );
-
-    if (validItems.length === 0) return PAGE_CONSTANTS.CATEGORY_HEADER_HEIGHT;
-
-    const itemsPerRow = useDoubleColumn ? 2 : 1;
-    const itemHeight = useDoubleColumn ? PAGE_CONSTANTS.ITEM_HEIGHT_DOUBLE_COLUMN : PAGE_CONSTANTS.ITEM_HEIGHT_SINGLE_COLUMN;
-    const rowsNeeded = Math.ceil(validItems.length / itemsPerRow);
-    
-    // Add extra height for items with descriptions
-    const itemsWithDescriptions = validItems.filter(item => item.description && item.description.trim().length > 0).length;
-    const extraDescriptionHeight = Math.ceil(itemsWithDescriptions / itemsPerRow) * PAGE_CONSTANTS.ITEM_WITH_DESCRIPTION_EXTRA;
-    
-    return PAGE_CONSTANTS.CATEGORY_HEADER_HEIGHT + (rowsNeeded * itemHeight) + extraDescriptionHeight;
-  }
-
-  // Organize categories into pages based on content size - matching PDF logic exactly
-  const organizeCategoriesIntoPages = (categories: MenuCategory[]) => {
-    const pages: MenuCategory[][] = [];
-    let currentPage: MenuCategory[] = [];
-    let currentPageHeight = 0;
-    
-    const firstPageAvailableHeight = getAvailablePageHeight(true, false); // Has header, no footer
-    const regularPageAvailableHeight = getAvailablePageHeight(false, false); // No header, no footer
-    const lastPageAvailableHeight = getAvailablePageHeight(false, true); // No header, has footer
-    
-    categories.forEach((category, index) => {
-      const categoryHeight = estimateCategoryHeight(category, false); // Use single column
-      const isFirstPage = pages.length === 0 && currentPage.length === 0;
-      const isLastCategory = index === categories.length - 1;
-      
-      // Determine available height for current page
-      let availableHeight = regularPageAvailableHeight;
-      if (isFirstPage) {
-        availableHeight = firstPageAvailableHeight;
-      }
-      
-      // If this would be the last page and we need to fit the footer, reduce available height
-      const needsFooterSpace = isLastCategory || (currentPageHeight + categoryHeight > availableHeight);
-      if (needsFooterSpace) {
-        availableHeight = Math.min(availableHeight, lastPageAvailableHeight);
-      }
-      
-      // Check if category fits on current page
-      const wouldExceedPage = currentPageHeight + categoryHeight > availableHeight;
-      const isPageEmpty = currentPage.length === 0;
-      
-      if (wouldExceedPage && !isPageEmpty) {
-        // Start new page
-        pages.push([...currentPage]);
-        currentPage = [category];
-        currentPageHeight = categoryHeight;
-      } else {
-        // Add to current page
-        currentPage.push(category);
-        currentPageHeight += categoryHeight;
-      }
-      
-      // If this category alone exceeds page height, it will get wrapped automatically by react-pdf
-      if (categoryHeight > availableHeight) {
-        console.warn(`Category "${category.name}" may be too large for a single page and might get split`);
-      }
-    });
-    
-    // Add the last page if it has content
-    if (currentPage.length > 0) {
-      pages.push(currentPage);
-    }
-
-    // Ensure we have at least one page
-    return pages.length > 0 ? pages : [[]];
-  }
-
-  // Helper function to get page break information for visual indicators
-  const getPageBreaks = (categories: MenuCategory[]): number[] => {
-    const pages = organizeCategoriesIntoPages(categories);
-    const pageBreaks: number[] = [];
-    let categoryIndex = 0;
-    
-    pages.forEach((page, pageIndex) => {
-      if (pageIndex === 0) {
-        pageBreaks.push(0); // First category is always a page break
-      } else {
-        pageBreaks.push(categoryIndex); // Mark categories that start new pages
-      }
-      categoryIndex += page.length;
-    });
-    
-    return pageBreaks;
-  }
-
-  const paginatedCategories = organizeCategoriesIntoPages(categories)
-  const totalPages = paginatedCategories.length
-  const currentPageCategories = paginatedCategories[currentPage - 1] || []
-  const pageBreaks = getPageBreaks(categories) // Get page break indicators
-
-  // Debug pagination logic
+  // Update local palette when restaurant data changes
   useEffect(() => {
-    if (categories.length > 0) {
-      console.log(`Preview Pagination: ${totalPages} pages for ${categories.length} categories`)
-      console.log('Page breaks at category indices:', pageBreaks)
-      paginatedCategories.forEach((page, index) => {
-        console.log(`Page ${index + 1}: ${page.length} categories - ${page.map(c => c.name).join(', ')}`)
-      })
+    if (restaurant.color_palette) {
+      setCurrentPalette(restaurant.color_palette)
+      setSelectedPalette(restaurant.color_palette.id)
     }
-  }, [categories, totalPages, pageBreaks, paginatedCategories])
+  }, [restaurant.color_palette])
 
   const handleAddItem = async (categoryId: string) => {
     const result = await quickAddItem(categoryId, restaurant.id)
@@ -516,8 +450,9 @@ export default function ProfessionalCafeMenuPreview({
           cat.id === categoryId ? { ...cat, menu_items: [...cat.menu_items, result.item as MenuItem] } : cat,
         ),
       )
+      showNotification("success", "تم إضافة العنصر", "تم إضافة عنصر جديد للقائمة بنجاح")
     } else {
-      alert(result.error)
+      showNotification("error", "فشل في إضافة العنصر", result.error || "حدث خطأ غير متوقع")
     }
   }
 
@@ -531,7 +466,10 @@ export default function ProfessionalCafeMenuPreview({
   }
 
   const handleDeleteItem = async (itemId: string) => {
-    if (!confirm("Delete this item?")) return
+    showConfirmation(
+      "حذف العنصر",
+      "هل أنت متأكد من حذف هذا العنصر من القائمة؟",
+      async () => {
     const result = await quickDeleteItem(itemId)
     if (result.success) {
       setCategories((prev) =>
@@ -540,9 +478,13 @@ export default function ProfessionalCafeMenuPreview({
           menu_items: cat.menu_items.filter((item) => item.id !== itemId),
         })),
       )
+          showNotification("success", "تم حذف العنصر", "تم حذف العنصر من القائمة بنجاح")
     } else {
-      alert(result.error)
+          showNotification("error", "فشل في حذف العنصر", result.error || "حدث خطأ غير متوقع")
     }
+      },
+      "danger"
+    )
   }
 
   const handleUpdateCategory = async (categoryId: string, field: string, value: string | null) => {
@@ -550,27 +492,28 @@ export default function ProfessionalCafeMenuPreview({
     if (result.success) {
       setCategories((prev) => prev.map((cat) => (cat.id === categoryId ? { ...cat, [field]: value } : cat)))
     } else {
-      alert(result.error)
+      showNotification("error", "فشل في تحديث القسم", result.error || "حدث خطأ غير متوقع")
       onRefresh() // Revert on error
     }
   }
 
   const handleDeleteCategory = async (categoryId: string) => {
-    if (!confirm("Delete this entire category and all its items?")) return
     const result = await quickDeleteCategory(categoryId)
     if (result.success) {
       setCategories((prev) => prev.filter((cat) => cat.id !== categoryId))
+      showNotification("success", "تم حذف القسم", "تم حذف القسم وجميع عناصره بنجاح")
     } else {
-      alert(result.error)
+      showNotification("error", "فشل في حذف القسم", result.error || "حدث خطأ غير متوقع")
     }
   }
 
   const handleAddCategory = async () => {
-    const result = await quickAddCategory(restaurant.id, "New Category")
+    const result = await quickAddCategory(restaurant.id, "قسم جديد")
     if (result.success && result.category) {
       setCategories((prev) => [...prev, { ...result.category, menu_items: [] }])
+      showNotification("success", "تم إضافة القسم", "تم إضافة قسم جديد للقائمة بنجاح")
     } else {
-      alert(result.error)
+      showNotification("error", "فشل في إضافة القسم", result.error || "حدث خطأ غير متوقع")
     }
   }
 
@@ -621,7 +564,7 @@ export default function ProfessionalCafeMenuPreview({
         .from('restaurant-logos')
         .getPublicUrl(fileName)
 
-      // Update restaurant logo in database
+      // Update restaurant logo
       const { error: updateError } = await supabase
         .from('restaurants')
         .update({ logo_url: publicUrl })
@@ -629,30 +572,30 @@ export default function ProfessionalCafeMenuPreview({
 
       if (updateError) throw updateError
 
-      // Update local state would require parent component refresh
-      onRefresh()
+      onRefresh() // Refresh to get updated restaurant data
+      showNotification("success", "تم تحديث الشعار", "تم رفع شعار المطعم بنجاح")
     } catch (error) {
       console.error('Logo upload error:', error)
-      alert('فشل في رفع الشعار. حاول مرة أخرى.')
+      showNotification("error", "فشل في رفع الشعار", "حدث خطأ أثناء رفع الشعار. حاول مرة أخرى.")
     } finally {
       setIsUploadingLogo(false)
     }
   }
-
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page)
-    }
-  }
-
-  // Get current color palette or default
-  const currentPalette = restaurant.color_palette || colorPalettes.find(p => p.id === "emerald")!
 
   const handleUpdateColorPalette = async (paletteId: string) => {
     setIsUpdatingPalette(true)
     try {
       const palette = colorPalettes.find(p => p.id === paletteId)
       if (!palette) throw new Error('Invalid palette')
+
+      // Update local state immediately for real-time preview
+      setCurrentPalette({
+        id: palette.id,
+        name: palette.name,
+        primary: palette.primary,
+        secondary: palette.secondary,
+        accent: palette.accent
+      })
 
       const { error } = await supabase
         .from('restaurants')
@@ -667,23 +610,28 @@ export default function ProfessionalCafeMenuPreview({
         })
         .eq('id', restaurant.id)
 
-      if (error) throw error
+      if (error) {
+        // Revert local state on error
+        setCurrentPalette(restaurant.color_palette || colorPalettes.find(p => p.id === "emerald")!)
+        throw error
+      }
 
       setSelectedPalette(paletteId)
       setShowColorModal(false)
-      onRefresh() // Refresh to get updated restaurant data
-      alert('تم تحديث لوحة الألوان بنجاح!')
+      showNotification("success", "تم تحديث الألوان", "تم تحديث لوحة الألوان بنجاح")
     } catch (error) {
       console.error('Error updating color palette:', error)
-      alert('فشل في تحديث لوحة الألوان')
+      showNotification("error", "فشل في تحديث الألوان", "حدث خطأ أثناء تحديث لوحة الألوان")
     } finally {
       setIsUpdatingPalette(false)
     }
   }
 
   const handleLoadDummyData = async () => {
-    if (!confirm("هل تريد تحميل بيانات تجريبية؟ سيتم إضافة أقسام وعناصر جديدة للقائمة.")) return
-    
+    showConfirmation(
+      "تحميل بيانات تجريبية",
+      "هل تريد تحميل بيانات تجريبية؟ سيتم إضافة أقسام وعناصر جديدة للقائمة.",
+      async () => {
     setIsLoadingDummy(true)
     try {
       // Get current user for RLS compliance
@@ -720,16 +668,16 @@ export default function ProfessionalCafeMenuPreview({
           const { error: itemError } = await supabase
             .from('menu_items')
             .insert({
-              restaurant_id: restaurant.id, // Add restaurant_id for RLS compliance
+                  restaurant_id: restaurant.id,
               category_id: newCategory.id,
               name: item.name,
               description: item.description,
               price: item.price,
-              is_available: item.is_available !== false, // Default to true if not specified
+                  is_available: item.is_available !== false,
               is_featured: item.is_featured || false,
               dietary_info: item.dietary_info || [],
               display_order: category.menu_items.indexOf(item),
-              image_url: null // Add default null value
+                  image_url: null
             })
 
           if (itemError) {
@@ -740,13 +688,16 @@ export default function ProfessionalCafeMenuPreview({
 
       // Refresh the menu
       onRefresh()
-      alert('تم تحميل البيانات التجريبية بنجاح!')
+          showNotification("success", "تم تحميل البيانات", "تم تحميل البيانات التجريبية بنجاح")
     } catch (error: any) {
       console.error('Error loading dummy data:', error)
-      alert(`فشل في تحميل البيانات التجريبية: ${error.message}`)
+          showNotification("error", "فشل في تحميل البيانات", `فشل في تحميل البيانات التجريبية: ${error.message}`)
     } finally {
       setIsLoadingDummy(false)
     }
+      },
+      "info"
+    )
   }
 
   return (
@@ -760,7 +711,8 @@ export default function ProfessionalCafeMenuPreview({
             }
           `
         }} />
-        <div className="max-w-6xl mx-auto p-8">
+        
+        <div className="max-w-4xl mx-auto p-8"> {/* Changed from max-w-6xl to max-w-4xl for single column */}
           {/* Header */}
           <div className="text-center mb-12 border-b-2 pb-8 flex flex-col items-center justify-center" style={{ borderColor: currentPalette.primary }}>
             <div className="mb-4">
@@ -791,97 +743,14 @@ export default function ProfessionalCafeMenuPreview({
                     />
                   </label>
                 </div>
-                {isUploadingLogo && (
-                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
                   </div>
-                )}
-              </div>
-            </div>
-            <InlineEditable
-              value={restaurant.name}
-              onSave={(value) => console.log("Restaurant name update not implemented yet:", value)}
-              className="text-5xl font-serif text-gray-800 mb-3 text-center"
-              inputClassName="text-center"
-              placeholder="اسم المطعم"
-            />
-            <InlineEditable
-              value="Fine Dining & Artisan Coffee"
-              onSave={(value) => console.log("Subtitle update:", value)}
-              className="text-gray-600 text-lg italic mb-2 text-center"
-              inputClassName="text-center"
-              placeholder="وصف المطعم"
-            />
-            <InlineEditable
-              value="Est. 2018 | Farm to Table | Locally Sourced"
-              onSave={(value) => console.log("Tagline update:", value)}
-              className="text-sm text-gray-500 text-center"
-              inputClassName="text-center"
-              placeholder="شعار المطعم"
-            />
           </div>
 
-          {/* Pagination Toggle */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <Button
-                  onClick={() => setShowPagination(!showPagination)}
-                  variant="outline"
-                  size="sm"
-                  className="border-emerald-600 text-emerald-600 hover:bg-emerald-50"
-                >
-                  {showPagination ? "عرض متواصل" : "عرض صفحات"}
-                </Button>
-                <span className="text-sm text-gray-600">
-                  {showPagination ? `صفحة ${currentPage} من ${totalPages}` : `إجمالي ${categories.length} أقسام`}
-                </span>
-              </div>
-              
-              {showPagination && (
-                <div className="flex items-center gap-2">
-                  <Button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage <= 1}
-                    variant="outline"
-                    size="sm"
-                  >
-                    السابق
-                  </Button>
-                  <span className="text-sm text-gray-600 px-3">
-                    {currentPage} / {totalPages}
-                  </span>
-                  <Button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage >= totalPages}
-                    variant="outline"
-                    size="sm"
-                  >
-                    التالي
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Menu Controls */}
-          {categories.length > 0 && (
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
-                {/* Always show pagination toggle if there's content */}
-                <Button
-                  onClick={() => setShowPagination(!showPagination)}
-                  variant="outline"
-                  size="sm"
-                  className="border-emerald-600 text-emerald-600 hover:bg-emerald-50"
-                >
-                  {showPagination ? "عرض متواصل" : "عرض صفحات"}
-                </Button>
-                <span className="text-sm text-gray-600">
-                  إجمالي {categories.length} أقسام
-                  {showPagination && ` • صفحة ${currentPage} من ${totalPages}`}
-                </span>
-              </div>
+            <h1 className="text-4xl font-serif mb-4" style={{ color: currentPalette.primary }}>
+              {restaurant.name}
+            </h1>
+            
+            <div className="w-24 h-px mx-auto mb-6" style={{ backgroundColor: currentPalette.accent }}></div>
               
               <div className="flex items-center gap-2">
                 <Dialog open={showColorModal} onOpenChange={setShowColorModal}>
@@ -972,49 +841,8 @@ export default function ProfessionalCafeMenuPreview({
                   )}
                   {isLoadingDummy ? "جاري التحميل..." : "إضافة بيانات تجريبية"}
                 </Button>
-                
-                {/* Pagination Toggle Button */}
-                {totalPages > 1 && (
-                  <Button
-                    onClick={() => setShowPagination(!showPagination)}
-                    variant={showPagination ? "default" : "outline"}
-                    size="sm"
-                    className="text-xs"
-                  >
-                    {showPagination ? "📄 نمط PDF" : "📋 نمط متصل"}
-                  </Button>
-                )}
-                
-                {/* Show navigation only when pagination is enabled and there are multiple pages */}
-                {showPagination && totalPages > 1 && (
-                  <>
-                    <Button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage <= 1}
-                      variant="outline"
-                      size="sm"
-                    >
-                      السابق
-                    </Button>
-                    <span className="text-sm text-gray-600 px-3">
-                      صفحة {currentPage} / {totalPages}
-                    </span>
-                    <span className="text-xs text-gray-400 px-2">
-                      ({currentPageCategories.length} أقسام)
-                    </span>
-                    <Button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage >= totalPages}
-                      variant="outline"
-                      size="sm"
-                    >
-                      التالي
-                    </Button>
-                  </>
-                )}
               </div>
             </div>
-          )}
 
           {/* Menu Content */}
           <div className="bg-white shadow-xl rounded-lg" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.1)" }}>
@@ -1022,8 +850,8 @@ export default function ProfessionalCafeMenuPreview({
               {categories.length === 0 ? (
                 <div className="text-center py-20 text-slate-400">
                   <div className="text-8xl mb-6">🍽️</div>
-                  <h3 className="text-2xl font-semibold mb-4 text-slate-600">Your menu awaits</h3>
-                  <p className="text-lg mb-6">Start building your delicious menu</p>
+                  <h3 className="text-2xl font-semibold mb-4 text-slate-600">قائمتك في انتظارك</h3>
+                  <p className="text-lg mb-6">ابدأ في بناء قائمة طعامك اللذيذة</p>
                   <div className="flex flex-col items-center gap-4">
                   <Button
                     onClick={handleAddCategory}
@@ -1037,7 +865,7 @@ export default function ProfessionalCafeMenuPreview({
                     }}
                   >
                     <Plus className="h-5 w-5 mr-2" />
-                    Add First Category
+                      إضافة أول قسم
                   </Button>
                     <div className="text-sm text-slate-500">أو</div>
                     <Button
@@ -1057,57 +885,26 @@ export default function ProfessionalCafeMenuPreview({
                 </div>
               ) : (
                 <>
-                  {/* Show categories with page break indicators */}
-                  {(showPagination && totalPages > 1 ? currentPageCategories : categories).map((category, index) => {
-                    // Calculate the original index for page break detection
-                    const originalIndex = showPagination && totalPages > 1 
-                      ? categories.findIndex(c => c.id === category.id) 
-                      : index;
-                    const isPageBreak = pageBreaks.includes(originalIndex);
-                    
-                    return (
+                  {categories.map((category, index) => (
                       <div key={category.id}>
-                                                 {/* Page Break Indicator */}
-                         {isPageBreak && originalIndex > 0 && !showPagination && (
-                           <div className="my-8 relative">
-                             <div className="absolute inset-0 flex items-center">
-                               <div className="w-full border-t-2 border-dashed border-blue-400"></div>
-                             </div>
-                             <div className="relative flex justify-center text-sm">
-                               <span className="bg-white px-4 py-2 text-blue-600 font-medium rounded-full border border-blue-200 shadow-sm">
-                                 📄 صفحة جديدة في PDF - Page {pageBreaks.indexOf(originalIndex) + 1}
-                               </span>
-                             </div>
-                           </div>
-                         )}
-                        
                         <div onDrop={() => handleDropItem(category.id)}>
                       <MenuSectionPreview
                         title={category.name}
                         sectionData={category}
-                        columns={
-                          category.name.toLowerCase().includes("appetizer") ||
-                          category.name.toLowerCase().includes("starter") ||
-                          category.name.toLowerCase().includes("beverage") ||
-                          category.name.toLowerCase().includes("dessert")
-                            ? 2
-                            : 1
-                        }
                         onAddItem={handleAddItem}
                         onUpdateItem={handleUpdateItem}
                         onDeleteItem={handleDeleteItem}
                         moveItem={moveItem}
                         onUpdateCategory={handleUpdateCategory}
                         onDeleteCategory={handleDeleteCategory}
+                          onRefresh={onRefresh}
                         colorPalette={currentPalette}
                       />
                     </div>
                       </div>
-                    );
-                  })}
+                  ))}
                   
                   {/* Add Category Button */}
-                  {(!showPagination || currentPage === totalPages) && (
                   <div className="text-center py-8 border-t-2 border-gray-200">
                     <Button
                       onClick={handleAddCategory}
@@ -1128,10 +925,9 @@ export default function ProfessionalCafeMenuPreview({
                       }}
                     >
                       <Plus className="h-4 w-4 mr-2" />
-                      Add New Category
+                      إضافة قسم جديد
                     </Button>
                   </div>
-                  )}
                 </>
               )}
             </div>
@@ -1143,25 +939,25 @@ export default function ProfessionalCafeMenuPreview({
               <div className="grid md:grid-cols-3 gap-6 text-sm text-gray-600">
                 <div>
                   <InlineEditable
-                    value="Hours"
+                    value="ساعات العمل"
                     onSave={(value) => console.log("Hours title update:", value)}
                     className="font-serif text-gray-800 mb-2 block text-center"
                     placeholder="عنوان الساعات"
                   />
                   <InlineEditable
-                    value="Monday - Thursday: 7:00 AM - 9:00 PM"
+                    value="الاثنين - الخميس: 7:00 ص - 9:00 م"
                     onSave={(value) => console.log("Hours 1 update:", value)}
                     className="block text-center"
                     placeholder="ساعات العمل"
                   />
                   <InlineEditable
-                    value="Friday - Saturday: 7:00 AM - 10:00 PM"
+                    value="الجمعة - السبت: 7:00 ص - 10:00 م"
                     onSave={(value) => console.log("Hours 2 update:", value)}
                     className="block text-center"
                     placeholder="ساعات نهاية الأسبوع"
                   />
                   <InlineEditable
-                    value="Sunday: 8:00 AM - 8:00 PM"
+                    value="الأحد: 8:00 ص - 8:00 م"
                     onSave={(value) => console.log("Hours 3 update:", value)}
                     className="block text-center"
                     placeholder="ساعات الأحد"
@@ -1169,68 +965,70 @@ export default function ProfessionalCafeMenuPreview({
                 </div>
                 <div>
                   <InlineEditable
-                    value="Location"
-                    onSave={(value) => console.log("Location title update:", value)}
+                    value="العنوان"
+                    onSave={(value) => console.log("Address title update:", value)}
                     className="font-serif text-gray-800 mb-2 block text-center"
-                    placeholder="عنوان الموقع"
+                    placeholder="عنوان القسم"
                   />
                   <InlineEditable
-                    value="425 Heritage Boulevard"
-                    onSave={(value) => console.log("Address 1 update:", value)}
+                    value="123 شارع الطعام"
+                    onSave={(value) => console.log("Address update:", value)}
                     className="block text-center"
-                    placeholder="العنوان الأول"
+                    placeholder="العنوان"
                   />
                   <InlineEditable
-                    value="Downtown Arts District"
-                    onSave={(value) => console.log("Address 2 update:", value)}
+                    value="المدينة، المنطقة 12345"
+                    onSave={(value) => console.log("City update:", value)}
                     className="block text-center"
-                    placeholder="المنطقة"
-                  />
-                  <InlineEditable
-                    value="Reservations: (555) 234-5678"
-                    onSave={(value) => console.log("Phone update:", value)}
-                    className="block text-center"
-                    placeholder="رقم الهاتف"
+                    placeholder="المدينة والرمز البريدي"
                   />
                 </div>
                 <div>
                   <InlineEditable
-                    value="Notes"
-                    onSave={(value) => console.log("Notes title update:", value)}
+                    value="التواصل"
+                    onSave={(value) => console.log("Contact title update:", value)}
                     className="font-serif text-gray-800 mb-2 block text-center"
-                    placeholder="عنوان الملاحظات"
+                    placeholder="عنوان التواصل"
                   />
                   <InlineEditable
-                    value="Gluten-free options available"
-                    onSave={(value) => console.log("Note 1 update:", value)}
+                    value="(555) 123-4567"
+                    onSave={(value) => console.log("Phone update:", value)}
                     className="block text-center"
-                    placeholder="ملاحظة 1"
+                    placeholder="رقم الهاتف"
                   />
                   <InlineEditable
-                    value="Locally sourced ingredients"
-                    onSave={(value) => console.log("Note 2 update:", value)}
+                    value="info@restaurant.com"
+                    onSave={(value) => console.log("Email update:", value)}
                     className="block text-center"
-                    placeholder="ملاحظة 2"
-                  />
-                  <InlineEditable
-                    value="18% gratuity added to parties of 6+"
-                    onSave={(value) => console.log("Note 3 update:", value)}
-                    className="block text-center"
-                    placeholder="ملاحظة 3"
+                    placeholder="البريد الإلكتروني"
                   />
                 </div>
               </div>
             </div>
-
-            <InlineEditable
-              value="Please inform your server of any allergies or dietary restrictions"
-              onSave={(value) => console.log("Footer note update:", value)}
-              className="text-xs text-gray-500 italic text-center"
-              placeholder="ملاحظة الحساسية"
-            />
           </div>
         </div>
       </div>
+
+      {/* Global Modals */}
+      <ConfirmationModal
+        isOpen={confirmAction.show}
+        onClose={() => setConfirmAction(prev => ({ ...prev, show: false }))}
+        onConfirm={() => {
+          confirmAction.action()
+          setConfirmAction(prev => ({ ...prev, show: false }))
+        }}
+        title={confirmAction.title}
+        description={confirmAction.description}
+        type={confirmAction.type}
+      />
+
+      <NotificationModal
+        isOpen={notification.show}
+        onClose={() => setNotification(prev => ({ ...prev, show: false }))}
+        title={notification.title}
+        description={notification.description}
+        type={notification.type}
+      />
     </DndProvider>
   )
 }

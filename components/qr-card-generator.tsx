@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useTransition } from "react"
 import { QRCodeCanvas } from "qrcode.react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -9,11 +9,13 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input" // Added Input for color pickers
 import { Switch } from "@/components/ui/switch" // Added Switch for toggle
 import { Loader2, Download, Printer, LinkIcon, Check } from "lucide-react"
-import { generateQrCardPdf } from "@/lib/actions/qr-card-actions" // New server action
+import { generateAndSaveQrCardPdf } from "@/lib/actions/qr-card-actions" // New server action
 import { useActionState } from "react"
 import Image from "next/image"
 // Add new imports for Select components
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { pdf } from "@react-pdf/renderer"
+import { QRCardPDF } from "@/components/pdf/qr-card-pdf"
 
 interface Restaurant {
   id: string
@@ -26,6 +28,25 @@ interface QrCardGeneratorProps {
   menuPublicUrl: string // The URL the QR code will point to
 }
 
+// Function to generate QR code using web API (same as server-side)
+async function generateQrCodeDataUrl(url: string, size: number = 200): Promise<string> {
+  try {
+    const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(url)}&format=png&ecc=H`
+    
+    const response = await fetch(qrApiUrl)
+    if (!response.ok) {
+      throw new Error(`QR API request failed: ${response.status}`)
+    }
+    
+    const buffer = await response.arrayBuffer()
+    const base64 = Buffer.from(buffer).toString('base64')
+    return `data:image/png;base64,${base64}`
+  } catch (error) {
+    console.error('Error generating QR code:', error)
+    throw new Error('Failed to generate QR code')
+  }
+}
+
 export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGeneratorProps) {
   const [customText, setCustomText] = useState("امسح الكود لعرض قائمتنا الرقمية!")
   // Replace the existing useState for cardBgColor and textColor
@@ -36,7 +57,9 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
   const [qrCodeSize, setQrCodeSize] = useState(200) // Default QR code size in pixels
   const [showBorder, setShowBorder] = useState(false) // Default no border
   const [borderColor, setBorderColor] = useState("#000000") // Default black border
-  const [state, formAction, isPending] = useActionState(generateQrCardPdf, null)
+  const [cardName, setCardName] = useState("QR Card")
+  const [isPending, startTransition] = useTransition()
+  const [state, formAction] = useActionState(generateAndSaveQrCardPdf, null)
 
   // Define predefined color options
   const colorOptions = [
@@ -57,9 +80,72 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
     { name: "كلاهما (أعلى ومنتصف)", value: "both" },
   ]
 
-  const handleGeneratePdf = async () => {
-    // This function is no longer needed as formAction will be directly on the form
-    // The form will automatically collect inputs into FormData
+  const handleGeneratePdf = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    startTransition(async () => {
+      try {
+        // Generate QR code data URL
+        const qrCodeDataUrl = await generateQrCodeDataUrl(menuPublicUrl, qrCodeSize)
+
+        // Prepare restaurant data for PDF
+        const restaurantData = {
+          id: restaurant.id,
+          name: restaurant.name,
+          logo_url: restaurant.logo_url || undefined,
+          color_palette: {
+            primary: "#10b981",
+            secondary: "#059669",
+            accent: "#34d399"
+          }
+        }
+
+        // Prepare QR card options
+        const options = {
+          customText,
+          cardBgColor,
+          textColor,
+          qrCodeSize,
+          showBorder,
+          borderColor,
+          logoPosition: logoPosition as 'none' | 'top' | 'middle' | 'both'
+        }
+
+        // Generate PDF using React PDF (client-side)
+        const pdfBlob = await pdf(
+          QRCardPDF({
+            restaurant: restaurantData,
+            qrCodeUrl: menuPublicUrl,
+            qrCodeDataUrl,
+            options
+          })
+        ).toBlob()
+
+        // Create FormData to send to server action
+        const formData = new FormData()
+        formData.append("pdfFile", pdfBlob, `${cardName}.pdf`)
+        formData.append("restaurantId", restaurant.id)
+        formData.append("cardName", cardName)
+        formData.append("qrCodeUrl", menuPublicUrl)
+        formData.append("customText", customText)
+        formData.append("cardOptions", JSON.stringify({
+          cardBgColor,
+          textColor,
+          qrCodeSize,
+          showBorder,
+          borderColor,
+          logoPosition,
+          restaurantName: restaurant.name,
+          restaurantLogoUrl: restaurant.logo_url
+        }))
+
+        // Call server action inside transition
+        await formAction(formData)
+      } catch (error: any) {
+        console.error("PDF generation error:", error)
+        // Handle error - you might want to show an error state
+      }
+    })
   }
 
   return (
@@ -69,26 +155,25 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
         <CardDescription className="text-slate-300">صمم بطاقة QR مخصصة لطاولات مطعمك أو مقهاك.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <form action={formAction} className="space-y-6">
-          {" "}
-          {/* Wrap content in a form */}
-          {/* Hidden fields for server action */}
-          <input type="hidden" name="restaurantName" value={restaurant.name} />
-          <input type="hidden" name="restaurantLogoUrl" value={restaurant.logo_url || ""} />
-          <input type="hidden" name="qrCodeUrl" value={menuPublicUrl} />
-          <input type="hidden" name="cardBgColor" value={cardBgColor} />
-          <input type="hidden" name="textColor" value={textColor} />
-          <input type="hidden" name="qrCodeSize" value={qrCodeSize.toString()} />
-          <input type="hidden" name="showBorder" value={showBorder ? "on" : "off"} />
-          <input type="hidden" name="borderColor" value={borderColor} />
-          <input type="hidden" name="logoPosition" value={logoPosition} />
+        <form onSubmit={handleGeneratePdf} className="space-y-6">
+          <div className="space-y-4">
+            <Label htmlFor="cardName" className="text-slate-300">
+              اسم البطاقة
+            </Label>
+            <Input
+              id="cardName"
+              value={cardName}
+              onChange={(e) => setCardName(e.target.value)}
+              placeholder="اسم البطاقة (مثل: بطاقة QR - مطعم الورد)"
+              className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 transition-all duration-200"
+            />
+          </div>
           <div className="space-y-4">
             <Label htmlFor="customText" className="text-slate-300">
               نص مخصص للبطاقة
             </Label>
             <Textarea
               id="customText"
-              name="customText" // Add name prop for form submission
               value={customText}
               onChange={(e) => setCustomText(e.target.value)}
               placeholder="اكتب نصًا هنا ليظهر على بطاقة QR الخاصة بك..."
@@ -149,7 +234,6 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
               </Label>
               <Input
                 id="qrCodeSize"
-                name="qrCodeSize" // Add name prop
                 type="number"
                 value={qrCodeSize}
                 onChange={(e) => setQrCodeSize(Number.parseInt(e.target.value) || 0)}
@@ -180,8 +264,7 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
               <Label htmlFor="showBorder" className="text-slate-300 cursor-pointer">
                 إظهار الحدود
               </Label>
-              <Switch id="showBorder" name="showBorder" checked={showBorder} onCheckedChange={setShowBorder} />{" "}
-              {/* Add name prop */}
+              <Switch id="showBorder" checked={showBorder} onCheckedChange={setShowBorder} />
             </div>
             {showBorder && (
               <div className="space-y-2 col-span-full md:col-span-1">
@@ -190,7 +273,6 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
                 </Label>
                 <Input
                   id="borderColor"
-                  name="borderColor" // Add name prop
                   type="color"
                   value={borderColor}
                   onChange={(e) => setBorderColor(e.target.value)}
@@ -257,7 +339,7 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
             </p>
           </div>
           <Button
-            type="submit" // Change type to submit
+            type="submit"
             disabled={isPending}
             className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white py-6 text-lg font-medium rounded-xl h-[60px] transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-emerald-500/25"
           >
@@ -289,8 +371,7 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
               </Button>
             </div>
           )}
-        </form>{" "}
-        {/* End of form */}
+        </form>
       </CardContent>
     </Card>
   )

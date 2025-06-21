@@ -15,11 +15,11 @@ Font.register({
 Font.register({
   family: 'NotoKufiArabic',
   fonts: [
-    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Noto_Kufi_Arabic/static/NotoKufiArabic-Regular.ttf', fontWeight: 'normal' },
-    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Noto_Kufi_Arabic/static/NotoKufiArabic-Bold.ttf', fontWeight: 'bold' },
-    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Noto_Kufi_Arabic/static/NotoKufiArabic-Light.ttf', fontWeight: 300 },
-    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Noto_Kufi_Arabic/static/NotoKufiArabic-Medium.ttf', fontWeight: 500 },
-    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Noto_Kufi_Arabic/static/NotoKufiArabic-SemiBold.ttf', fontWeight: 600 },
+    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Rubik-Regular.ttf', fontWeight: 'normal' },
+    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Rubik-Regular.ttf', fontWeight: 'bold' },
+    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Rubik-Regular.ttf', fontWeight: 300 },
+    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Rubik-Regular.ttf', fontWeight: 500 },
+    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Rubik-Regular.ttf', fontWeight: 600 },
   ]
 });
 
@@ -60,106 +60,115 @@ interface Restaurant {
   }
 }
 
-// Updated styles to match React component
+// Improved styles with better proportions and spacing
 const styles = StyleSheet.create({
   page: {
     fontFamily: "Cairo",
-    backgroundColor: "#f8fafc", // Match React's bg-gray-50
-    padding: 0,
-    margin: 0,
-    minHeight: "100vh",
+    backgroundColor: "#ffffff",
+    padding: 20,
+    fontSize: 12,
   },
   documentContainer: {
-    maxWidth: 1152, // Match React's max-w-6xl
-    marginHorizontal: "auto",
-    padding: 32, // Match React's p-8
+    maxWidth: "100%",
     flex: 1,
     display: "flex",
     flexDirection: "column",
   },
-  // Header styling to match React component
+  // Header styling - more compact
   header: {
     textAlign: "center",
-    marginBottom: 48, // Match React's mb-12
-    paddingBottom: 32, // Match React's pb-8
-    borderBottomWidth: 2,
-    borderBottomColor: "#10b981", // Will be overridden by color palette
-    position: "relative",
+    marginBottom: 24,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
     alignItems: "center",
     justifyContent: "center",
   },
   logoContainer: {
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 12,
   },
   logoImage: {
-    width: 96, // Match React's w-24 h-24
-    height: 96,
-    borderRadius: 48,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     objectFit: "cover",
-    borderWidth: 0,
-    marginBottom: 16,
+    marginBottom: 8,
   },
   logoText: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: "#10b981",
     color: "#ffffff",
-    fontSize: 24, // Match React's text-2xl
+    fontSize: 16,
     fontWeight: "bold",
     textAlign: "center",
-    lineHeight: 96,
-    fontFamily: "Cairo", // Match React's font-serif
-    marginBottom: 16,
+    lineHeight: 60,
+    fontFamily: "Cairo",
+    marginBottom: 8,
   },
-  // Updated title styling to match React
   title: {
-    fontSize: 48, // Match React's text-5xl
+    fontSize: 24,
     color: "#1f2937",
     fontWeight: "bold",
-    marginBottom: 12, // Match React's mb-3
+    marginBottom: 8,
     textAlign: "center",
-    fontFamily: "Cairo", // Match React's font-serif
-    letterSpacing: 0.5,
+    fontFamily: "Cairo",
   },
   subtitle: {
-    fontSize: 18, // Match React's text-lg
+    fontSize: 14,
     color: "#6b7280",
-    marginBottom: 8, // Match React's mb-2
+    marginBottom: 4,
     textAlign: "center",
     fontFamily: "Cairo",
-    fontStyle: "italic",
   },
   tagline: {
-    fontSize: 14, // Match React's text-sm
+    fontSize: 12,
     color: "#6b7280",
     textAlign: "center",
     fontFamily: "Cairo",
   },
-  // Main content container to match React's white card
-  mainContent: {
-    backgroundColor: "#ffffff",
-    borderRadius: 8, // Match React's rounded-lg
-    padding: 48, // Match React's p-12
-    marginBottom: 32,
-    // Shadow effect (approximated for PDF)
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-  },
-  // Category styling to match React component
+  // Category styling - more compact
   categoryContainer: {
-    marginBottom: 32, // Increased spacing
+    marginBottom: 20,
     pageBreakInside: "avoid",
   },
   categoryHeader: {
-    position: "relative",
-    marginBottom: 24,
-    height: 120, // Increased height
-    borderRadius: 16, // Increased border radius
+    marginBottom: 12,
+    height: 80,
+    borderRadius: 8,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
+    position: "relative",
+    borderLeftWidth: 4,
+    borderLeftColor: "#10b981",
+  },
+  categoryHeaderNoImage: {
+    marginBottom: 12,
+    height: 80,
+    borderRadius: 8,
+    position: "relative",
+    overflow: "hidden",
+  },
+  categoryGradientBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: "100%",
+    height: "100%",
+  },
+  categoryGradientOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 16,
   },
   categoryBackgroundImage: {
     position: "absolute",
@@ -177,234 +186,209 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
-    padding: 24,
+    padding: 16,
   },
   categoryTitle: {
-    fontSize: 28, // Increased font size
+    fontSize: 18,
     color: "#ffffff",
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 12,
     fontFamily: "NotoKufiArabic",
-    letterSpacing: 0.5,
+    marginBottom: 6,
+    textShadow: "0 2px 4px rgba(0,0,0,0.5)",
+  },
+  categoryTitleNoImage: {
+    fontSize: 18,
+    color: "#ffffff",
+    fontWeight: "bold",
+    textAlign: "center",
+    fontFamily: "NotoKufiArabic",
+    marginBottom: 6,
     textShadow: "0 2px 4px rgba(0,0,0,0.3)",
   },
   categoryDivider: {
-    width: 100, // Increased width
-    height: 4,
-    backgroundColor: "#10b981",
-    borderRadius: 2,
+    width: 60,
+    height: 2,
+    backgroundColor: "#ffffff",
+    borderRadius: 1,
+    alignSelf: "center",
   },
-  // Items container
-  itemsContainer: {
-    paddingHorizontal: 8,
+  categoryDividerNoImage: {
+    width: 60,
+    height: 2,
+    backgroundColor: "#ffffff",
+    borderRadius: 1,
+    alignSelf: "center",
   },
-  itemWrapper: {
-    marginBottom: 20, // Increased spacing
-    paddingBottom: 20,
+  // Menu items styling - properly defined
+  itemContainer: {
+    marginBottom: 12,
+    paddingBottom: 12,
     borderBottomColor: "#f3f4f6",
     borderBottomWidth: 1,
     pageBreakInside: "avoid",
   },
-  itemWrapperFull: {
-    marginBottom: 20,
-    paddingBottom: 20,
-    borderBottomColor: "#f3f4f6",
-    borderBottomWidth: 1,
-    pageBreakInside: "avoid",
-  },
-  // Enhanced LTR layout
-  itemHeaderLTR: {
+  itemRowLTR: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 8,
   },
-  itemNameLTR: {
-    fontSize: 16, // Slightly larger
-    color: "#1f2937",
-    fontWeight: "bold",
-    flex: 1,
-    paddingRight: 16,
-    textAlign: "left",
-    fontFamily: "Cairo",
-    lineHeight: 1.4,
-  },
-  // Enhanced RTL layout
-  itemHeaderRTL: {
+  itemRowRTL: {
     flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 8,
   },
-  itemNameRTL: {
-    fontSize: 16,
-    color: "#1f2937",
-    fontWeight: "bold",
+  itemContentLTR: {
+    flex: 1,
+    paddingRight: 16,
+  },
+  itemContentRTL: {
     flex: 1,
     paddingLeft: 16,
-    textAlign: "right",
-    fontFamily: "NotoKufiArabic",
-    lineHeight: 1.4,
   },
-  priceContainer: {
+  featuredContainer: {
     flexDirection: "row",
     alignItems: "center",
-    minWidth: 100,
-    justifyContent: "flex-end",
+    marginBottom: 4,
   },
-  priceDots: {
-    flex: 1,
-    maxWidth: 80,
-    borderBottomColor: "#d1d5db",
-    borderBottomWidth: 1,
-    borderStyle: "dotted",
-    marginHorizontal: 12,
-    height: 1,
+  featuredBadge: {
+    fontSize: 10,
+    color: "#f59e0b",
+    marginRight: 4,
   },
-  itemPrice: {
-    fontSize: 16, // Larger price font
+  itemNameLTR: {
+    fontSize: 14,
+    color: "#1f2937",
+    fontWeight: "bold",
+    marginBottom: 4,
+    textAlign: "left",
+    fontFamily: "Cairo",
+    lineHeight: 1.3,
+  },
+  itemNameRTL: {
+    fontSize: 14,
+    color: "#1f2937",
+    fontWeight: "bold",
+    marginBottom: 4,
+    textAlign: "right",
+    fontFamily: "NotoKufiArabic",
+    lineHeight: 1.3,
+  },
+  itemDescriptionLTR: {
+    fontSize: 11,
+    color: "#6b7280",
+    lineHeight: 1.4,
+    textAlign: "left",
+    fontFamily: "Cairo",
+  },
+  itemDescriptionRTL: {
+    fontSize: 11,
+    color: "#6b7280",
+    lineHeight: 1.4,
+    textAlign: "right",
+    fontFamily: "NotoKufiArabic",
+  },
+  priceContainer: {
+    minWidth: 80,
+    alignItems: "flex-end",
+  },
+  priceBox: {
+    backgroundColor: "#fef3c7",
+    borderColor: "#f59e0b",
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  priceText: {
+    fontSize: 13,
     color: "#d97706",
     fontWeight: "bold",
     fontFamily: "Cairo",
-    minWidth: 60,
-    textAlign: "right",
-    backgroundColor: "#fef3c7",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
+    textAlign: "center",
   },
-  itemDescriptionLTR: {
-    fontSize: 12,
-    color: "#6b7280",
-    lineHeight: 1.5,
-    textAlign: "left",
-    fontFamily: "Cairo",
-    marginTop: 6,
-    paddingLeft: 4,
-  },
-  itemDescriptionRTL: {
-    fontSize: 12,
-    color: "#6b7280",
-    lineHeight: 1.5,
-    textAlign: "right",
-    fontFamily: "NotoKufiArabic",
-    marginTop: 6,
-    paddingRight: 4,
-  },
-  featuredBadge: {
-    fontSize: 14,
-    color: "#f59e0b",
-    marginLeft: 6,
-    marginRight: 6,
-  },
-  // Footer styling to match React component
+  // Footer styling - more compact
   footer: {
-    marginTop: 32,
-    backgroundColor: "#ffffff",
-    padding: 24,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    position: "relative",
+    marginTop: 24,
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#e5e7eb",
   },
-  footerGrid: {
+  footerContent: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 16,
+    marginBottom: 12,
   },
   footerSection: {
     width: "30%",
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
   },
   footerTitle: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#1f2937",
     fontWeight: "bold",
-    marginBottom: 8,
+    marginBottom: 6,
     textAlign: "center",
-    fontFamily: "Cairo", // Match React's font-serif
+    fontFamily: "Cairo",
     borderBottomWidth: 1,
     borderBottomColor: "#e5e7eb",
-    paddingBottom: 4,
+    paddingBottom: 3,
   },
   footerText: {
-    fontSize: 12,
+    fontSize: 10,
     color: "#6b7280",
-    marginBottom: 4,
+    marginBottom: 3,
     textAlign: "center",
     fontFamily: "Cairo",
-    lineHeight: 1.4,
+    lineHeight: 1.3,
   },
   footerNote: {
-    fontSize: 10,
+    fontSize: 9,
     color: "#9ca3af",
     textAlign: "center",
-    marginTop: 16,
+    marginTop: 12,
     fontFamily: "Cairo",
-    fontStyle: "italic",
     borderTopWidth: 1,
     borderTopColor: "#e5e7eb",
-    paddingTop: 12,
+    paddingTop: 8,
   },
-  // Page break indicator (for visual reference)
+  // Page break indicator
   pageBreakIndicator: {
-    marginVertical: 32,
+    marginVertical: 20,
     position: "relative",
     alignItems: "center",
   },
   pageBreakLine: {
     width: "100%",
-    height: 2,
+    height: 1,
     backgroundColor: "#3b82f6",
     borderStyle: "dashed",
   },
   pageBreakText: {
     position: "absolute",
     backgroundColor: "#ffffff",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    fontSize: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    fontSize: 10,
     color: "#3b82f6",
     fontWeight: "500",
-    borderRadius: 20,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: "#93c5fd",
   },
 })
 
-// Helper to get section image based on category name
-const getSectionImage = (categoryName: string) => {
-  const sectionImages = {
-    appetizers: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=300&fit=crop",
-    mains: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&h=300&fit=crop",
-    beverages: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop",
-    desserts: "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400&h=300&fit=crop",
-  }
-
-  const lowerCaseName = categoryName.toLowerCase()
-  if (lowerCaseName.includes("appetizer") || lowerCaseName.includes("starter") || lowerCaseName.includes("مقبلات")) return sectionImages.appetizers
-  if (lowerCaseName.includes("main") || lowerCaseName.includes("أطباق رئيسية")) return sectionImages.mains
-  if (lowerCaseName.includes("beverage") || lowerCaseName.includes("coffee") || lowerCaseName.includes("drink") || lowerCaseName.includes("مشروبات"))
-    return sectionImages.beverages
-  if (lowerCaseName.includes("dessert") || lowerCaseName.includes("حلويات")) return sectionImages.desserts
-  return sectionImages.mains // Default fallback
-}
-
 const MenuSectionPDF = ({
   title,
   sectionData,
-  columns = 1,
   colorPalette,
 }: {
   title: string
   sectionData: MenuCategory
-  columns?: 1 | 2
   colorPalette?: Restaurant['color_palette']
 }) => {
   // Safety checks
@@ -414,6 +398,12 @@ const MenuSectionPDF = ({
         <Text style={styles.categoryTitle}>No items available</Text>
       </View>
     )
+  }
+
+  const safeColorPalette = colorPalette || {
+    primary: "#10b981",
+    secondary: "#059669",
+    accent: "#34d399"
   }
 
   // Filter valid items
@@ -429,66 +419,87 @@ const MenuSectionPDF = ({
   if (validItems.length === 0) {
     return (
       <View style={styles.categoryContainer}>
-        <View style={styles.categoryHeader} wrap={false}>
-          <Image
-            src={sectionData.background_image_url || getSectionImage(title)}
-            style={styles.categoryBackgroundImage} 
-          />
-          <View style={[styles.categoryOverlay, colorPalette ? { backgroundColor: `${colorPalette.primary}90` } : {}]}>
-            <Text style={styles.categoryTitle}>{title}</Text>
-            <View style={[styles.categoryDivider, colorPalette ? { backgroundColor: colorPalette.accent } : {}]} />
-          </View>
+        <View style={[styles.categoryHeader, { borderLeftColor: safeColorPalette.primary }]}>
+          <Text style={styles.categoryTitle}>{title}</Text>
+          <View style={[styles.categoryDivider, { backgroundColor: safeColorPalette.primary }]} />
         </View>
         <Text style={styles.itemDescriptionLTR}>No available items in this category</Text>
       </View>
     )
   }
 
+  const titleIsRTL = getTextDirection(title) === 'rtl'
+
   return (
-    <View style={styles.categoryContainer} wrap={false}>
-      <View style={styles.categoryHeader}>
-        <Image
-          src={sectionData.background_image_url || getSectionImage(title)}
-          style={styles.categoryBackgroundImage} 
-        />
-        <View style={[styles.categoryOverlay, colorPalette ? { backgroundColor: `${colorPalette.primary}90` } : {}]}>
-          <Text style={styles.categoryTitle}>{title}</Text>
-          <View style={[styles.categoryDivider, colorPalette ? { backgroundColor: colorPalette.accent } : {}]} />
+    <View style={styles.categoryContainer}>
+      {sectionData.background_image_url ? (
+        <View style={[styles.categoryHeader, { borderLeftColor: safeColorPalette.primary }]}>
+          <Image src={sectionData.background_image_url} style={styles.categoryBackgroundImage} />
+          <View style={styles.categoryOverlay}>
+            <Text style={[
+              styles.categoryTitle, 
+              titleIsRTL ? { fontFamily: 'NotoKufiArabic' } : { fontFamily: 'Cairo' }
+            ]}>
+              {title}
+            </Text>
+            <View style={styles.categoryDivider} />
+          </View>
         </View>
-      </View>
+      ) : (
+        <View style={styles.categoryHeaderNoImage}>
+          <View 
+            style={[
+              styles.categoryGradientBackground,
+              { backgroundColor: safeColorPalette.primary }
+            ]} 
+          />
+          <View style={styles.categoryGradientOverlay}>
+            <Text style={[
+              styles.categoryTitleNoImage, 
+              titleIsRTL ? { fontFamily: 'NotoKufiArabic' } : { fontFamily: 'Cairo' }
+            ]}>
+              {title}
+            </Text>
+            <View style={styles.categoryDividerNoImage} />
+          </View>
+        </View>
+      )}
 
-      <View style={styles.itemsContainer}>
-        {validItems.map((item, index) => {
-          const itemIsRTL = getTextDirection(item.name) === 'rtl';
-          const ItemWrapper = columns === 2 ? styles.itemWrapper : styles.itemWrapperFull;
+      {validItems.map((item) => {
+        const itemIsRTL = getTextDirection(item.name) === 'rtl'
+        const descriptionIsRTL = item.description ? getTextDirection(item.description) === 'rtl' : itemIsRTL
 
-          return (
-            <View key={item.id} style={ItemWrapper}>
-              <View style={itemIsRTL ? styles.itemHeaderRTL : styles.itemHeaderLTR}>
-                <View style={{ flexDirection: itemIsRTL ? 'row-reverse' : 'row', flex: 1, alignItems: 'center' }}>
-                  {item.is_featured && (
+        return (
+          <View key={item.id} style={styles.itemContainer} wrap={false}>
+            <View style={itemIsRTL ? styles.itemRowRTL : styles.itemRowLTR}>
+              <View style={itemIsRTL ? styles.itemContentRTL : styles.itemContentLTR}>
+                {item.is_featured && (
+                  <View style={[styles.featuredContainer, itemIsRTL ? { justifyContent: 'flex-end' } : { justifyContent: 'flex-start' }]}>
                     <Text style={styles.featuredBadge}>⭐</Text>
-                  )}
-                  <Text style={itemIsRTL ? styles.itemNameRTL : styles.itemNameLTR}>
-                    {item.name}
+                    <Text style={[styles.featuredBadge, { fontSize: 10 }]}>مميز</Text>
+                  </View>
+                )}
+                <Text style={itemIsRTL ? styles.itemNameRTL : styles.itemNameLTR}>
+                  {item.name}
+                </Text>
+                {item.description && (
+                  <Text style={descriptionIsRTL ? styles.itemDescriptionRTL : styles.itemDescriptionLTR}>
+                    {item.description}
                   </Text>
-                </View>
-                <View style={styles.priceContainer}>
-                  <View style={styles.priceDots} />
-                  <Text style={[styles.itemPrice, colorPalette ? { color: colorPalette.secondary, backgroundColor: `${colorPalette.secondary}15` } : {}]}>
+                )}
+              </View>
+              
+              <View style={styles.priceContainer}>
+                <View style={[styles.priceBox, { borderColor: safeColorPalette.secondary, backgroundColor: `${safeColorPalette.secondary}20` }]}>
+                  <Text style={[styles.priceText, { color: safeColorPalette.secondary }]}>
                     ${item.price!.toFixed(2)}
                   </Text>
                 </View>
               </View>
-              {item.description && (
-                <Text style={getTextDirection(item.description) === 'rtl' ? styles.itemDescriptionRTL : styles.itemDescriptionLTR}>
-                  {item.description}
-                </Text>
-              )}
             </View>
-          )
-        })}
-      </View>
+          </View>
+        )
+      })}
     </View>
   )
 }
@@ -497,8 +508,8 @@ export const CafeMenuPDF = ({
   restaurant, 
   categories, 
   qrCodeUrl, 
-  showQrCode = false, // Default to false to match React component
-  pageBreaks = [] as number[] // Add page breaks array
+  showQrCode = false,
+  pageBreaks = [] as number[]
 }: { 
   restaurant: Restaurant; 
   categories: MenuCategory[];
@@ -529,6 +540,12 @@ export const CafeMenuPDF = ({
         </Page>
       </Document>
     )
+  }
+
+  const safeColorPalette = restaurant.color_palette || {
+    primary: "#10b981",
+    secondary: "#059669",
+    accent: "#34d399"
   }
 
   // Filter valid categories with items
@@ -562,61 +579,39 @@ export const CafeMenuPDF = ({
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" style={styles.page} wrap>
         <View style={styles.documentContainer}>
-          {/* Header matching React component */}
-          <View style={[styles.header, restaurant.color_palette ? { borderBottomColor: restaurant.color_palette.primary } : {}]}>
+          {/* Header */}
+          <View style={[styles.header, { borderBottomColor: safeColorPalette.primary }]}>
             <View style={styles.logoContainer}>
               {restaurant.logo_url ? (
                 <Image src={restaurant.logo_url} style={styles.logoImage} />
               ) : (
-                <Text style={[styles.logoText, restaurant.color_palette ? { backgroundColor: restaurant.color_palette.primary } : {}]}>
+                <Text style={[styles.logoText, { backgroundColor: safeColorPalette.primary }]}>
                   {restaurant.name.substring(0, 2).toUpperCase()}
                 </Text>
               )}
             </View>
-            <Text style={[styles.title, restaurant.color_palette ? { color: restaurant.color_palette.primary } : {}]}>
+            <Text style={[styles.title, { color: safeColorPalette.primary }]}>
               {restaurant.name}
             </Text>
             <Text style={styles.subtitle}>Fine Dining & Artisan Coffee</Text>
             <Text style={styles.tagline}>Est. 2018 | Farm to Table | Locally Sourced</Text>
           </View>
 
-          {/* Main content container matching React's white card */}
-          <View style={styles.mainContent}>
-            {/* All Categories with page break indicators */}
-            {validCategories.map((category, index) => (
-              <View key={category.id}>
-                {/* Page Break Indicator */}
-                {pageBreaks.includes(index) && index > 0 && (
-                  <View style={styles.pageBreakIndicator}>
-                    <View style={styles.pageBreakLine} />
-                    <Text style={styles.pageBreakText}>
-                      📄 صفحة جديدة في PDF - Page {pageBreaks.indexOf(index) + 1}
-                    </Text>
-                  </View>
-                )}
-                
-                <MenuSectionPDF
-                  title={category.name}
-                  sectionData={category}
-                  columns={
-                    category.name.toLowerCase().includes("appetizer") ||
-                    category.name.toLowerCase().includes("starter") ||
-                    category.name.toLowerCase().includes("beverage") ||
-                    category.name.toLowerCase().includes("dessert")
-                      ? 2
-                      : 1
-                  }
-                  colorPalette={restaurant.color_palette}
-                />
-              </View>
-            ))}
-          </View>
+          {/* Categories */}
+          {validCategories.map((category) => (
+            <MenuSectionPDF
+              key={category.id}
+              title={category.name}
+              sectionData={category}
+              colorPalette={safeColorPalette}
+            />
+          ))}
 
-          {/* Footer matching React component */}
-          <View style={styles.footer}>
-            <View style={styles.footerGrid}>
+          {/* Footer */}
+          <View style={[styles.footer, { borderTopColor: safeColorPalette.primary }]}>
+            <View style={styles.footerContent}>
               <View style={styles.footerSection}>
                 <Text style={styles.footerTitle}>Hours</Text>
                 <Text style={styles.footerText}>Monday - Thursday: 7:00 AM - 9:00 PM</Text>

@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Cairo } from "next/font/google"
 import "./globals.css"
+import { Toaster } from "sonner"
 
 const cairo = Cairo({
   subsets: ["arabic"],
@@ -21,7 +22,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl">
-      <body className={cairo.className}>{children}</body>
+      <body className={cairo.className}>
+        {children}
+        <Toaster 
+          position="top-center"
+          toastOptions={{
+            style: {
+              direction: 'rtl',
+              fontFamily: cairo.style.fontFamily,
+            },
+          }}
+        />
+      </body>
     </html>
   )
 }

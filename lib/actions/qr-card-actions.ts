@@ -2,29 +2,17 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
-import { jsPDF } from "jspdf"
-import qrcode from "qrcode" // npm package for server-side QR generation
 
 interface GenerateQrCardPdfState {
   pdfUrl?: string
+  cardId?: string
   error?: string
 }
 
-export async function generateQrCardPdf(
+export async function generateAndSaveQrCardPdf(
   prevState: GenerateQrCardPdfState | null,
   formData: FormData,
 ): Promise<GenerateQrCardPdfState> {
-  const restaurantName = formData.get("restaurantName")?.toString() || "مطعمك"
-  const restaurantLogoUrl = formData.get("restaurantLogoUrl")?.toString()
-  const qrCodeUrl = formData.get("qrCodeUrl")?.toString() || "https://menu-p.com" // Fallback
-  const customText = formData.get("customText")?.toString() || "امسح الكود لعرض قائمتنا الرقمية!"
-  const cardBgColor = formData.get("cardBgColor")?.toString() || "#FFFFFF" // New: Card background color
-  const textColor = formData.get("textColor")?.toString() || "#000000" // New: Text color
-  const qrCodeSize = Number.parseInt(formData.get("qrCodeSize")?.toString() || "200") // New: QR code size in pixels
-  const showBorder = formData.get("showBorder") === "on" // New: Show border
-  const borderColor = formData.get("borderColor")?.toString() || "#000000" // New: Border color
-  const logoPosition = formData.get("logoPosition")?.toString() || "top" // New: Logo position
-
   const supabase = createClient()
   const {
     data: { user },
@@ -35,115 +23,26 @@ export async function generateQrCardPdf(
     return { error: "User not authenticated." }
   }
 
+  const pdfFile = formData.get("pdfFile") as File
+  const restaurantId = formData.get("restaurantId") as string
+  const cardName = formData.get("cardName")?.toString() || "QR Card"
+  const qrCodeUrl = formData.get("qrCodeUrl")?.toString() || ""
+  const customText = formData.get("customText")?.toString() || ""
+  const cardOptions = formData.get("cardOptions")?.toString() || "{}"
+
+  if (!pdfFile || pdfFile.size === 0) {
+    return { error: "No PDF file provided." }
+  }
+  if (!restaurantId) {
+    return { error: "Restaurant ID is missing." }
+  }
+
   try {
-    // 1. Generate QR code as a data URL (plain, no logo embedded here)
-    const qrCodeDataUrl = await qrcode.toDataURL(qrCodeUrl, {
-      errorCorrectionLevel: "H", // High error correction for potential logo overlay
-      margin: 1,
-      width: qrCodeSize, // Use dynamic QR code size
-      color: {
-        dark: "#000000",
-        light: "#FFFFFF",
-      },
-    })
-
-    const doc = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: [100, 150], // Custom format for a card-like size (e.g., 100mm x 150mm)
-    })
-
-    // Set card background
-    doc.setFillColor(cardBgColor)
-    doc.rect(0, 0, doc.internal.pageSize.getWidth(), doc.internal.pageSize.getHeight(), "F")
-
-    // Set font for Arabic text
-    doc.setFont("helvetica", "normal")
-    doc.setTextColor(textColor) // Set text color
-
-    let yPosition = 10 // Initial Y position
-
-    // Restaurant Logo (if available and position is 'top' or 'both')
-    if (restaurantLogoUrl && (logoPosition === "top" || logoPosition === "both")) {
-      try {
-        const logoResponse = await fetch(restaurantLogoUrl)
-        const logoBlob = await logoResponse.blob()
-        const logoDataUrl = await new Promise<string>((resolve) => {
-          const reader = new FileReader()
-          reader.onloadend = () => resolve(reader.result as string)
-          reader.readAsDataURL(logoBlob)
-        })
-        // Add logo to PDF
-        doc.addImage(logoDataUrl, "PNG", (doc.internal.pageSize.getWidth() - 30) / 2, yPosition, 30, 30) // Centered, 30x30mm
-        yPosition += 35 // Space after logo
-      } catch (logoError) {
-        console.warn("Failed to add restaurant logo to PDF (top position):", logoError)
-        // Continue without logo if fetch fails
-      }
-    }
-
-    // Restaurant Name
-    doc.setFontSize(16)
-    doc.text(restaurantName, doc.internal.pageSize.getWidth() / 2, yPosition, { align: "center" })
-    yPosition += 8
-
-    // Custom Text
-    doc.setFontSize(10)
-    const splitCustomText = doc.splitTextToSize(customText, doc.internal.pageSize.getWidth() - 20) // Wrap text
-    doc.text(splitCustomText, doc.internal.pageSize.getWidth() / 2, yPosition, { align: "center" })
-    yPosition += splitCustomText.length * 5 + 10 // Adjust line height and add space
-
-    // QR Code
-    const qrCodeDisplaySize = 50 // Fixed display size in mm for PDF, QR code image will scale
-    const qrCodeX = (doc.internal.pageSize.getWidth() - qrCodeDisplaySize) / 2
-    const qrCodeY = yPosition
-    doc.addImage(qrCodeDataUrl, "PNG", qrCodeX, qrCodeY, qrCodeDisplaySize, qrCodeDisplaySize) // 50x50mm QR code
-    yPosition += qrCodeDisplaySize + 5 // Space after QR code
-
-    // Restaurant Logo (if available and position is 'middle' or 'both' - drawn over QR)
-    if (restaurantLogoUrl && (logoPosition === "middle" || logoPosition === "both")) {
-      try {
-        const logoResponse = await fetch(restaurantLogoUrl)
-        const logoBlob = await logoResponse.blob()
-        const logoDataUrl = await new Promise<string>((resolve) => {
-          const reader = new FileReader()
-          reader.onloadend = () => resolve(reader.result as string)
-          reader.readAsDataURL(logoBlob)
-        })
-        // Calculate center of QR code for logo placement
-        const logoOverlaySize = 20 // Smaller size for overlay logo
-        const logoOverlayX = qrCodeX + (qrCodeDisplaySize - logoOverlaySize) / 2
-        const logoOverlayY = qrCodeY + (qrCodeDisplaySize - logoOverlaySize) / 2
-        doc.addImage(logoDataUrl, "PNG", logoOverlayX, logoOverlayY, logoOverlaySize, logoOverlaySize)
-      } catch (logoError) {
-        console.warn("Failed to add restaurant logo to PDF (middle position):", logoError)
-      }
-    }
-
-    // Footer text (e.g., "Scan to view menu")
-    doc.setFontSize(8)
-    doc.text("امسح الكود لعرض القائمة", doc.internal.pageSize.getWidth() / 2, yPosition, { align: "center" })
-    yPosition += 5
-
-    doc.text("Powered by Menu-p.com", doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 10, {
-      align: "center",
-    })
-
-    // Add border if requested
-    if (showBorder) {
-      doc.setDrawColor(borderColor)
-      doc.setLineWidth(1)
-      doc.rect(5, 5, doc.internal.pageSize.getWidth() - 10, doc.internal.pageSize.getHeight() - 10, "S") // Draw border
-    }
-
-    // Get PDF as buffer
-    const pdfBuffer = Buffer.from(doc.output("arraybuffer"))
-
     // Upload PDF to Supabase Storage
-    const filePath = `${user.id}/qr_cards/${Date.now()}_qr_card.pdf`
+    const filePath = `${restaurantId}/qr_cards/${Date.now()}_${cardName.replace(/\s+/g, "_")}.pdf`
     const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("restaurant-logos") // Using the same bucket, consider a new one if needed
-      .upload(filePath, pdfBuffer, {
+      .from("restaurant-logos") // Using the same bucket as menus
+      .upload(filePath, pdfFile, {
         contentType: "application/pdf",
         cacheControl: "3600",
         upsert: false,
@@ -158,10 +57,152 @@ export async function generateQrCardPdf(
       data: { publicUrl },
     } = supabase.storage.from("restaurant-logos").getPublicUrl(uploadData.path)
 
-    revalidatePath("/dashboard") // Revalidate dashboard to show new QR card if listed
-    return { pdfUrl: publicUrl }
+    // Parse card options
+    let parsedCardOptions = {}
+    try {
+      parsedCardOptions = JSON.parse(cardOptions)
+    } catch (e) {
+      console.warn("Failed to parse card options, using empty object")
+    }
+
+    // Save QR card info to published_qr_cards table
+    const insertResult = await supabase
+      .from("published_qr_cards")
+      .insert({
+        restaurant_id: restaurantId,
+        card_name: cardName,
+        pdf_url: publicUrl,
+        qr_code_url: qrCodeUrl,
+        custom_text: customText,
+        card_options: parsedCardOptions
+      })
+      .select("id")
+      .single()
+
+    const { data: publishedCard, error: dbError } = insertResult
+
+    if (dbError) {
+      console.error("DB Insert Error:", dbError)
+      // Attempt to delete uploaded PDF if DB insert fails
+      await supabase.storage.from("restaurant-logos").remove([filePath])
+      return { error: `Failed to save QR card details: ${dbError.message}` }
+    }
+
+    revalidatePath("/dashboard") // Revalidate dashboard to show new QR card
+    return { pdfUrl: publicUrl, cardId: publishedCard?.id }
   } catch (error: any) {
     console.error("QR Card PDF Generation Error:", error)
     return { error: `An unexpected error occurred during QR card generation: ${error.message}` }
+  }
+}
+
+// Add function to get published QR cards for dashboard
+export async function getPublishedQrCards() {
+  const supabase = createClient()
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return { error: "User not authenticated.", data: null }
+  }
+
+  try {
+    // Get restaurant data
+    const { data: restaurant, error: restaurantError } = await supabase
+      .from("restaurants")
+      .select("id")
+      .eq("user_id", user.id)
+      .single()
+
+    if (restaurantError || !restaurant) {
+      return { error: "Restaurant not found", data: null }
+    }
+
+    // Fetch published QR cards
+    const { data: qrCards, error: qrCardsError } = await supabase
+      .from("published_qr_cards")
+      .select("*")
+      .eq("restaurant_id", restaurant.id)
+      .order("created_at", { ascending: false })
+
+    if (qrCardsError) {
+      console.error("Error fetching published QR cards:", qrCardsError)
+      return { error: "Failed to fetch QR cards", data: null }
+    }
+
+    return { data: qrCards || [], error: null }
+  } catch (error) {
+    console.error("Error in getPublishedQrCards:", error)
+    return { error: "Failed to fetch QR cards", data: null }
+  }
+}
+
+// Add function to delete a QR card
+export async function deleteQrCard(cardId: string): Promise<{ success?: boolean; error?: string }> {
+  const supabase = createClient()
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return { error: "User not authenticated." }
+  }
+
+  try {
+    // Get the QR card to verify ownership and get file path
+    const { data: qrCard, error: fetchError } = await supabase
+      .from("published_qr_cards")
+      .select(`
+        pdf_url,
+        restaurant_id,
+        restaurants!inner (
+          user_id
+        )
+      `)
+      .eq("id", cardId)
+      .single()
+
+    if (fetchError || !qrCard) {
+      return { error: "QR card not found" }
+    }
+
+    // Verify ownership through restaurant
+    if ((qrCard.restaurants as any).user_id !== user.id) {
+      return { error: "Access denied" }
+    }
+
+    // Extract file path from URL for deletion
+    const url = new URL(qrCard.pdf_url)
+    const filePath = url.pathname.split('/').slice(-2).join('/') // Get last two parts of path
+
+    // Delete from database
+    const { error: deleteError } = await supabase
+      .from("published_qr_cards")
+      .delete()
+      .eq("id", cardId)
+
+    if (deleteError) {
+      console.error("Error deleting QR card from database:", deleteError)
+      return { error: "Failed to delete QR card" }
+    }
+
+    // Delete file from storage
+    const { error: storageError } = await supabase.storage
+      .from("restaurant-logos")
+      .remove([filePath])
+
+    if (storageError) {
+      console.error("Error deleting QR card file:", storageError)
+      // Note: We don't return error here since DB deletion succeeded
+    }
+
+    revalidatePath("/dashboard")
+    return { success: true }
+  } catch (error) {
+    console.error("Error in deleteQrCard:", error)
+    return { error: "Failed to delete QR card" }
   }
 }
