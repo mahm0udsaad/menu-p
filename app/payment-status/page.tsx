@@ -60,7 +60,15 @@ function PaymentStatusContent() {
   }, [success, orderId]);
 
   const handleContinue = () => {
-    router.push('/dashboard');
+    const redirect = searchParams.get('redirect');
+    const autoPublish = searchParams.get('auto_publish');
+    
+    if (redirect && autoPublish === 'true') {
+      // Redirect back to the original page with auto_publish parameter
+      router.push(`${redirect}?auto_publish=true`);
+    } else {
+      router.push('/dashboard');
+    }
   };
 
   const handleRetry = () => {
@@ -138,7 +146,7 @@ function PaymentStatusContent() {
                 className="w-full"
                 size="lg"
               >
-                Continue to Dashboard
+                {searchParams.get('auto_publish') === 'true' ? 'Continue Publishing Menu' : 'Continue to Dashboard'}
               </Button>
             </>
           ) : (

@@ -23,9 +23,19 @@ interface BillingData {
 export async function createPaymobPayment(
   amount: number, 
   billing: BillingData,
-  restaurantId: string
+  restaurantId: string,
+  integrationId?: string
 ) {
   try {
+    // Validate inputs
+    if (!amount || isNaN(amount) || amount <= 0) {
+      throw new Error(`Invalid amount: ${amount}`);
+    }
+    
+    if (!restaurantId) {
+      throw new Error('Restaurant ID is required');
+    }
+
     const supabase = createClient();
     
     // Get the current user
@@ -37,30 +47,28 @@ export async function createPaymobPayment(
     // Get auth token from Paymob
     const token = await getAuthToken();
     
-    // Register order with Paymob
-    const orderId = await registerOrder(token, amount);
+    // Register order with Paymob (with metadata for webhook)
+    const orderId = await registerOrder(token, amount, {
+      user_id: user.id,
+      restaurant_id: restaurantId,
+      integration_id: integrationId
+    });
     
-    // Get payment key
-    const paymentToken = await getPaymentKey(token, orderId, amount, billing);
+    // Get payment key with specified integration ID
+    const paymentToken = await getPaymentKey(token, orderId, amount, billing, integrationId);
 
-    // Save payment record in database
-    const { error: paymentError } = await supabase
-      .from('payments')
-      .insert({
+    // Don't save to database here - webhook will create the record on success
+    return { 
+      success: true, 
+      paymentToken,
+      orderId,
+      metadata: {
         user_id: user.id,
         restaurant_id: restaurantId,
-        order_id: orderId,
-        payment_token: paymentToken,
         amount: amount,
-        status: 'pending'
-      });
-
-    if (paymentError) {
-      console.error('Error saving payment:', paymentError);
-      throw new Error('Failed to save payment record');
-    }
-
-    return { success: true, paymentToken };
+        integration_id: integrationId
+      }
+    };
   } catch (error) {
     console.error('Payment creation error:', error);
     return { 

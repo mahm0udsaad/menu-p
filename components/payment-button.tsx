@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Zap } from 'lucide-react';
-import { createPaymobPayment } from '@/lib/actions/payment';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import PaymentModal from './payment-modal';
 
 interface PaymentButtonProps {
   amount: number;
@@ -28,66 +28,45 @@ export default function PaymentButton({
   size = 'default',
   variant = 'default'
 }: PaymentButtonProps) {
-  const [isPending, startTransition] = useTransition();
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const router = useRouter();
 
   const handlePayment = () => {
     if (!restaurantId) {
-      toast.error('Please create a restaurant first');
+      toast.error('يرجى إنشاء مطعم أولاً');
       router.push('/onboarding');
       return;
     }
 
     if (!userEmail || !userName) {
-      toast.error('Please complete your profile');
+      toast.error('يرجى إكمال بيانات الملف الشخصي');
       return;
     }
 
-    startTransition(async () => {
-      try {
-        // Prepare billing data
-        const billingData = {
-          firstName: userName.split(' ')[0] || 'User',
-          lastName: userName.split(' ').slice(1).join(' ') || 'Name',
-          email: userEmail,
-          phone: '+201000000000', // Default phone - user can update in profile
-        };
-
-        const result = await createPaymobPayment(amount, billingData, restaurantId);
-        
-        if (result.success && result.paymentToken) {
-          // Redirect to Paymob checkout
-          const iframeUrl = `https://accept.paymob.com/api/acceptance/iframes/${process.env.PAYMOB_IFRAME_ID}?payment_token=${result.paymentToken}`;
-          window.location.href = iframeUrl;
-        } else {
-          toast.error(result.error || 'Failed to create payment');
-        }
-      } catch (error) {
-        console.error('Payment error:', error);
-        toast.error('Failed to process payment');
-      }
-    });
+    setIsModalOpen(true);
   };
 
   return (
-    <Button
-      onClick={handlePayment}
-      disabled={isPending}
-      size={size}
-      variant={variant}
-      className={className}
-    >
-      {isPending ? (
-        <>
-          <Zap className="w-4 h-4 mr-2 animate-spin" />
-          جاري المعالجة...
-        </>
-      ) : (
-        <>
-          <Zap className="w-4 h-4 mr-2" />
-          ادفع ${amount / 100} الآن
-        </>
-      )}
-    </Button>
+    <>
+      <Button
+        onClick={handlePayment}
+        size={size}
+        variant={variant}
+        className={className}
+      >
+        <Zap className="w-4 h-4 mr-2" />
+        ادفع ${amount / 100} الآن
+      </Button>
+
+      <PaymentModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        amount={amount}
+        planName={planName}
+        restaurantId={restaurantId}
+        userEmail={userEmail}
+        userName={userName}
+      />
+    </>
   );
 }

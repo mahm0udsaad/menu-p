@@ -15,7 +15,16 @@ export async function getAuthToken(): Promise<string> {
   return data.token;
 }
 
-export async function registerOrder(token: string, amount: number): Promise<number> {
+export async function registerOrder(token: string, amount: number, metadata?: any): Promise<number> {
+  // Validate inputs
+  if (!token) {
+    throw new Error('Auth token is required');
+  }
+  
+  if (!amount || isNaN(amount) || amount <= 0) {
+    throw new Error(`Invalid amount: ${amount}`);
+  }
+
   const res = await fetch('https://accept.paymob.com/api/ecommerce/orders', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -24,6 +33,7 @@ export async function registerOrder(token: string, amount: number): Promise<numb
       delivery_needed: false,
       amount_cents: amount,
       currency: 'EGP',
+      merchant_order_id: metadata ? JSON.stringify(metadata) : undefined,
       items: [{
         name: 'Menu Subscription',
         amount_cents: amount,
@@ -34,10 +44,16 @@ export async function registerOrder(token: string, amount: number): Promise<numb
   });
 
   if (!res.ok) {
-    throw new Error('Failed to register order with Paymob');
+    const errorText = await res.text();
+    throw new Error(`Failed to register order with Paymob: ${res.status} ${errorText}`);
   }
 
   const data = await res.json();
+  
+  if (!data.id || isNaN(data.id)) {
+    throw new Error(`Invalid order ID received: ${data.id}`);
+  }
+  
   return data.id;
 }
 
@@ -45,8 +61,23 @@ export async function getPaymentKey(
   token: string,
   orderId: number,
   amount: number,
-  billing: any
+  billing: any,
+  integrationId?: string
 ): Promise<string> {
+  // Use provided integration ID or fallback to environment variable
+  const finalIntegrationId = integrationId || process.env.PAYMOB_INTEGRATION_ID;
+  
+  // Validate integration ID
+  if (!finalIntegrationId || finalIntegrationId === 'undefined') {
+    throw new Error('Integration ID is required but not provided');
+  }
+  
+  // Convert to number and validate
+  const integrationIdNumber = parseInt(finalIntegrationId, 10);
+  if (isNaN(integrationIdNumber)) {
+    throw new Error(`Invalid integration ID: ${finalIntegrationId}`);
+  }
+  
   const res = await fetch('https://accept.paymob.com/api/acceptance/payment_keys', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -71,7 +102,7 @@ export async function getPaymentKey(
         state: billing.state || 'N/A'
       },
       currency: 'EGP',
-      integration_id: Number(process.env.PAYMOB_INTEGRATION_ID)
+      integration_id: integrationIdNumber
     })
   });
 
