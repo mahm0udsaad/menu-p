@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { checkPaymentStatus } from '@/lib/actions/payment';
 
-export default function PaymentStatusPage() {
+// Component that uses useSearchParams
+function PaymentStatusContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [status, setStatus] = useState<'loading' | 'success' | 'failed'>('loading');
@@ -183,5 +184,31 @@ export default function PaymentStatusPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// Loading fallback component
+function PaymentStatusFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/20">
+      <Card className="w-full max-w-md mx-4">
+        <CardContent className="flex flex-col items-center justify-center py-12">
+          <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Loading Payment Status</h2>
+          <p className="text-muted-foreground text-center">
+            Please wait while we load your payment information...
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function PaymentStatusPage() {
+  return (
+    <Suspense fallback={<PaymentStatusFallback />}>
+      <PaymentStatusContent />
+    </Suspense>
   );
 }

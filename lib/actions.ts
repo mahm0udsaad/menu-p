@@ -3,7 +3,6 @@
 import { createServerActionClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import { sendWelcomeEmail } from "@/lib/email/service"
 
 export type MenuItemFormState = {
   error?: string
@@ -36,21 +35,6 @@ export async function signUp(prevState: any, formData: FormData) {
 
   if (error) {
     return { error: "فشل في إنشاء الحساب. تحقق من البريد الإلكتروني." }
-  }
-
-  // Send welcome email after successful signup
-  if (data.user) {
-    try {
-      const userName = data.user.email?.split('@')[0] || 'عميلنا العزيز'
-      await sendWelcomeEmail({
-        userName,
-        userEmail: email
-      })
-      console.log('Welcome email sent successfully to:', email)
-    } catch (emailError) {
-      console.error('Failed to send welcome email:', emailError)
-      // Don't fail the signup if email fails, just log it
-    }
   }
 
   return { success: "تم إنشاء الحساب بنجاح! تحقق من بريدك الإلكتروني." }
