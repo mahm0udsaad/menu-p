@@ -18,6 +18,8 @@ import {
 } from "lucide-react" // Added LayoutDashboard icon
 import Link from "next/link"
 import PaymentButton from "@/components/payment-button"
+import { Suspense } from "react"
+import AuthHandler from "@/components/auth-handler"
 
 export default async function LandingPage() {
   // Made async
@@ -43,6 +45,11 @@ export default async function LandingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir="rtl">
+      {/* Auth Handler - handles auth codes from email confirmations and OAuth */}
+      <Suspense fallback={null}>
+        <AuthHandler />
+      </Suspense>
+
       {/* Floating Background Icons */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 right-20 animate-bounce delay-100">
