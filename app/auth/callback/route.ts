@@ -5,7 +5,6 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
-  const next = requestUrl.searchParams.get('next') ?? '/dashboard'
 
   if (code) {
     const cookieStore = cookies()
@@ -17,12 +16,11 @@ export async function GET(request: NextRequest) {
       
       if (error) {
         console.error('Auth callback error:', error)
-        return NextResponse.redirect(new URL('/auth/login?error=Authentication failed', request.url))
+        return NextResponse.redirect(new URL('/auth/login?error=auth_error', request.url))
       }
 
-      // Check if this is a new user (Google OAuth) or email confirmation
       if (data.user) {
-        // Check if user has completed onboarding
+        // Check if user has completed onboarding (has restaurant record)
         const { data: restaurant, error: restaurantError } = await supabase
           .from('restaurants')
           .select('id')
@@ -30,19 +28,19 @@ export async function GET(request: NextRequest) {
           .single()
 
         if (restaurantError || !restaurant) {
-          // New user needs onboarding
+          // New user - redirect to onboarding
           return NextResponse.redirect(new URL('/onboarding', request.url))
+        } else {
+          // Existing user - redirect to dashboard
+          return NextResponse.redirect(new URL('/dashboard', request.url))
         }
-
-        // User already has restaurant setup, redirect to dashboard
-        return NextResponse.redirect(new URL('/dashboard', request.url))
       }
     } catch (error) {
-      console.error('Unexpected auth callback error:', error)
-      return NextResponse.redirect(new URL('/auth/login?error=Authentication failed', request.url))
+      console.error('Callback processing error:', error)
+      return NextResponse.redirect(new URL('/auth/login?error=callback_error', request.url))
     }
   }
 
-  // No code provided, redirect to login
+  // If no code or something went wrong, redirect to login
   return NextResponse.redirect(new URL('/auth/login', request.url))
 } 

@@ -26,9 +26,13 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   // Create a Supabase client configured to use cookies
   const supabase = createMiddlewareClient({ req: request, res })
 
-  // Check if this is an auth callback - let the callback route handle it
-  if (request.nextUrl.pathname === "/auth/callback") {
-    return NextResponse.next()
+  // Let the auth callback route handle authentication codes
+  const requestUrl = new URL(request.url)
+  const code = requestUrl.searchParams.get("code")
+  
+  if (code && request.nextUrl.pathname !== "/auth/callback") {
+    // Redirect to callback route to handle authentication
+    return NextResponse.redirect(new URL(`/auth/callback?code=${code}`, request.url))
   }
 
   // Refresh session if expired - required for Server Components

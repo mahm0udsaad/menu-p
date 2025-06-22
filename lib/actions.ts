@@ -9,7 +9,7 @@ export type MenuItemFormState = {
   success?: boolean
 } | null
 
-export async function signUp(prevState: any, formData: FormData) {
+export async function signUp(state: { error?: string; success?: string } | null, formData: FormData) {
   const email = formData.get("email") as string
   const password = formData.get("password") as string
   const confirmPassword = formData.get("confirmPassword") as string
@@ -43,7 +43,7 @@ export async function signUp(prevState: any, formData: FormData) {
   return { success: "تم إنشاء الحساب بنجاح! تحقق من بريدك الإلكتروني." }
 }
 
-export async function signIn(prevState: any, formData: FormData) {
+export async function signIn(state: { error?: string } | null, formData: FormData) {
   const email = formData.get("email") as string
   const password = formData.get("password") as string
 
@@ -91,7 +91,7 @@ export async function signIn(prevState: any, formData: FormData) {
   }
 }
 
-export async function forgotPassword(prevState: any, formData: FormData) {
+export async function forgotPassword(state: { error?: string; success?: string } | null, formData: FormData) {
   const email = formData.get("email") as string
 
   if (!email) {
@@ -119,7 +119,7 @@ export async function forgotPassword(prevState: any, formData: FormData) {
   }
 }
 
-export async function resetPassword(prevState: any, formData: FormData) {
+export async function resetPassword(state: { error?: string } | null, formData: FormData) {
   const password = formData.get("password") as string
   const confirmPassword = formData.get("confirmPassword") as string
 
@@ -159,9 +159,7 @@ export async function signOut() {
   redirect("/auth/login")
 }
 
-
-
-export async function onboardRestaurant(prevState: any, formData: FormData) {
+export async function onboardRestaurant(state: { error?: string; success?: boolean } | null, formData: FormData) {
   const name = formData.get("name") as string
   const category = formData.get("category") as string
   const colorPalette = formData.get("colorPalette") as string
@@ -234,4 +232,24 @@ export async function onboardRestaurant(prevState: any, formData: FormData) {
   }
 
   redirect("/menu-editor")
+}
+
+export async function signInWithGoogle() {
+  const supabase = createServerActionClient({ cookies })
+  
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`,
+    },
+  })
+
+  if (error) {
+    console.error('Google OAuth error:', error)
+    throw new Error("فشل في تسجيل الدخول بجوجل")
+  }
+
+  if (data.url) {
+    redirect(data.url)
+  }
 }
