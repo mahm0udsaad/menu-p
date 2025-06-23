@@ -712,27 +712,27 @@ export default function ProfessionalCafeMenuPreview({
           `
         }} />
         
-        <div className="max-w-4xl mx-auto p-8"> {/* Changed from max-w-6xl to max-w-4xl for single column */}
+        <div className="max-w-4xl mx-auto p-4 sm:p-8"> {/* Changed from max-w-6xl to max-w-4xl for single column */}
           {/* Header */}
-          <div className="text-center mb-12 border-b-2 pb-8 flex flex-col items-center justify-center" style={{ borderColor: currentPalette.primary }}>
-            <div className="mb-4">
-              <div className="w-24 h-24 mx-auto mb-4 rounded-full flex items-center justify-center shadow-lg overflow-hidden relative group" style={{ backgroundColor: currentPalette.primary }}>
+          <div className="text-center mb-6 sm:mb-12 border-b-2 pb-4 sm:pb-8 flex flex-col items-center justify-center" style={{ borderColor: currentPalette.primary }}>
+            <div className="mb-2 sm:mb-4">
+              <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-2 sm:mb-4 rounded-full flex items-center justify-center shadow-lg overflow-hidden relative group" style={{ backgroundColor: currentPalette.primary }}>
                 {restaurant.logo_url ? (
                   <Image
                     src={restaurant.logo_url || "/placeholder.svg"}
                     alt={`${restaurant.name} logo`}
-                    width={96}
-                    height={96}
-                    className="object-cover"
+                    width={64}
+                    height={64}
+                    className="object-cover sm:w-[96px] sm:h-[96px]"
                   />
                 ) : (
-                  <span className="text-white text-2xl font-serif">
+                  <span className="text-white text-lg sm:text-2xl font-serif">
                     {restaurant.name.substring(0, 2).toUpperCase()}
                   </span>
                 )}
                 <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <label htmlFor="logo-upload" className="cursor-pointer">
-                    <Upload className="h-6 w-6 text-white" />
+                    <Upload className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                     <input
                       id="logo-upload"
                       type="file"
@@ -743,106 +743,107 @@ export default function ProfessionalCafeMenuPreview({
                     />
                   </label>
                 </div>
-                  </div>
-          </div>
+              </div>
+            </div>
 
-            <h1 className="text-4xl font-serif mb-4" style={{ color: currentPalette.primary }}>
+            <h1 className="text-2xl sm:text-4xl font-serif mb-2 sm:mb-4" style={{ color: currentPalette.primary }}>
               {restaurant.name}
             </h1>
             
-            <div className="w-24 h-px mx-auto mb-6" style={{ backgroundColor: currentPalette.accent }}></div>
+            <div className="w-16 sm:w-24 h-px mx-auto mb-3 sm:mb-6" style={{ backgroundColor: currentPalette.accent }}></div>
               
-              <div className="flex items-center gap-2">
-                <Dialog open={showColorModal} onOpenChange={setShowColorModal}>
-                  <DialogTrigger asChild>
+            <div className="flex items-center gap-2">
+              <Dialog open={showColorModal} onOpenChange={setShowColorModal}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
+                  >
+                    <Palette className="h-3 w-3 ml-1" />
+                    <span className="hidden sm:inline">تغيير الألوان</span>
+                    <span className="sm:hidden">ألوان</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle className="text-right">اختر لوحة الألوان</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    {colorPalettes.map((palette) => (
+                      <div key={palette.id} className="flex items-center space-x-2 space-x-reverse">
+                        <input
+                          type="radio"
+                          name="colorPalette"
+                          value={palette.id}
+                          id={`modal-${palette.id}`}
+                          checked={selectedPalette === palette.id}
+                          onChange={() => setSelectedPalette(palette.id)}
+                          className="sr-only"
+                        />
+                        <Label
+                          htmlFor={`modal-${palette.id}`}
+                          className={`cursor-pointer p-4 rounded-xl border transition-all duration-300 flex-1 ${
+                            selectedPalette === palette.id
+                              ? 'border-blue-400 bg-blue-50'
+                              : 'border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="font-medium">{palette.name}</span>
+                            <div className="flex space-x-1 space-x-reverse">
+                              {palette.preview.map((color, index) => (
+                                <div
+                                  key={index}
+                                  className="w-4 h-4 rounded-full border border-gray-200"
+                                  style={{ backgroundColor: color }}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-end gap-2 mt-6">
                     <Button
                       variant="outline"
-                      size="sm"
-                      className="border-purple-600 text-purple-600 hover:bg-purple-50"
+                      onClick={() => setShowColorModal(false)}
+                      disabled={isUpdatingPalette}
                     >
-                      <Palette className="h-3 w-3 mr-1" />
-                      تغيير الألوان
+                      إلغاء
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-2xl">
-                    <DialogHeader>
-                      <DialogTitle className="text-right">اختر لوحة الألوان</DialogTitle>
-                    </DialogHeader>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                      {colorPalettes.map((palette) => (
-                        <div key={palette.id} className="flex items-center space-x-2 space-x-reverse">
-                          <input
-                            type="radio"
-                            name="colorPalette"
-                            value={palette.id}
-                            id={`modal-${palette.id}`}
-                            checked={selectedPalette === palette.id}
-                            onChange={() => setSelectedPalette(palette.id)}
-                            className="sr-only"
-                          />
-                          <Label
-                            htmlFor={`modal-${palette.id}`}
-                            className={`cursor-pointer p-4 rounded-xl border transition-all duration-300 flex-1 ${
-                              selectedPalette === palette.id
-                                ? 'border-blue-400 bg-blue-50'
-                                : 'border-gray-300 hover:bg-gray-50'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between mb-3">
-                              <span className="font-medium">{palette.name}</span>
-                              <div className="flex space-x-1 space-x-reverse">
-                                {palette.preview.map((color, index) => (
-                                  <div
-                                    key={index}
-                                    className="w-4 h-4 rounded-full border border-gray-200"
-                                    style={{ backgroundColor: color }}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex justify-end gap-2 mt-6">
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowColorModal(false)}
-                        disabled={isUpdatingPalette}
-                      >
-                        إلغاء
-                      </Button>
-                      <Button
-                        onClick={() => handleUpdateColorPalette(selectedPalette)}
-                        disabled={isUpdatingPalette || selectedPalette === restaurant.color_palette?.id}
-                        style={{ backgroundColor: colorPalettes.find(p => p.id === selectedPalette)?.primary }}
-                        className="text-white"
-                      >
-                        {isUpdatingPalette ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        ) : null}
-                        {isUpdatingPalette ? "جاري التحديث..." : "تطبيق الألوان"}
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-                
-                <Button
-                  onClick={handleLoadDummyData}
-                  disabled={isLoadingDummy}
-                  variant="outline"
-                  size="sm"
-                  className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                >
-                  {isLoadingDummy ? (
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-1"></div>
-                  ) : (
-                    <FileText className="h-3 w-3 mr-1" />
-                  )}
-                  {isLoadingDummy ? "جاري التحميل..." : "إضافة بيانات تجريبية"}
-                </Button>
-              </div>
+                    <Button
+                      onClick={() => handleUpdateColorPalette(selectedPalette)}
+                      disabled={isUpdatingPalette || selectedPalette === restaurant.color_palette?.id}
+                      style={{ backgroundColor: colorPalettes.find(p => p.id === selectedPalette)?.primary }}
+                      className="text-white"
+                    >
+                      {isUpdatingPalette ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      ) : null}
+                      {isUpdatingPalette ? "جاري التحديث..." : "تطبيق الألوان"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              
+              <Button
+                onClick={handleLoadDummyData}
+                disabled={isLoadingDummy}
+                variant="outline"
+                size="sm"
+                className="border-blue-600 text-blue-600 hover:bg-blue-50"
+              >
+                {isLoadingDummy ? (
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-1"></div>
+                ) : (
+                  <FileText className="h-3 w-3 mr-1" />
+                )}
+                {isLoadingDummy ? "جاري التحميل..." : "إضافة بيانات تجريبية"}
+              </Button>
             </div>
+          </div>
 
           {/* Menu Content */}
           <div className="bg-white shadow-xl rounded-lg" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.1)" }}>

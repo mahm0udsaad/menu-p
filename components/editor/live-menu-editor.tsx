@@ -276,46 +276,49 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
       <div className="space-y-4 h-full flex flex-col">
         {/* Compact Header */}
         <div className="flex items-center justify-between bg-slate-800/30 border border-slate-700 rounded-lg p-3">
-          <div className="flex items-center gap-4">
-            <h2 className="text-lg font-bold text-white">محرر القائمة المباشر</h2>
-            <div className="text-xs text-slate-400 flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+            <h2 className="text-base sm:text-lg font-bold text-white truncate">محرر القائمة المباشر</h2>
+            <div className="text-xs text-slate-400 hidden sm:flex items-center gap-3">
               <span>💡 اضغط للتعديل</span>
               <span>⭐ اضغط النجمة للمميز</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             <Button
               variant="outline"
               onClick={handleRefresh}
               disabled={refreshing}
               size="sm"
-              className="border-slate-600"
+              className="border-slate-600 px-2 sm:px-3"
+              title="تحديث"
             >
-              {refreshing ? <RefreshCw className="h-3 w-3 mr-1 animate-spin" /> : <RefreshCw className="h-3 w-3 mr-1" />}
-              تحديث
+              {refreshing ? <RefreshCw className="h-3 w-3 sm:mr-1 animate-spin" /> : <RefreshCw className="h-3 w-3 sm:mr-1" />}
+              <span className="hidden sm:inline">تحديث</span>
             </Button>
             <Button
               variant="outline"
               onClick={handlePdfPreview}
               size="sm"
-              className={`border-slate-600 ${!hasPaidPlan && !paymentLoading ? 'opacity-75' : ''}`}
-              title={!hasPaidPlan && !paymentLoading ? 'يتطلب اشتراك مدفوع' : paymentLoading ? 'جاري التحقق من حالة الاشتراك...' : ''}
+              className={`border-slate-600 px-2 sm:px-3 ${!hasPaidPlan && !paymentLoading ? 'opacity-75' : ''}`}
+              title={!hasPaidPlan && !paymentLoading ? 'يتطلب اشتراك مدفوع - معاينة PDF' : paymentLoading ? 'جاري التحقق من حالة الاشتراك...' : 'معاينة PDF'}
               disabled={paymentLoading}
             >
-              {paymentLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Eye className="h-3 w-3 mr-1" />}
-              معاينة PDF
+              {paymentLoading ? <Loader2 className="h-3 w-3 sm:mr-1 animate-spin" /> : <Eye className="h-3 w-3 sm:mr-1" />}
+              <span className="hidden sm:inline">معاينة PDF</span>
               {!hasPaidPlan && !paymentLoading && <span className="text-yellow-400 ml-1">👑</span>}
             </Button>
             <Button
               onClick={handlePublishMenu}
               disabled={isPublishing || categories.length === 0 || paymentLoading}
               size="sm"
-              className={`bg-emerald-600 hover:bg-emerald-700 ${!hasPaidPlan && !paymentLoading ? 'opacity-75' : ''}`}
-              title={!hasPaidPlan && !paymentLoading ? 'يتطلب اشتراك مدفوع' : paymentLoading ? 'جاري التحقق من حالة الاشتراك...' : ''}
+              className={`bg-emerald-600 hover:bg-emerald-700 px-2 sm:px-3 ${!hasPaidPlan && !paymentLoading ? 'opacity-75' : ''}`}
+              title={!hasPaidPlan && !paymentLoading ? 'يتطلب اشتراك مدفوع - نشر القائمة' : paymentLoading ? 'جاري التحقق من حالة الاشتراك...' : 'نشر القائمة'}
             >
-              {isPublishing ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : paymentLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <FileText className="h-3 w-3 mr-1" />}
-              {isPublishing ? "جاري النشر..." : paymentLoading ? "جاري التحقق..." : "نشر القائمة"}
-              {!hasPaidPlan && !paymentLoading && <span className="text-yellow-400 ml-1">👑</span>}
+              {isPublishing ? <Loader2 className="h-3 w-3 sm:mr-1 animate-spin" /> : paymentLoading ? <Loader2 className="h-3 w-3 sm:mr-1 animate-spin" /> : <FileText className="h-3 w-3 sm:mr-1" />}
+              <span>
+                {isPublishing ? "جاري النشر..." : paymentLoading ? "جاري التحقق..." : "نشر القائمة"}
+              </span>
+              {!hasPaidPlan && !paymentLoading && <span className="text-yellow-400 ml-1 hidden sm:inline">👑</span>}
             </Button>
           </div>
         </div>

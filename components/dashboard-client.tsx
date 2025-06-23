@@ -286,11 +286,11 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
     }
   }
 
-  const getMenuPublicUrl = (menuId: string) => {
+  const getMenuPublicUrl = (restaurantOrMenuId: string) => {
     if (typeof window !== "undefined") {
-      return `${window.location.origin}/menus/${menuId}`
+      return `${window.location.origin}/menus/${restaurantOrMenuId}`
     }
-    return `/menus/${menuId}`
+    return `/menus/${restaurantOrMenuId}`
   }
 
   const getPlanInfo = () => {
@@ -346,31 +346,31 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
 
       {/* Header */}
       <header className="border-b border-slate-700 bg-slate-800/50 backdrop-blur sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
+        <div className="px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="bg-gradient-to-l from-emerald-500 to-emerald-600 p-2 rounded-xl shadow-lg">
-                <QrCode className="h-6 w-6 text-white" />
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+              <div className="bg-gradient-to-l from-emerald-500 to-emerald-600 p-1.5 sm:p-2 rounded-lg sm:rounded-xl shadow-lg flex-shrink-0">
+                <QrCode className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
               </div>
               {restaurant.logo_url && (
                 <Image
                   src={restaurant.logo_url || "/placeholder.svg"}
                   alt={`${restaurant.name} logo`}
-                  width={40}
-                  height={40}
-                  className="rounded-lg object-cover"
+                  width={32}
+                  height={32}
+                  className="rounded-lg object-cover sm:w-10 sm:h-10 flex-shrink-0"
                 />
               )}
-              <div>
-                <h1 className="text-2xl font-bold text-white">{restaurant.name}</h1>
-                <p className="text-slate-300">{restaurant.category === 'both' ? 'مطعم ومقهى' : restaurant.category}</p>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-2xl font-bold text-white truncate">{restaurant.name}</h1>
+                <p className="text-xs sm:text-sm text-slate-300 truncate">{restaurant.category === 'both' ? 'مطعم ومقهى' : restaurant.category}</p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
               {/* Plan Badge */}
               <Badge 
                 variant={getPlanInfo().status === "active" ? "default" : "outline"}
-                className={`${getPlanInfo().status === "active" ? "bg-emerald-500 text-white" : "border-slate-600 text-slate-300"}`}
+                className={`text-xs sm:text-sm ${getPlanInfo().status === "active" ? "bg-emerald-500 text-white" : "border-slate-600 text-slate-300"} hidden sm:flex`}
               >
                 <Crown className="h-3 w-3 ml-1" />
                 {getPlanInfo().name}
@@ -380,79 +380,94 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                 <Button
                   variant="ghost"
                   type="submit"
-                  className="text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-xl flex items-center gap-2"
+                  className="text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-xl p-2 sm:px-4 sm:py-2"
+                  size="sm"
                 >
-                  <LogOut className="h-4 w-4" />
-                  تسجيل الخروج
+                  <LogOut className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">تسجيل الخروج</span>
                 </Button>
               </form>
             </div>
+          </div>
+          
+          {/* Mobile Plan Badge */}
+          <div className="mt-2 sm:hidden">
+            <Badge 
+              variant={getPlanInfo().status === "active" ? "default" : "outline"}
+              className={`text-xs ${getPlanInfo().status === "active" ? "bg-emerald-500 text-white" : "border-slate-600 text-slate-300"}`}
+            >
+              <Crown className="h-3 w-3 ml-1" />
+              {getPlanInfo().name}
+            </Badge>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-          <TabsList className="bg-slate-800/50 p-1 rounded-xl">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-emerald-500">
+      <main className="px-3 sm:px-4 py-4 sm:py-8">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4 sm:space-y-6">
+          <TabsList className="bg-slate-800/50 p-1 rounded-xl w-full flex flex-wrap h-auto sm:h-10 gap-1">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-emerald-500 text-xs sm:text-sm px-2 sm:px-4 py-2 flex-1 sm:flex-none">
               نظرة عامة
             </TabsTrigger>
-            <TabsTrigger value="menus" className="data-[state=active]:bg-emerald-500">
-              القوائم المنشورة
+            <TabsTrigger value="menus" className="data-[state=active]:bg-emerald-500 text-xs sm:text-sm px-2 sm:px-4 py-2 flex-1 sm:flex-none">
+              القوائم
             </TabsTrigger>
-            <TabsTrigger value="qr-cards" className="data-[state=active]:bg-emerald-500">
+            <TabsTrigger value="qr-cards" className="data-[state=active]:bg-emerald-500 text-xs sm:text-sm px-2 sm:px-4 py-2 flex-1 sm:flex-none">
               بطاقات QR
             </TabsTrigger>
-            <TabsTrigger value="restaurant-info" className="data-[state=active]:bg-emerald-500">
-              معلومات المطعم
+            <TabsTrigger value="restaurant-info" className="data-[state=active]:bg-emerald-500 text-xs sm:text-sm px-2 sm:px-4 py-2 flex-1 sm:flex-none">
+              معلومات
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <TabsContent value="overview" className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
               <Card className="bg-slate-800/50 border-slate-700">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-emerald-400 flex items-center gap-2">
-                    <MenuIcon className="h-5 w-5" />
-                    القوائم المنشورة
+                <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+                  <CardTitle className="text-emerald-400 flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
+                    <MenuIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="hidden sm:inline">القوائم المنشورة</span>
+                    <span className="sm:hidden">القوائم</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-white">{publishedMenus.length}</div>
-                  <p className="text-slate-400 text-sm">قوائم نشطة</p>
+                <CardContent className="px-3 sm:px-6">
+                  <div className="text-2xl sm:text-3xl font-bold text-white">{publishedMenus.length}</div>
+                  <p className="text-slate-400 text-xs sm:text-sm">قوائم نشطة</p>
                 </CardContent>
               </Card>
 
               <Card className="bg-slate-800/50 border-slate-700">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-emerald-400 flex items-center gap-2">
-                    <QrCode className="h-5 w-5" />
-                    بطاقات QR
+                <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+                  <CardTitle className="text-emerald-400 flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
+                    <QrCode className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="hidden sm:inline">بطاقات QR</span>
+                    <span className="sm:hidden">البطاقات</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-white">{publishedQrCards.length}</div>
-                  <p className="text-slate-400 text-sm">بطاقات مُنشأة</p>
+                <CardContent className="px-3 sm:px-6">
+                  <div className="text-2xl sm:text-3xl font-bold text-white">{publishedQrCards.length}</div>
+                  <p className="text-slate-400 text-xs sm:text-sm">بطاقات مُنشأة</p>
                 </CardContent>
               </Card>
 
               <Card className="bg-slate-800/50 border-slate-700">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-emerald-400 flex items-center gap-2">
-                    <Crown className="h-5 w-5" />
-                    الخطة الحالية
+                <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+                  <CardTitle className="text-emerald-400 flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
+                    <Crown className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="hidden sm:inline">الخطة الحالية</span>
+                    <span className="sm:hidden">الخطة</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-lg font-bold text-white">{getPlanInfo().name}</div>
+                <CardContent className="px-3 sm:px-6">
+                  <div className="text-sm sm:text-lg font-bold text-white">{getPlanInfo().name}</div>
                   <div className="flex items-center gap-1 mt-1">
                     {getPlanInfo().status === "active" ? (
-                      <CheckCircle className="h-4 w-4 text-emerald-400" />
+                      <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-emerald-400" />
                     ) : (
-                      <AlertTriangle className="h-4 w-4 text-yellow-400" />
+                      <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-400" />
                     )}
-                    <p className="text-slate-400 text-sm">
+                    <p className="text-slate-400 text-xs sm:text-sm">
                       {getPlanInfo().status === "active" ? "نشطة" : "محدودة"}
                     </p>
                   </div>
@@ -460,64 +475,67 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
               </Card>
 
               <Card className="bg-slate-800/50 border-slate-700">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-emerald-400 flex items-center gap-2">
-                    <Package className="h-5 w-5" />
-                    القوائم المتاحة
+                <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+                  <CardTitle className="text-emerald-400 flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
+                    <Package className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="hidden sm:inline">القوائم المتاحة</span>
+                    <span className="sm:hidden">المتاحة</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-white">{restaurant.available_menus || 0}</div>
-                  <p className="text-slate-400 text-sm">قوائم متبقية</p>
+                <CardContent className="px-3 sm:px-6">
+                  <div className="text-2xl sm:text-3xl font-bold text-white">{restaurant.available_menus || 0}</div>
+                  <p className="text-slate-400 text-xs sm:text-sm">قوائم متبقية</p>
                 </CardContent>
               </Card>
             </div>
 
             {/* Quick Actions */}
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader>
-                <CardTitle className="text-white">إجراءات سريعة</CardTitle>
+              <CardHeader className="px-4 sm:px-6">
+                <CardTitle className="text-white text-lg sm:text-xl">إجراءات سريعة</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <CardContent className="px-4 sm:px-6">
+                <div className="grid grid-cols-1 gap-3 sm:gap-4">
                   <Button
                     asChild
-                    className="bg-emerald-600 hover:bg-emerald-700 h-16 text-base"
+                    className="bg-emerald-600 hover:bg-emerald-700 h-12 sm:h-16 text-sm sm:text-base justify-start"
                   >
                     <Link href="/menu-editor">
-                      <Plus className="h-5 w-5 ml-2" />
+                      <Plus className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />
                       إنشاء قائمة جديدة
                     </Link>
                   </Button>
                   
-                  <Button
-                    onClick={() => setActiveTab("qr-cards")}
-                    variant="outline"
-                    className="border-slate-600 text-slate-300 hover:bg-slate-700 h-16 text-base"
-                  >
-                    <QrCode className="h-5 w-5 ml-2" />
-                    إنشاء بطاقة QR
-                  </Button>
-                  
-                  <Button
-                    onClick={() => setActiveTab("restaurant-info")}
-                    variant="outline"
-                    className="border-slate-600 text-slate-300 hover:bg-slate-700 h-16 text-base"
-                  >
-                    <Edit className="h-5 w-5 ml-2" />
-                    تعديل معلومات المطعم
-                  </Button>
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    <Button
+                      onClick={() => setActiveTab("qr-cards")}
+                      variant="outline"
+                      className="border-slate-600 text-slate-300 hover:bg-slate-700 h-12 sm:h-16 text-xs sm:text-base flex-col sm:flex-row gap-1 sm:gap-2"
+                    >
+                      <QrCode className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <span>إنشاء بطاقة QR</span>
+                    </Button>
+                    
+                    <Button
+                      onClick={() => setActiveTab("restaurant-info")}
+                      variant="outline"
+                      className="border-slate-600 text-slate-300 hover:bg-slate-700 h-12 sm:h-16 text-xs sm:text-base flex-col sm:flex-row gap-1 sm:gap-2"
+                    >
+                      <Edit className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <span>تعديل المعلومات</span>
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="menus" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-white">القوائم المنشورة</h2>
+          <TabsContent value="menus" className="space-y-4 sm:space-y-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+              <h2 className="text-xl sm:text-2xl font-bold text-white">القوائم المنشورة</h2>
               <Button
                 asChild
-                className="bg-emerald-600 hover:bg-emerald-700"
+                className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto"
               >
                 <Link href="/menu-editor">
                   <Plus className="h-4 w-4 ml-2" />
@@ -528,40 +546,40 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
             
             {publishedMenus.length === 0 ? (
               <Card className="bg-slate-800/50 border-slate-700">
-                <CardContent className="text-center py-12">
-                  <MenuIcon className="h-16 w-16 mx-auto mb-4 text-slate-600" />
-                  <h3 className="text-xl font-semibold text-white mb-2">لا توجد قوائم منشورة</h3>
-                  <p className="text-slate-400 mb-4">ابدأ بإنشاء قائمتك الأولى</p>
+                <CardContent className="text-center py-8 sm:py-12 px-4">
+                  <MenuIcon className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4 text-slate-600" />
+                  <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">لا توجد قوائم منشورة</h3>
+                  <p className="text-slate-400 mb-4 text-sm sm:text-base">ابدأ بإنشاء قائمتك الأولى</p>
                   <Button asChild className="bg-emerald-600 hover:bg-emerald-700">
                     <Link href="/menu-editor">إنشاء قائمة</Link>
                   </Button>
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {publishedMenus.map((menu) => (
                   <Card key={menu.id} className="bg-slate-800/50 border-slate-700">
-                    <CardHeader>
-                      <CardTitle className="text-emerald-400 flex items-center justify-between">
-                        <span>{menu.menu_name}</span>
-                        <Badge variant="outline" className="border-slate-600 text-slate-300">
+                    <CardHeader className="px-4 sm:px-6">
+                      <CardTitle className="text-emerald-400 flex items-center justify-between flex-wrap gap-2">
+                        <span className="text-sm sm:text-base truncate">{menu.menu_name}</span>
+                        <Badge variant="outline" className="border-slate-600 text-slate-300 text-xs">
                           <Package className="h-3 w-3 ml-1" />
                           {menu._count?.menu_items || 0} عنصر
                         </Badge>
                       </CardTitle>
-                      <p className="text-slate-400 text-sm">
+                      <p className="text-slate-400 text-xs sm:text-sm">
                         نُشرت في: {new Date(menu.created_at).toLocaleDateString("ar-SA")}
                       </p>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex justify-center bg-white p-4 rounded-lg">
-                        <QRCodeCanvas value={getMenuPublicUrl(menu.id)} size={120} />
+                    <CardContent className="space-y-4 px-4 sm:px-6">
+                      <div className="flex justify-center bg-white p-3 sm:p-4 rounded-lg">
+                        <QRCodeCanvas value={getMenuPublicUrl(menu.id)} size={100} className="sm:w-[120px] sm:h-[120px]" />
                       </div>
-                      <div className="flex flex-col gap-2">
+                      <div className="grid grid-cols-1 gap-2 text-sm">
                         <Link
                           href={getMenuPublicUrl(menu.id)}
                           target="_blank"
-                          className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors"
+                          className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors p-2 rounded hover:bg-slate-700/30"
                         >
                           <Eye className="h-4 w-4" />
                           عرض القائمة
@@ -570,14 +588,14 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                           href={menu.pdf_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors"
+                          className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors p-2 rounded hover:bg-slate-700/30"
                         >
                           <Download className="h-4 w-4" />
                           تحميل PDF
                         </a>
                         <button
                           onClick={() => handleDeleteMenu(menu.id, menu.pdf_url)}
-                          className="flex items-center gap-2 text-red-400 hover:text-red-300 transition-colors"
+                          className="flex items-center gap-2 text-red-400 hover:text-red-300 transition-colors p-2 rounded hover:bg-red-900/20"
                         >
                           <Trash2 className="h-4 w-4" />
                           حذف
@@ -590,8 +608,8 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
             )}
           </TabsContent>
 
-          <TabsContent value="qr-cards" className="space-y-6">
-            <div className="space-y-6">
+          <TabsContent value="qr-cards" className="space-y-4 sm:space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* QR Card Generator */}
               <QrCardGenerator 
                 restaurant={restaurant} 
@@ -600,42 +618,42 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
 
               {/* Published QR Cards */}
               <div>
-                <h2 className="text-2xl font-bold text-white mb-6">بطاقات QR المنشورة</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">بطاقات QR المنشورة</h2>
                 {publishedQrCards.length === 0 ? (
                   <Card className="bg-slate-800/50 border-slate-700">
-                    <CardContent className="text-center py-12">
-                      <QrCode className="h-16 w-16 mx-auto mb-4 text-slate-600" />
-                      <h3 className="text-xl font-semibold text-white mb-2">لا توجد بطاقات QR</h3>
-                      <p className="text-slate-400">استخدم المولد أعلاه لإنشاء بطاقة QR</p>
+                    <CardContent className="text-center py-8 sm:py-12 px-4">
+                      <QrCode className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4 text-slate-600" />
+                      <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">لا توجد بطاقات QR</h3>
+                      <p className="text-slate-400 text-sm sm:text-base">استخدم المولد أعلاه لإنشاء بطاقة QR</p>
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     {publishedQrCards.map((card) => (
                       <Card key={card.id} className="bg-slate-800/50 border-slate-700">
-                        <CardHeader>
-                          <CardTitle className="text-emerald-400">{card.card_name}</CardTitle>
-                          <p className="text-slate-400 text-sm">
+                        <CardHeader className="px-4 sm:px-6">
+                          <CardTitle className="text-emerald-400 text-sm sm:text-base">{card.card_name}</CardTitle>
+                          <p className="text-slate-400 text-xs sm:text-sm">
                             نُشرت في: {new Date(card.created_at).toLocaleDateString("ar-SA")}
                           </p>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="flex justify-center bg-white p-4 rounded-lg">
-                            <QRCodeCanvas value={card.qr_code_url} size={120} />
+                        <CardContent className="space-y-4 px-4 sm:px-6">
+                          <div className="flex justify-center bg-white p-3 sm:p-4 rounded-lg">
+                            <QRCodeCanvas value={card.qr_code_url} size={100} className="sm:w-[120px] sm:h-[120px]" />
                           </div>
-                          <div className="flex flex-col gap-2">
+                          <div className="grid grid-cols-1 gap-2 text-sm">
                             <a
                               href={card.pdf_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors"
+                              className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors p-2 rounded hover:bg-slate-700/30"
                             >
                               <Download className="h-4 w-4" />
                               تحميل PDF
                             </a>
                             <button
                               onClick={() => handleDeleteQrCard(card.id, card.pdf_url)}
-                              className="flex items-center gap-2 text-red-400 hover:text-red-300 transition-colors"
+                              className="flex items-center gap-2 text-red-400 hover:text-red-300 transition-colors p-2 rounded hover:bg-red-900/20"
                             >
                               <Trash2 className="h-4 w-4" />
                               حذف
@@ -650,11 +668,11 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
             </div>
           </TabsContent>
 
-          <TabsContent value="restaurant-info" className="space-y-6">
+          <TabsContent value="restaurant-info" className="space-y-4 sm:space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-white flex items-center gap-2">
+              <CardHeader className="px-4 sm:px-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <CardTitle className="text-white flex items-center gap-2 text-lg sm:text-xl">
                     <Building className="h-5 w-5" />
                     معلومات المطعم
                   </CardTitle>
@@ -662,7 +680,7 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                     <Button
                       onClick={() => setIsEditingRestaurant(true)}
                       variant="outline"
-                      className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                      className="border-slate-600 text-slate-300 hover:bg-slate-700 w-full sm:w-auto"
                     >
                       <Edit className="h-4 w-4 ml-2" />
                       تعديل
@@ -670,12 +688,12 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                   )}
                 </div>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
                 {isEditingRestaurant ? (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4">
                       <div className="space-y-2">
-                        <Label className="text-slate-300">اسم المطعم</Label>
+                        <Label className="text-slate-300 text-sm">اسم المطعم</Label>
                         <Input
                           value={editRestaurantData.name}
                           onChange={(e) => setEditRestaurantData(prev => ({ ...prev, name: e.target.value }))}
@@ -683,7 +701,7 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-slate-300">نوع النشاط</Label>
+                        <Label className="text-slate-300 text-sm">نوع النشاط</Label>
                         <Select
                           value={editRestaurantData.category}
                           onValueChange={(value) => setEditRestaurantData(prev => ({ ...prev, category: value }))}
@@ -699,7 +717,7 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-slate-300">رقم الهاتف</Label>
+                        <Label className="text-slate-300 text-sm">رقم الهاتف</Label>
                         <Input
                           value={editRestaurantData.phone}
                           onChange={(e) => setEditRestaurantData(prev => ({ ...prev, phone: e.target.value }))}
@@ -708,7 +726,7 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-slate-300">البريد الإلكتروني</Label>
+                        <Label className="text-slate-300 text-sm">البريد الإلكتروني</Label>
                         <Input
                           value={editRestaurantData.email}
                           onChange={(e) => setEditRestaurantData(prev => ({ ...prev, email: e.target.value }))}
@@ -716,8 +734,8 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                           placeholder="info@restaurant.com"
                         />
                       </div>
-                      <div className="space-y-2 md:col-span-2">
-                        <Label className="text-slate-300">العنوان</Label>
+                      <div className="space-y-2">
+                        <Label className="text-slate-300 text-sm">العنوان</Label>
                         <Textarea
                           value={editRestaurantData.address}
                           onChange={(e) => setEditRestaurantData(prev => ({ ...prev, address: e.target.value }))}
@@ -727,10 +745,10 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                         />
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <Button
                         onClick={handleUpdateRestaurant}
-                        className="bg-emerald-600 hover:bg-emerald-700"
+                        className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto"
                       >
                         <Save className="h-4 w-4 ml-2" />
                         حفظ التغييرات
@@ -747,7 +765,7 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                           })
                         }}
                         variant="outline"
-                        className="border-slate-600 text-slate-300"
+                        className="border-slate-600 text-slate-300 w-full sm:w-auto"
                       >
                         <X className="h-4 w-4 ml-2" />
                         إلغاء
@@ -757,7 +775,7 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                 ) : (
                   <div className="space-y-4">
                     {/* Logo Section */}
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
                       <div className="relative group">
                         {restaurant.logo_url ? (
                           <Image
@@ -786,33 +804,33 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                           </label>
                         </div>
                       </div>
-                      <div>
+                      <div className="text-center sm:text-right">
                         <h3 className="text-lg font-semibold text-white">{restaurant.name}</h3>
                         <p className="text-slate-400">{restaurant.category === 'both' ? 'مطعم ومقهى' : restaurant.category}</p>
                       </div>
                     </div>
 
                     {/* Info Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-3 sm:gap-4">
                       <div className="flex items-center gap-3 p-3 bg-slate-700/30 rounded-lg">
-                        <Phone className="h-5 w-5 text-emerald-400" />
-                        <div>
+                        <Phone className="h-5 w-5 text-emerald-400 flex-shrink-0" />
+                        <div className="min-w-0">
                           <p className="text-slate-400 text-sm">رقم الهاتف</p>
-                          <p className="text-white">{restaurant.phone || "غير محدد"}</p>
+                          <p className="text-white truncate">{restaurant.phone || "غير محدد"}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3 p-3 bg-slate-700/30 rounded-lg">
-                        <Mail className="h-5 w-5 text-emerald-400" />
-                        <div>
+                        <Mail className="h-5 w-5 text-emerald-400 flex-shrink-0" />
+                        <div className="min-w-0">
                           <p className="text-slate-400 text-sm">البريد الإلكتروني</p>
-                          <p className="text-white">{restaurant.email || "غير محدد"}</p>
+                          <p className="text-white truncate">{restaurant.email || "غير محدد"}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 p-3 bg-slate-700/30 rounded-lg md:col-span-2">
-                        <MapPin className="h-5 w-5 text-emerald-400" />
-                        <div>
+                      <div className="flex items-start gap-3 p-3 bg-slate-700/30 rounded-lg">
+                        <MapPin className="h-5 w-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0">
                           <p className="text-slate-400 text-sm">العنوان</p>
-                          <p className="text-white">{restaurant.address || "غير محدد"}</p>
+                          <p className="text-white break-words">{restaurant.address || "غير محدد"}</p>
                         </div>
                       </div>
                     </div>

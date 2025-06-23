@@ -97,17 +97,17 @@ export default function TemplateSelector({
 
   return (
     <>
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-2">Choose Your Template</h2>
-          <p className="text-slate-300">Select a template that matches your {restaurantCategory} style</p>
+      <div className="space-y-4 sm:space-y-6">
+        <div className="text-center sm:text-right">
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">اختر القالب المناسب</h2>
+          <p className="text-slate-300 text-sm sm:text-base">اختر قالب يناسب طابع {restaurantCategory === 'both' ? 'مطعمك ومقهاك' : restaurantCategory}</p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {templates.map((template) => (
             <div key={template.id} className="relative group cursor-pointer" onClick={() => onTemplateSelect(template)}>
               {/* Full Image Card */}
-              <div className={`relative w-full h-[500px] rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-[1.02] ${
+              <div className={`relative w-full h-[350px] sm:h-[500px] rounded-xl sm:rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-[1.02] ${
                 selectedTemplateId === template.id ? "ring-2 ring-emerald-400" : ""
               }`}>
                 
@@ -123,54 +123,62 @@ export default function TemplateSelector({
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 
                 {/* Content Overlay - Bottom */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-6">
-                  <div className="text-right space-y-2 mb-4">
-                    <h2 className="text-white text-2xl font-bold drop-shadow-lg">
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 sm:p-6">
+                  <div className="text-right space-y-1 sm:space-y-2 mb-3 sm:mb-4">
+                    <h2 className="text-white text-lg sm:text-2xl font-bold drop-shadow-lg">
                       {template.name}
                     </h2>
-                    <p className="text-white/90 text-base drop-shadow-md">
+                    <p className="text-white/90 text-sm sm:text-base drop-shadow-md line-clamp-2">
                       {template.description}
                     </p>
                   </div>
                 </div>
                 
-                {/* Floating Action Buttons - Center */}
-                <div className="absolute inset-0 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0">
+                {/* Floating Action Buttons - Mobile Optimized */}
+                <div className="absolute inset-0 flex items-center justify-center gap-2 sm:gap-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0">
                   
                   {/* Preview Button */}
                   <Button
                     onClick={(e) => handlePreview(template, e)}
-                    className="flex items-center gap-3 px-6 py-3 bg-white/95 backdrop-blur-sm rounded-xl font-semibold text-gray-800 shadow-lg hover:shadow-xl hover:bg-white transition-all duration-300 hover:scale-105"
+                    className="flex items-center gap-1 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 bg-white/95 backdrop-blur-sm rounded-lg sm:rounded-xl font-semibold text-gray-800 shadow-lg hover:shadow-xl hover:bg-white transition-all duration-300 hover:scale-105 text-xs sm:text-sm"
                   >
-                    <Eye className="w-5 h-5" />
+                    <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span>معاينة</span>
                   </Button>
                   
                   {/* Select Button */}
                   <Button
                     onClick={() => onTemplateSelect(template)}
-                    className="flex items-center gap-3 px-6 py-3 bg-blue-600 rounded-xl font-semibold text-white shadow-lg hover:shadow-xl hover:bg-blue-700 transition-all duration-300 hover:scale-105"
+                    className="flex items-center gap-1 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 bg-emerald-600 rounded-lg sm:rounded-xl font-semibold text-white shadow-lg hover:shadow-xl hover:bg-emerald-700 transition-all duration-300 hover:scale-105 text-xs sm:text-sm"
                   >
-                    <Check className="w-5 h-5" />
+                    <Check className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span>اختيار</span>
                   </Button>
                 </div>
                 
                 {/* Category Badge - Top Right */}
-                <div className="absolute top-4 right-4 bg-emerald-600/20 text-emerald-400 px-3 py-1 rounded-full text-sm font-medium shadow-lg border border-emerald-400/30">
-                  {template.category === "both" ? "Universal" : template.category}
+                <div className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-emerald-600/20 text-emerald-400 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium shadow-lg border border-emerald-400/30">
+                  {template.category === "both" ? "شامل" : template.category}
                 </div>
                 
+                {/* Selected Indicator */}
+                {selectedTemplateId === template.id && (
+                  <div className="absolute top-2 sm:top-4 left-2 sm:left-4 bg-emerald-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium shadow-lg flex items-center gap-1">
+                    <Check className="w-3 h-3 sm:w-4 sm:h-4" />
+                    مُختار
+                  </div>
+                )}
+                
                 {/* Subtle Frame Effect */}
-                <div className="absolute inset-0 rounded-2xl ring-1 ring-black/10 pointer-events-none"></div>
+                <div className="absolute inset-0 rounded-xl sm:rounded-2xl ring-1 ring-black/10 pointer-events-none"></div>
               </div>
             </div>
           ))}
         </div>
 
         {templates.length === 0 && (
-          <div className="text-center p-8">
-            <p className="text-slate-400">No templates available for your restaurant type.</p>
+          <div className="text-center p-6 sm:p-8">
+            <p className="text-slate-400 text-sm sm:text-base">لا توجد قوالب متاحة لنوع مطعمك.</p>
           </div>
         )}
       </div>
@@ -178,13 +186,13 @@ export default function TemplateSelector({
       {/* Preview Drawer */}
       <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
         <DrawerContent className="bg-slate-900 border-slate-700 max-h-[90vh]">
-          <DrawerHeader className="border-b border-slate-700">
+          <DrawerHeader className="border-b border-slate-700 px-4 sm:px-6">
             <div className="flex items-center justify-between">
-              <div>
-                <DrawerTitle className="text-white text-xl">
+              <div className="min-w-0 flex-1">
+                <DrawerTitle className="text-white text-lg sm:text-xl truncate">
                   {previewTemplate?.name}
                 </DrawerTitle>
-                <p className="text-slate-400 text-sm mt-1">
+                <p className="text-slate-400 text-xs sm:text-sm mt-1 line-clamp-2">
                   {previewTemplate?.description}
                 </p>
               </div>
@@ -192,7 +200,7 @@ export default function TemplateSelector({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-slate-400 hover:text-white"
+                  className="text-slate-400 hover:text-white flex-shrink-0 ml-2"
                   onClick={handleCloseDrawer}
                 >
                   <X className="h-4 w-4" />

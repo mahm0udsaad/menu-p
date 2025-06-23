@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, CreditCard, Wallet, X, ArrowLeft, CheckCircle, Zap } from 'lucide-react';
 import { createPaymobPayment } from '@/lib/actions/payment';
 import { toast } from 'sonner';
+import styles from '@/styles/PaymobPayment.module.css';
+import { injectPaymobStyles } from '@/lib/utils/iframe-style-injector';
 
 interface PaymentMethod {
   id: string;
@@ -97,6 +99,175 @@ export default function PaymentModal({
     }
   }, [isOpen]);
 
+  // Listen for iframe load and inject custom styles
+  useEffect(() => {
+    const handleIframeLoad = () => {
+      const iframe = document.querySelector('.PaymobPayment_paymob-iframe__uWcyJ') as HTMLIFrameElement;
+      if (iframe) {
+        try {
+          // Custom CSS to match your design
+          const customStyles = `
+            <style>
+              body { 
+                background: #0f172a !important; 
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+                color: #f8fafc !important;
+              }
+              .payment-form-container, .payment-container, .main-container { 
+                background: #1e293b !important; 
+                border-radius: 12px !important; 
+                border: 1px solid #475569 !important;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+              }
+              .form-group { 
+                margin-bottom: 1.5rem !important; 
+              }
+              .form-control, input[type="text"], input[type="email"], input[type="tel"], select { 
+                background: #334155 !important; 
+                border: 1px solid #475569 !important; 
+                border-radius: 8px !important; 
+                color: #f8fafc !important; 
+                padding: 12px 16px !important;
+                font-size: 14px !important;
+                transition: all 0.2s ease !important;
+              }
+              .form-control:focus, input:focus, select:focus { 
+                border-color: #10b981 !important; 
+                box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important; 
+                outline: none !important;
+              }
+              .form-control::placeholder, input::placeholder {
+                color: #94a3b8 !important;
+              }
+              .btn-primary, button[type="submit"], .submit-btn { 
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; 
+                border: none !important; 
+                border-radius: 8px !important; 
+                padding: 12px 24px !important; 
+                font-weight: 600 !important;
+                font-size: 16px !important;
+                transition: all 0.2s ease !important;
+                color: white !important;
+              }
+              .btn-primary:hover, button[type="submit"]:hover, .submit-btn:hover { 
+                background: linear-gradient(135deg, #059669 0%, #047857 100%) !important; 
+                transform: translateY(-1px) !important;
+              }
+              .payment-header, .header { 
+                background: #1e293b !important; 
+                color: #f8fafc !important; 
+                border-bottom: 1px solid #475569 !important;
+                padding: 24px !important;
+              }
+              .payment-header h2, .header h2, .payment-header h1, .header h1 {
+                color: #f8fafc !important;
+                font-size: 24px !important;
+                font-weight: 600 !important;
+                margin-bottom: 8px !important;
+              }
+              .payment-header p, .header p {
+                color: #94a3b8 !important;
+                font-size: 14px !important;
+              }
+              .security-badge, .footer {
+                background: #0f172a !important;
+                border-top: 1px solid #475569 !important;
+                color: #94a3b8 !important;
+              }
+              .error-message, .error, .alert-danger {
+                background: #fecaca !important;
+                color: #dc2626 !important;
+                border: 1px solid #f87171 !important;
+                border-radius: 8px !important;
+                padding: 12px 16px !important;
+              }
+              .success-message, .success, .alert-success {
+                background: #dcfce7 !important;
+                color: #16a34a !important;
+                border: 1px solid #4ade80 !important;
+                border-radius: 8px !important;
+                padding: 12px 16px !important;
+              }
+              label {
+                color: #e2e8f0 !important;
+                font-weight: 500 !important;
+                margin-bottom: 8px !important;
+                display: block !important;
+              }
+              .card-input-container, .card-container {
+                background: #334155 !important;
+                border: 1px solid #475569 !important;
+                border-radius: 8px !important;
+                padding: 16px !important;
+              }
+              .payment-methods {
+                background: #1e293b !important;
+                border-radius: 8px !important;
+                padding: 16px !important;
+              }
+              .payment-method-item {
+                background: #334155 !important;
+                border: 1px solid #475569 !important;
+                border-radius: 8px !important;
+                margin-bottom: 12px !important;
+                transition: all 0.2s ease !important;
+              }
+              .payment-method-item:hover {
+                border-color: #10b981 !important;
+                background: #374151 !important;
+              }
+              .loading-spinner, .spinner {
+                border-color: #475569 !important;
+                border-top-color: #10b981 !important;
+              }
+              /* Additional common Paymob classes */
+              .payment-form, .checkout-form {
+                background: #1e293b !important;
+                padding: 24px !important;
+                border-radius: 12px !important;
+              }
+              .card-number-input, .card-expiry-input, .card-cvc-input {
+                background: #334155 !important;
+                border: 1px solid #475569 !important;
+                color: #f8fafc !important;
+              }
+              .amount-display, .total-amount {
+                color: #10b981 !important;
+                font-weight: 600 !important;
+                font-size: 18px !important;
+              }
+            </style>
+          `;
+
+          // Try to inject styles using postMessage
+          iframe.contentWindow?.postMessage({
+            type: 'INJECT_STYLES',
+            styles: customStyles
+          }, '*');
+
+          // Alternative: Try to access iframe document (may fail due to CORS)
+          try {
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+            if (iframeDoc) {
+              const styleElement = iframeDoc.createElement('style');
+              styleElement.innerHTML = customStyles.replace('<style>', '').replace('</style>', '');
+              iframeDoc.head.appendChild(styleElement);
+            }
+          } catch (corsError) {
+            console.log('CORS restriction - using PostMessage fallback');
+          }
+        } catch (error) {
+          console.error('Error injecting styles:', error);
+        }
+      }
+    };
+
+    if (currentStep === 'payment-iframe' && iframeUrl) {
+      // Wait for iframe to load
+      setTimeout(handleIframeLoad, 2000);
+    }
+  }, [currentStep, iframeUrl]);
+
   const convertCurrency = (amountInCents: number, toCurrency: string) => {
     if (toCurrency === 'USD') {
       // Convert EGP to USD (assuming 1 USD = 50 EGP roughly)
@@ -150,6 +321,8 @@ export default function PaymentModal({
         
         // Add redirect URL for payment status page
         const redirectUrl = `${window.location.origin}/payment-status?success={{success}}`;
+   
+        // Build iframe URL - remove custom_css as Paymob doesn't support it
         const frameUrl = `https://accept.paymob.com/api/acceptance/iframes/${iframeId}?payment_token=${result.paymentToken}&callback_url=${encodeURIComponent(redirectUrl)}&notification_url=${encodeURIComponent(`${window.location.origin}/api/paymob-webhook`)}`;
         
         setIframeUrl(frameUrl);
@@ -309,12 +482,23 @@ export default function PaymentModal({
 
           {/* Payment Iframe Screen */}
           {currentStep === 'payment-iframe' && iframeUrl && (
-            <div className="h-full w-full animate-in fade-in-0 duration-500">
+            <div className={`h-full w-full animate-in fade-in-0 duration-500 ${styles['iframe-wrapper']}`}>
+              <div className={styles['iframe-brand-overlay']}>
+                Secure Payment
+              </div>
               <iframe
                 src={iframeUrl}
-                className="w-full h-full border-0 rounded-b-lg"
+                className={`${styles['paymob-iframe']} paymob-iframe w-full h-full border-0 rounded-b-lg`}
                 title="Payment"
                 allow="payment"
+                onLoad={(e) => {
+                  console.log('Iframe loaded');
+                  const iframe = e.target as HTMLIFrameElement;
+                  // Try to inject custom styles with multiple methods
+                  setTimeout(() => injectPaymobStyles(iframe), 500);
+                  setTimeout(() => injectPaymobStyles(iframe), 2000);
+                  setTimeout(() => injectPaymobStyles(iframe), 5000);
+                }}
               />
             </div>
           )}

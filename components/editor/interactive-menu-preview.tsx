@@ -169,11 +169,11 @@ export default function InteractiveMenuPreview({
   const getDietaryIcon = (dietary: string) => {
     switch (dietary.toLowerCase()) {
       case "vegetarian":
-        return <Leaf className="h-3 w-3 text-green-500" />
+        return <Leaf className="h-2 w-2 sm:h-3 sm:w-3 text-green-500" />
       case "vegan":
-        return <Leaf className="h-3 w-3 text-green-600" />
+        return <Leaf className="h-2 w-2 sm:h-3 sm:w-3 text-green-600" />
       case "gluten-free":
-        return <Wheat className="h-3 w-3 text-amber-500" />
+        return <Wheat className="h-2 w-2 sm:h-3 sm:w-3 text-amber-500" />
       default:
         return null
     }
@@ -183,20 +183,20 @@ export default function InteractiveMenuPreview({
     <DndProvider backend={HTML5Backend}>
       <div className="bg-white text-black min-h-[800px] max-w-3xl mx-auto shadow-2xl font-serif">
         {/* Header */}
-        <div className="text-center py-12 px-8 bg-gradient-to-b from-slate-50 to-white border-b border-slate-200">
-          <div className="flex items-center justify-center gap-6 mb-6">
+        <div className="text-center py-6 sm:py-12 px-4 sm:px-8 bg-gradient-to-b from-slate-50 to-white border-b border-slate-200">
+          <div className="flex items-center justify-center gap-3 sm:gap-6 mb-3 sm:mb-6">
             {restaurant.logo_url && (
               <Image
                 src={restaurant.logo_url || "/placeholder.svg?height=80&width=80"}
                 alt={`${restaurant.name} logo`}
-                width={80}
-                height={80}
-                className="rounded-full object-cover shadow-lg"
+                width={50}
+                height={50}
+                className="rounded-full object-cover shadow-lg sm:w-[80px] sm:h-[80px]"
               />
             )}
             <div>
-              <h1 className="text-4xl font-bold text-slate-800 mb-2 tracking-wide">{restaurant.name}</h1>
-              <p className="text-slate-600 capitalize text-lg font-light">{restaurant.category}</p>
+              <h1 className="text-2xl sm:text-4xl font-bold text-slate-800 mb-1 sm:mb-2 tracking-wide">{restaurant.name}</h1>
+              <p className="text-slate-600 capitalize text-sm sm:text-lg font-light">{restaurant.category}</p>
             </div>
           </div>
         </div>
