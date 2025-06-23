@@ -131,7 +131,7 @@ export default function PricingPlans({ restaurantId, userEmail, userName }: Pric
           
           // Add redirect URL for payment status page
           const redirectUrl = `${window.location.origin}/payment-status?success={{success}}`;
-          const frameUrl = `https://accept.paymob.com/api/acceptance/iframes/${iframeId}?payment_token=${result.paymentToken}&callback_url=${encodeURIComponent(redirectUrl)}`;
+          const frameUrl = `https://accept.paymob.com/api/acceptance/iframes/${iframeId}?payment_token=${result.paymentToken}&callback_url=${encodeURIComponent(redirectUrl)}&notification_url=${encodeURIComponent(`${window.location.origin}/api/paymob-webhook`)}`;
           
           window.location.href = frameUrl;
         } else {

@@ -178,7 +178,7 @@ export default function PaymentForPublishModal({
         
         // Add current path and auto-publish parameter for redirect after payment
         const redirectUrl = `${window.location.origin}/payment-status?success={{success}}&redirect=${encodeURIComponent(currentPath)}&auto_publish=true`;
-        const frameUrl = `https://accept.paymob.com/api/acceptance/iframes/${iframeId}?payment_token=${result.paymentToken}&callback_url=${encodeURIComponent(redirectUrl)}`;
+        const frameUrl = `https://accept.paymob.com/api/acceptance/iframes/${iframeId}?payment_token=${result.paymentToken}&callback_url=${encodeURIComponent(redirectUrl)}&notification_url=${encodeURIComponent(`${window.location.origin}/api/paymob-webhook`)}`;
         
         setIframeUrl(frameUrl);
         setCurrentStep('payment-iframe');
