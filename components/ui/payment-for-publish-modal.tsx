@@ -52,6 +52,8 @@ interface PaymentForPublishModalProps {
   onClose: () => void;
   restaurantId: string;
   currentPath: string;
+  currentTab?: string;
+  currentStep?: string;
 }
 
 type ModalStep = 'method-selection' | 'payment-iframe' | 'processing';
@@ -60,7 +62,9 @@ export default function PaymentForPublishModal({
   isOpen,
   onClose,
   restaurantId,
-  currentPath
+  currentPath,
+  currentTab,
+  currentStep
 }: PaymentForPublishModalProps) {
   const [currentStep, setCurrentStep] = useState<ModalStep>('method-selection');
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
@@ -104,34 +108,9 @@ export default function PaymentForPublishModal({
   };
 
   const handleMethodSelect = async (method: PaymentMethod) => {
-    // Prevent duplicate requests
-    if (isProcessing || processingMethod === method.id) {
-      console.log('Payment already in progress, ignoring duplicate request');
-      return;
-    }
-
-    console.log(`Starting payment process for method: ${method.id}`);
-    
-    // Save current URL and state to localStorage for return after payment
-    const currentUrl = window.location.href;
-    const urlParams = new URLSearchParams(window.location.search);
-    const currentStep = urlParams.get('step');
-    const currentTab = urlParams.get('tab');
-    
-    localStorage.setItem('paymentReturnUrl', currentUrl);
-    if (currentStep) localStorage.setItem('paymentReturnStep', currentStep);
-    if (currentTab) localStorage.setItem('paymentReturnTab', currentTab);
-    
-    console.log('💾 Saved return state for post-payment redirect:', { 
-      currentUrl, 
-      currentStep, 
-      currentTab 
-    });
-    
     setSelectedMethod(method);
     setCurrentStep('processing');
     setIsProcessing(true);
-    setProcessingMethod(method.id);
 
     try {
       const billingData = {
@@ -153,6 +132,21 @@ export default function PaymentForPublishModal({
       if (!user) {
         throw new Error('User not authenticated');
       }
+
+      // Save complete current state to localStorage for post-payment redirect
+      const currentUrl = currentPath || (typeof window !== 'undefined' ? window.location.pathname : '/menu-editor');
+      
+      console.log('💾 Saving comprehensive return state for post-payment redirect:', {
+        url: currentUrl,
+        tab: currentTab,
+        step: currentStep,
+        timestamp: new Date().toISOString()
+      });
+      
+      localStorage.setItem('paymentReturnUrl', currentUrl);
+      if (currentTab) localStorage.setItem('paymentReturnTab', currentTab);
+      if (currentStep) localStorage.setItem('paymentReturnStep', currentStep);
+      localStorage.setItem('paymentReturnTimestamp', new Date().toISOString());
 
       // Generate unique debouncing key
       const paymentKey = generatePaymentKey({
@@ -190,22 +184,10 @@ export default function PaymentForPublishModal({
       }
     } catch (error) {
       console.error('Payment error:', error);
-      
-      // Show user-friendly error message
-      let errorMessage = 'فشل في معالجة الدفع';
-      if (error instanceof Error) {
-        if (error.message.includes('duplicate') || error.message.includes('اعتذر')) {
-          errorMessage = 'يبدو أن هناك طلب دفع مشابه. يرجى المحاولة مرة أخرى بعد قليل.';
-        } else if (error.message.includes('auth')) {
-          errorMessage = 'خطأ في المصادقة. يرجى تسجيل الدخول مرة أخرى.';
-        }
-      }
-      
-      toast.error(errorMessage);
+      toast.error('فشل في معالجة الدفع');
       setCurrentStep('method-selection');
     } finally {
       setIsProcessing(false);
-      setProcessingMethod(null);
     }
   };
 

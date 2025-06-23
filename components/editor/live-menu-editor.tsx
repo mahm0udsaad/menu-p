@@ -401,7 +401,9 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
         restaurantId={restaurant.id}
-        currentPath={typeof window !== 'undefined' ? window.location.pathname : '/menu-editor'}
+        currentPath={typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/menu-editor'}
+        currentTab={typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tab') || undefined : undefined}
+        currentStep={typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('step') || undefined : undefined}
       />
     </>
   )

@@ -46,16 +46,37 @@ export function usePaymentStatus(): PaymentStatus {
         return;
       }
 
-      // Check payment status directly from payments table (faster than restaurants table)
-      const { data: payment, error: paymentError } = await supabase
-        .from('payments')
-        .select('status')
-        .eq('user_id', user.id)
-        .eq('status', 'paid')
-        .limit(1)
-        .single();
+      // Check both payment status and restaurant available_menus in parallel
+      const [paymentResult, restaurantResult] = await Promise.all([
+        // Check payments table
+        supabase
+          .from('payments')
+          .select('status')
+          .eq('user_id', user.id)
+          .eq('status', 'paid')
+          .limit(1),
+        
+        // Check restaurant available_menus
+        supabase
+          .from('restaurants')
+          .select('available_menus')
+          .eq('user_id', user.id)
+          .limit(1)
+          .single()
+      ]);
 
-      const isPaid = !paymentError && payment?.status === 'paid';
+      const hasPaymentRecord = paymentResult.data && paymentResult.data.length > 0;
+      const hasAvailableMenus = restaurantResult.data && (restaurantResult.data.available_menus || 0) > 0;
+      
+      // User has paid plan if either they have a payment record OR restaurant has available_menus > 0
+      const isPaid = Boolean(hasPaymentRecord || hasAvailableMenus);
+      
+      console.log('💳 Payment status check:', {
+        hasPaymentRecord,
+        hasAvailableMenus,
+        isPaid,
+        availableMenus: restaurantResult.data?.available_menus
+      });
       
       // Update cache
       cache.set(cacheKey, { hasPaidPlan: isPaid, timestamp: now });
@@ -92,11 +113,12 @@ export function usePaymentStatus(): PaymentStatus {
     return () => subscription.unsubscribe();
   }, [checkPaymentStatus]);
 
-  // Listen for payment updates via real-time subscriptions
+  // Listen for payment and restaurant updates via real-time subscriptions
   useEffect(() => {
     if (!userId) return;
 
-    const subscription = supabase
+    // Subscribe to payments table changes
+    const paymentsSubscription = supabase
       .channel('payment_updates')
       .on(
         'postgres_changes',
@@ -107,7 +129,27 @@ export function usePaymentStatus(): PaymentStatus {
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
-          console.log('Payment update detected:', payload);
+          console.log('💳 Payment update detected:', payload);
+          // Invalidate cache and refetch
+          cache.delete(userId);
+          checkPaymentStatus();
+        }
+      )
+      .subscribe();
+
+    // Subscribe to restaurants table changes
+    const restaurantsSubscription = supabase
+      .channel('restaurant_updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'restaurants',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          console.log('🏪 Restaurant update detected:', payload);
           // Invalidate cache and refetch
           cache.delete(userId);
           checkPaymentStatus();
@@ -116,7 +158,8 @@ export function usePaymentStatus(): PaymentStatus {
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      paymentsSubscription.unsubscribe();
+      restaurantsSubscription.unsubscribe();
     };
   }, [userId, checkPaymentStatus]);
 
