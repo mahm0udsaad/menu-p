@@ -54,14 +54,16 @@ export async function POST(req: Request) {
             console.log('✅ [WEBHOOK] Got metadata from extras:', metadata);
           } else {
             console.log('ℹ️ [WEBHOOK] No extras, trying to parse merchant_order_id structure...');
-            // If no extras, try to parse merchant_order_id structure (user-restaurant-timestamp-random)
-            const parts = order.merchant_order_id.split('-');
-            if (parts.length >= 2) {
+            // Parse merchant_order_id structure (user_id__restaurant_id__timestamp__random)
+            const parts = order.merchant_order_id.split('__');
+            if (parts.length >= 2 && parts[0] !== 'order') {
               metadata = {
                 user_id: parts[0],
                 restaurant_id: parts[1]
               };
               console.log('✅ [WEBHOOK] Extracted metadata from merchant_order_id parts:', metadata);
+            } else {
+              console.error('❌ [WEBHOOK] Invalid merchant_order_id format:', order.merchant_order_id);
             }
           }
         }

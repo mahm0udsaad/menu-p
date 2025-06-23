@@ -47,7 +47,6 @@ function generateUniqueMerchantOrderId(metadata?: any): string {
   
   const timestamp = Date.now();
   const randomSuffix = Math.random().toString(36).substring(2, 12); // Longer random suffix
-  const uniqueId = `${timestamp}-${randomSuffix}`;
   
   if (metadata) {
     console.log('🆔 [PAYMOB] Extracting metadata:', {
@@ -55,16 +54,13 @@ function generateUniqueMerchantOrderId(metadata?: any): string {
       restaurant_id: metadata.restaurant_id
     });
     
-    // Create a shorter, cleaner unique ID that includes essential metadata
-    const userId = metadata.user_id ? metadata.user_id.toString().substring(0, 8) : 'u';
-    const restaurantId = metadata.restaurant_id ? metadata.restaurant_id.toString().substring(0, 8) : 'r';
-    
-    const merchantOrderId = `${userId}-${restaurantId}-${uniqueId}`;
+    // Create a unique ID that preserves the full UUIDs
+    const merchantOrderId = `${metadata.user_id}__${metadata.restaurant_id}__${timestamp}__${randomSuffix}`;
     console.log('🆔 [PAYMOB] Generated merchant order ID with metadata:', merchantOrderId);
     return merchantOrderId;
   }
   
-  const merchantOrderId = `order-${uniqueId}`;
+  const merchantOrderId = `order__${timestamp}__${randomSuffix}`;
   console.log('🆔 [PAYMOB] Generated merchant order ID without metadata:', merchantOrderId);
   return merchantOrderId;
 }
