@@ -6,6 +6,11 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   MenuIcon,
   BarChart3,
@@ -19,18 +24,40 @@ import {
   UtensilsCrossed,
   Star,
   Heart,
+  Plus,
+  Edit,
+  Crown,
+  Building,
+  Phone,
+  Mail,
+  MapPin,
+  Upload,
+  Save,
+  X,
+  Users,
+  Package,
+  CheckCircle,
+  AlertTriangle
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { QRCodeCanvas } from "qrcode.react"
 import { signOut } from "@/lib/actions"
 import QrCardGenerator from "@/components/qr-card-generator"
+import { useToast } from "@/components/ui/use-toast"
+import NotificationModal from "@/components/ui/notification-modal"
+import ConfirmationModal from "@/components/ui/confirmation-modal"
+import { usePaymentStatus } from "@/lib/hooks/use-payment-status"
 
 interface Restaurant {
   id: string
   name: string
   category: string
   logo_url: string | null
+  address?: string | null
+  phone?: string | null
+  email?: string | null
+  available_menus?: number
 }
 
 interface PublishedMenu {
@@ -38,6 +65,9 @@ interface PublishedMenu {
   menu_name: string
   pdf_url: string
   created_at: string
+  _count?: {
+    menu_items: number
+  }
 }
 
 interface PublishedQrCard {
@@ -57,13 +87,63 @@ interface DashboardClientProps {
   user: any
 }
 
-function DashboardContent({ restaurant, publishedMenus: initialPublishedMenus, publishedQrCards: initialPublishedQrCards, user }: DashboardClientProps) {
+function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initialPublishedMenus, publishedQrCards: initialPublishedQrCards, user }: DashboardClientProps) {
   const supabase = createClientComponentClient()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { toast } = useToast()
+  const { hasPaidPlan, loading: paymentLoading } = usePaymentStatus()
+  
+  const [restaurant, setRestaurant] = useState<Restaurant>(initialRestaurant)
   const [publishedMenus, setPublishedMenus] = useState<PublishedMenu[]>(initialPublishedMenus)
   const [publishedQrCards, setPublishedQrCards] = useState<PublishedQrCard[]>(initialPublishedQrCards)
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "overview")
+  
+  // Restaurant editing state
+  const [isEditingRestaurant, setIsEditingRestaurant] = useState(false)
+  const [editRestaurantData, setEditRestaurantData] = useState({
+    name: restaurant.name,
+    category: restaurant.category,
+    address: restaurant.address || "",
+    phone: restaurant.phone || "",
+    email: restaurant.email || ""
+  })
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false)
+  
+  // Modal states
+  const [notification, setNotification] = useState<{
+    show: boolean
+    type: "success" | "error" | "warning" | "info"
+    title: string
+    description: string
+  }>({
+    show: false,
+    type: "info",
+    title: "",
+    description: ""
+  })
+  
+  const [confirmAction, setConfirmAction] = useState<{
+    show: boolean
+    title: string
+    description: string
+    action: () => void
+    type?: "danger" | "warning" | "success" | "info"
+  }>({
+    show: false,
+    title: "",
+    description: "",
+    action: () => {},
+    type: "warning"
+  })
+
+  const showNotification = (type: "success" | "error" | "warning" | "info", title: string, description: string) => {
+    setNotification({ show: true, type, title, description })
+  }
+
+  const showConfirmation = (title: string, description: string, action: () => void, type: "danger" | "warning" | "success" | "info" = "warning") => {
+    setConfirmAction({ show: true, title, description, action, type })
+  }
 
   const handleTabChange = (value: string) => {
     setActiveTab(value)
@@ -71,98 +151,195 @@ function DashboardContent({ restaurant, publishedMenus: initialPublishedMenus, p
   }
 
   const handleDeleteMenu = async (menuId: string, pdfUrl: string) => {
-    if (!confirm("هل أنت متأكد من حذف هذه القائمة المنشورة؟ لا يمكن التراجع عن هذا الإجراء.")) return
+    showConfirmation(
+      "حذف القائمة",
+      "هل أنت متأكد من حذف هذه القائمة المنشورة؟ لا يمكن التراجع عن هذا الإجراء.",
+      async () => {
+        try {
+          // Delete from DB
+          const { error: dbError } = await supabase.from("published_menus").delete().eq("id", menuId)
+          if (dbError) throw dbError
 
-    // Delete from DB
-    const { error: dbError } = await supabase.from("published_menus").delete().eq("id", menuId)
-    if (dbError) {
-      alert(`خطأ في حذف القائمة من قاعدة البيانات: ${dbError.message}`)
-      return
-    }
+          // Delete from Storage
+          try {
+            const urlParts = new URL(pdfUrl)
+            const pathParts = urlParts.pathname.split("/")
+            const filePath = pathParts.slice(pathParts.indexOf("restaurant-logos") + 1).join("/")
 
-    // Delete from Storage
-    try {
-      const urlParts = new URL(pdfUrl)
-      const pathParts = urlParts.pathname.split("/")
-      const filePath = pathParts.slice(pathParts.indexOf("restaurant-logos") + 1).join("/")
+            if (filePath) {
+              const { error: storageError } = await supabase.storage.from("restaurant-logos").remove([filePath])
+              if (storageError) {
+                console.warn(`خطأ في حذف ملف PDF من التخزين (قد يكون الملف محذوف مسبقاً): ${storageError.message}`, filePath)
+              }
+            }
+          } catch (e) {
+            console.warn("لا يمكن تحليل رابط PDF للحذف من التخزين", e)
+          }
 
-      if (filePath) {
-        const { error: storageError } = await supabase.storage.from("restaurant-logos").remove([filePath])
-        if (storageError) {
-          console.warn(`خطأ في حذف ملف PDF من التخزين (قد يكون الملف محذوف مسبقاً): ${storageError.message}`, filePath)
+          setPublishedMenus((prev) => prev.filter((menu) => menu.id !== menuId))
+          showNotification("success", "تم الحذف بنجاح", "تم حذف القائمة المنشورة بنجاح")
+        } catch (error) {
+          showNotification("error", "خطأ في الحذف", "حدث خطأ أثناء محاولة حذف القائمة")
         }
-      }
-    } catch (e) {
-      console.warn("لا يمكن تحليل رابط PDF للحذف من التخزين", e)
-    }
-
-    setPublishedMenus((prev) => prev.filter((menu) => menu.id !== menuId))
-    alert("تم حذف القائمة بنجاح.")
+      },
+      "danger"
+    )
   }
 
   const handleDeleteQrCard = async (cardId: string, pdfUrl: string) => {
-    if (!confirm("هل أنت متأكد من حذف بطاقة QR هذه؟ لا يمكن التراجع عن هذا الإجراء.")) return
+    showConfirmation(
+      "حذف بطاقة QR",
+      "هل أنت متأكد من حذف بطاقة QR هذه؟ لا يمكن التراجع عن هذا الإجراء.",
+      async () => {
+        try {
+          // Delete from DB
+          const { error: dbError } = await supabase.from("published_qr_cards").delete().eq("id", cardId)
+          if (dbError) throw dbError
 
-    // Delete from DB
-    const { error: dbError } = await supabase.from("published_qr_cards").delete().eq("id", cardId)
-    if (dbError) {
-      alert(`خطأ في حذف بطاقة QR من قاعدة البيانات: ${dbError.message}`)
-      return
-    }
+          // Delete from Storage
+          try {
+            const urlParts = new URL(pdfUrl)
+            const pathParts = urlParts.pathname.split("/")
+            const filePath = pathParts.slice(pathParts.indexOf("restaurant-logos") + 1).join("/")
 
-    // Delete from Storage
-    try {
-      const urlParts = new URL(pdfUrl)
-      const pathParts = urlParts.pathname.split("/")
-      const filePath = pathParts.slice(pathParts.indexOf("restaurant-logos") + 1).join("/")
+            if (filePath) {
+              const { error: storageError } = await supabase.storage.from("restaurant-logos").remove([filePath])
+              if (storageError) {
+                console.warn(`خطأ في حذف ملف PDF من التخزين (قد يكون الملف محذوف مسبقاً): ${storageError.message}`, filePath)
+              }
+            }
+          } catch (e) {
+            console.warn("لا يمكن تحليل رابط PDF للحذف من التخزين", e)
+          }
 
-      if (filePath) {
-        const { error: storageError } = await supabase.storage.from("restaurant-logos").remove([filePath])
-        if (storageError) {
-          console.warn(`خطأ في حذف ملف PDF من التخزين (قد يكون الملف محذوف مسبقاً): ${storageError.message}`, filePath)
+          setPublishedQrCards((prev) => prev.filter((card) => card.id !== cardId))
+          showNotification("success", "تم الحذف بنجاح", "تم حذف بطاقة QR بنجاح")
+        } catch (error) {
+          showNotification("error", "خطأ في الحذف", "حدث خطأ أثناء محاولة حذف بطاقة QR")
         }
-      }
-    } catch (e) {
-      console.warn("لا يمكن تحليل رابط PDF للحذف من التخزين", e)
-    }
+      },
+      "danger"
+    )
+  }
 
-    setPublishedQrCards((prev) => prev.filter((card) => card.id !== cardId))
-    alert("تم حذف بطاقة QR بنجاح.")
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setIsUploadingLogo(true)
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${restaurant.id}-logo-${Date.now()}.${fileExt}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('restaurant-logos')
+        .upload(fileName, file)
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('restaurant-logos')
+        .getPublicUrl(fileName)
+
+      // Update restaurant logo
+      const { error: updateError } = await supabase
+        .from('restaurants')
+        .update({ logo_url: publicUrl })
+        .eq('id', restaurant.id)
+
+      if (updateError) throw updateError
+
+      setRestaurant(prev => ({ ...prev, logo_url: publicUrl }))
+      showNotification("success", "تم تحديث الشعار", "تم رفع شعار المطعم بنجاح")
+    } catch (error) {
+      console.error('Logo upload error:', error)
+      showNotification("error", "فشل في رفع الشعار", "حدث خطأ أثناء رفع الشعار. حاول مرة أخرى.")
+    } finally {
+      setIsUploadingLogo(false)
+    }
+  }
+
+  const handleUpdateRestaurant = async () => {
+    try {
+      const { error } = await supabase
+        .from('restaurants')
+        .update({
+          name: editRestaurantData.name,
+          category: editRestaurantData.category,
+          address: editRestaurantData.address || null,
+          phone: editRestaurantData.phone || null,
+          email: editRestaurantData.email || null,
+        })
+        .eq('id', restaurant.id)
+
+      if (error) throw error
+
+      setRestaurant(prev => ({
+        ...prev,
+        ...editRestaurantData
+      }))
+      setIsEditingRestaurant(false)
+      showNotification("success", "تم التحديث بنجاح", "تم تحديث بيانات المطعم بنجاح")
+    } catch (error) {
+      console.error('Restaurant update error:', error)
+      showNotification("error", "فشل في التحديث", "حدث خطأ أثناء تحديث بيانات المطعم")
+    }
   }
 
   const getMenuPublicUrl = (menuId: string) => {
     if (typeof window !== "undefined") {
       return `${window.location.origin}/menus/${menuId}`
     }
-    return `/menus/${menuId}` // Fallback for server or if window is not available
+    return `/menus/${menuId}`
+  }
+
+  const getPlanInfo = () => {
+    if (paymentLoading) return { name: "جاري التحميل...", status: "loading" }
+    if (hasPaidPlan) return { name: "الخطة المدفوعة", status: "active" }
+    return { name: "الخطة المجانية", status: "free" }
+  }
+
+  const getMenuItemsCount = async (menuId: string) => {
+    try {
+      const { count } = await supabase
+        .from("menu_items")
+        .select("*", { count: 'exact', head: true })
+        .eq("menu_id", menuId)
+        .eq("is_available", true)
+      
+      return count || 0
+    } catch (error) {
+      console.error("Error getting menu items count:", error)
+      return 0
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden" dir="rtl">
       {/* Floating Background Icons */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-20 animate-bounce delay-100">
+        <div className="absolute top-20 left-20 animate-bounce delay-100">
           <Coffee className="h-8 w-8 text-emerald-400/5" />
         </div>
-        <div className="absolute top-40 left-32 animate-pulse delay-300">
+        <div className="absolute top-40 right-32 animate-pulse delay-300">
           <UtensilsCrossed className="h-12 w-12 text-emerald-300/5" />
         </div>
-        <div className="absolute top-60 right-1/3 animate-bounce delay-500">
+        <div className="absolute top-60 left-1/3 animate-bounce delay-500">
           <QrCode className="h-10 w-10 text-emerald-500/5" />
         </div>
-        <div className="absolute bottom-40 left-20 animate-pulse delay-700">
+        <div className="absolute bottom-40 right-20 animate-pulse delay-700">
           <MenuIcon className="h-14 w-14 text-emerald-400/5" />
         </div>
-        <div className="absolute bottom-60 right-20 animate-bounce delay-1000">
+        <div className="absolute bottom-60 left-20 animate-bounce delay-1000">
           <Star className="h-8 w-8 text-emerald-300/5" />
         </div>
-        <div className="absolute top-1/3 left-1/4 animate-pulse delay-200">
+        <div className="absolute top-1/3 right-1/4 animate-pulse delay-200">
           <Star className="h-6 w-6 text-yellow-400/5" />
         </div>
-        <div className="absolute bottom-1/3 right-1/4 animate-bounce delay-800">
+        <div className="absolute bottom-1/3 left-1/4 animate-bounce delay-800">
           <Heart className="h-7 w-7 text-red-400/5" />
         </div>
-        <div className="absolute top-1/2 right-10 animate-pulse delay-600">
+        <div className="absolute top-1/2 left-10 animate-pulse delay-600">
           <BarChart3 className="h-9 w-9 text-emerald-400/5" />
         </div>
       </div>
@@ -171,8 +348,8 @@ function DashboardContent({ restaurant, publishedMenus: initialPublishedMenus, p
       <header className="border-b border-slate-700 bg-slate-800/50 backdrop-blur sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 space-x-reverse">
-              <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-2 rounded-xl shadow-lg">
+            <div className="flex items-center gap-4">
+              <div className="bg-gradient-to-l from-emerald-500 to-emerald-600 p-2 rounded-xl shadow-lg">
                 <QrCode className="h-6 w-6 text-white" />
               </div>
               {restaurant.logo_url && (
@@ -186,263 +363,496 @@ function DashboardContent({ restaurant, publishedMenus: initialPublishedMenus, p
               )}
               <div>
                 <h1 className="text-2xl font-bold text-white">{restaurant.name}</h1>
-                <p className="text-slate-300">{restaurant.category === 'Both' ? 'Restaurant & Cafe' : restaurant.category}</p>
+                <p className="text-slate-300">{restaurant.category === 'both' ? 'مطعم ومقهى' : restaurant.category}</p>
               </div>
             </div>
-            <form action={signOut}>
-              <Button
-                variant="ghost"
-                type="submit"
-                className="text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-xl"
+            <div className="flex items-center gap-4">
+              {/* Plan Badge */}
+              <Badge 
+                variant={getPlanInfo().status === "active" ? "default" : "outline"}
+                className={`${getPlanInfo().status === "active" ? "bg-emerald-500 text-white" : "border-slate-600 text-slate-300"}`}
               >
-                <LogOut className="h-4 w-4 mr-2" />
-                تسجيل الخروج
-              </Button>
-            </form>
+                <Crown className="h-3 w-3 ml-1" />
+                {getPlanInfo().name}
+              </Badge>
+              
+              <form action={signOut}>
+                <Button
+                  variant="ghost"
+                  type="submit"
+                  className="text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-xl flex items-center gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  تسجيل الخروج
+                </Button>
+              </form>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 relative z-10">
+      <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-          <TabsList className="bg-slate-800/50 border border-slate-700 rounded-xl p-1">
-            <TabsTrigger
-              value="overview"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-emerald-700 data-[state=active]:text-white rounded-lg"
-            >
-              <BarChart3 className="h-4 w-4 mr-2" />
+          <TabsList className="bg-slate-800/50 p-1 rounded-xl">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-emerald-500">
               نظرة عامة
             </TabsTrigger>
-            <TabsTrigger
-              value="edit-menu"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-emerald-700 data-[state=active]:text-white rounded-lg"
-            >
-              <MenuIcon className="h-4 w-4 mr-2" />
-              تحرير القائمة
-            </TabsTrigger>
-            <TabsTrigger
-              value="published-menus"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-emerald-700 data-[state=active]:text-white rounded-lg"
-            >
-              <FileText className="h-4 w-4 mr-2" />
+            <TabsTrigger value="menus" className="data-[state=active]:bg-emerald-500">
               القوائم المنشورة
             </TabsTrigger>
-            <TabsTrigger
-              value="qr-cards"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-emerald-700 data-[state=active]:text-white rounded-lg"
-            >
-              <QrCode className="h-4 w-4 mr-2" />
+            <TabsTrigger value="qr-cards" className="data-[state=active]:bg-emerald-500">
               بطاقات QR
+            </TabsTrigger>
+            <TabsTrigger value="restaurant-info" className="data-[state=active]:bg-emerald-500">
+              معلومات المطعم
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview">
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-white mb-2">مرحباً بك في لوحة التحكم!</h2>
-              <p className="text-slate-300">أدر قائمتك الرقمية وأكواد QR من هنا.</p>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="bg-slate-800/50 border-slate-700 backdrop-blur hover:bg-slate-800/70 transition-all duration-300 rounded-xl">
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card className="bg-slate-800/50 border-slate-700">
                 <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center text-white">
-                    <MenuIcon className="h-5 w-5 mr-2 text-emerald-400" />
-                    عناصر القائمة
+                  <CardTitle className="text-emerald-400 flex items-center gap-2">
+                    <MenuIcon className="h-5 w-5" />
+                    القوائم المنشورة
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-white mb-1">...</div>
-                  <p className="text-sm text-slate-400">عناصر في قائمتك</p>
+                  <div className="text-3xl font-bold text-white">{publishedMenus.length}</div>
+                  <p className="text-slate-400 text-sm">قوائم نشطة</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-slate-800/50 border-slate-700">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-emerald-400 flex items-center gap-2">
+                    <QrCode className="h-5 w-5" />
+                    بطاقات QR
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-white">{publishedQrCards.length}</div>
+                  <p className="text-slate-400 text-sm">بطاقات مُنشأة</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-slate-800/50 border-slate-700">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-emerald-400 flex items-center gap-2">
+                    <Crown className="h-5 w-5" />
+                    الخطة الحالية
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-lg font-bold text-white">{getPlanInfo().name}</div>
+                  <div className="flex items-center gap-1 mt-1">
+                    {getPlanInfo().status === "active" ? (
+                      <CheckCircle className="h-4 w-4 text-emerald-400" />
+                    ) : (
+                      <AlertTriangle className="h-4 w-4 text-yellow-400" />
+                    )}
+                    <p className="text-slate-400 text-sm">
+                      {getPlanInfo().status === "active" ? "نشطة" : "محدودة"}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-slate-800/50 border-slate-700">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-emerald-400 flex items-center gap-2">
+                    <Package className="h-5 w-5" />
+                    القوائم المتاحة
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-white">{restaurant.available_menus || 0}</div>
+                  <p className="text-slate-400 text-sm">قوائم متبقية</p>
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
 
-          <TabsContent value="edit-menu">
-            <Card className="bg-slate-800/50 border-slate-700 backdrop-blur rounded-xl">
+            {/* Quick Actions */}
+            <Card className="bg-slate-800/50 border-slate-700">
               <CardHeader>
-                <CardTitle className="text-white">تحرير قائمتك</CardTitle>
-                <p className="text-slate-300">
-                  ادخل إلى محرر القائمة الكامل لتحديث العناصر والفئات ونشر إصدارات جديدة.
-                </p>
+                <CardTitle className="text-white">إجراءات سريعة</CardTitle>
               </CardHeader>
               <CardContent>
-                <Button
-                  asChild
-                  className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 rounded-xl"
-                >
-                  <Link href="/menu-editor">
-                    <MenuIcon className="mr-2 h-5 w-5" />
-                    فتح محرر القائمة
-                  </Link>
-                </Button>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Button
+                    asChild
+                    className="bg-emerald-600 hover:bg-emerald-700 h-16 text-base"
+                  >
+                    <Link href="/menu-editor">
+                      <Plus className="h-5 w-5 ml-2" />
+                      إنشاء قائمة جديدة
+                    </Link>
+                  </Button>
+                  
+                  <Button
+                    onClick={() => setActiveTab("qr-cards")}
+                    variant="outline"
+                    className="border-slate-600 text-slate-300 hover:bg-slate-700 h-16 text-base"
+                  >
+                    <QrCode className="h-5 w-5 ml-2" />
+                    إنشاء بطاقة QR
+                  </Button>
+                  
+                  <Button
+                    onClick={() => setActiveTab("restaurant-info")}
+                    variant="outline"
+                    className="border-slate-600 text-slate-300 hover:bg-slate-700 h-16 text-base"
+                  >
+                    <Edit className="h-5 w-5 ml-2" />
+                    تعديل معلومات المطعم
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="published-menus">
-            <Card className="bg-slate-800/50 border-slate-700 backdrop-blur rounded-xl">
-              <CardHeader>
-                <CardTitle className="text-white">قوائمك المنشورة</CardTitle>
-                <p className="text-slate-300">اعرض وحمل وأدر قوائم PDF المُنشأة وأكواد QR الخاصة بها.</p>
-              </CardHeader>
-              <CardContent>
-                {publishedMenus.length === 0 ? (
-                  <p className="text-slate-400">لم تنشر أي قوائم بعد. اذهب إلى "تحرير القائمة" لإنشاء ونشر واحدة.</p>
+          <TabsContent value="menus" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-white">القوائم المنشورة</h2>
+              <Button
+                asChild
+                className="bg-emerald-600 hover:bg-emerald-700"
+              >
+                <Link href="/menu-editor">
+                  <Plus className="h-4 w-4 ml-2" />
+                  إنشاء قائمة جديدة
+                </Link>
+              </Button>
+            </div>
+            
+            {publishedMenus.length === 0 ? (
+              <Card className="bg-slate-800/50 border-slate-700">
+                <CardContent className="text-center py-12">
+                  <MenuIcon className="h-16 w-16 mx-auto mb-4 text-slate-600" />
+                  <h3 className="text-xl font-semibold text-white mb-2">لا توجد قوائم منشورة</h3>
+                  <p className="text-slate-400 mb-4">ابدأ بإنشاء قائمتك الأولى</p>
+                  <Button asChild className="bg-emerald-600 hover:bg-emerald-700">
+                    <Link href="/menu-editor">إنشاء قائمة</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {publishedMenus.map((menu) => (
+                  <Card key={menu.id} className="bg-slate-800/50 border-slate-700">
+                    <CardHeader>
+                      <CardTitle className="text-emerald-400 flex items-center justify-between">
+                        <span>{menu.menu_name}</span>
+                        <Badge variant="outline" className="border-slate-600 text-slate-300">
+                          <Package className="h-3 w-3 ml-1" />
+                          {menu._count?.menu_items || 0} عنصر
+                        </Badge>
+                      </CardTitle>
+                      <p className="text-slate-400 text-sm">
+                        نُشرت في: {new Date(menu.created_at).toLocaleDateString("ar-SA")}
+                      </p>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex justify-center bg-white p-4 rounded-lg">
+                        <QRCodeCanvas value={getMenuPublicUrl(menu.id)} size={120} />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Link
+                          href={getMenuPublicUrl(menu.id)}
+                          target="_blank"
+                          className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors"
+                        >
+                          <Eye className="h-4 w-4" />
+                          عرض القائمة
+                        </Link>
+                        <a
+                          href={menu.pdf_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors"
+                        >
+                          <Download className="h-4 w-4" />
+                          تحميل PDF
+                        </a>
+                        <button
+                          onClick={() => handleDeleteMenu(menu.id, menu.pdf_url)}
+                          className="flex items-center gap-2 text-red-400 hover:text-red-300 transition-colors"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          حذف
+                        </button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="qr-cards" className="space-y-6">
+            <div className="space-y-6">
+              {/* QR Card Generator */}
+              <QrCardGenerator 
+                restaurant={restaurant} 
+                menuPublicUrl={getMenuPublicUrl(restaurant.id)} 
+              />
+
+              {/* Published QR Cards */}
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-6">بطاقات QR المنشورة</h2>
+                {publishedQrCards.length === 0 ? (
+                  <Card className="bg-slate-800/50 border-slate-700">
+                    <CardContent className="text-center py-12">
+                      <QrCode className="h-16 w-16 mx-auto mb-4 text-slate-600" />
+                      <h3 className="text-xl font-semibold text-white mb-2">لا توجد بطاقات QR</h3>
+                      <p className="text-slate-400">استخدم المولد أعلاه لإنشاء بطاقة QR</p>
+                    </CardContent>
+                  </Card>
                 ) : (
-                  <div className="space-y-6">
-                    {publishedMenus.map((menu) => (
-                      <div
-                        key={menu.id}
-                        className="p-6 border border-slate-700 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-slate-700/30 hover:bg-slate-700/50 transition-all duration-300"
-                      >
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-white">{menu.menu_name}</h3>
-                          <p className="text-sm text-slate-400">
-                            نُشرت في: {new Date(menu.created_at).toLocaleDateString("ar-SA")}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {publishedQrCards.map((card) => (
+                      <Card key={card.id} className="bg-slate-800/50 border-slate-700">
+                        <CardHeader>
+                          <CardTitle className="text-emerald-400">{card.card_name}</CardTitle>
+                          <p className="text-slate-400 text-sm">
+                            نُشرت في: {new Date(card.created_at).toLocaleDateString("ar-SA")}
                           </p>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="p-2 bg-white rounded-lg">
-                            <QRCodeCanvas value={getMenuPublicUrl(menu.id)} size={80} level="M" />
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="flex justify-center bg-white p-4 rounded-lg">
+                            <QRCodeCanvas value={card.qr_code_url} size={120} />
                           </div>
                           <div className="flex flex-col gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              asChild
-                              className="border-slate-600 hover:bg-slate-700 rounded-lg"
+                            <a
+                              href={card.pdf_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors"
                             >
-                              <Link href={`/menus/${menu.id}`} target="_blank" rel="noopener noreferrer">
-                                <Eye className="h-4 w-4 mr-2" /> عرض
-                              </Link>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              asChild
-                              className="border-slate-600 hover:bg-slate-700 rounded-lg"
+                              <Download className="h-4 w-4" />
+                              تحميل PDF
+                            </a>
+                            <button
+                              onClick={() => handleDeleteQrCard(card.id, card.pdf_url)}
+                              className="flex items-center gap-2 text-red-400 hover:text-red-300 transition-colors"
                             >
-                              <a href={menu.pdf_url} download={`${menu.menu_name}.pdf`}>
-                                <Download className="h-4 w-4 mr-2" /> تحميل
-                              </a>
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDeleteMenu(menu.id, menu.pdf_url)}
-                              className="rounded-lg"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" /> حذف
-                            </Button>
+                              <Trash2 className="h-4 w-4" />
+                              حذف
+                            </button>
                           </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="restaurant-info" className="space-y-6">
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Building className="h-5 w-5" />
+                    معلومات المطعم
+                  </CardTitle>
+                  {!isEditingRestaurant && (
+                    <Button
+                      onClick={() => setIsEditingRestaurant(true)}
+                      variant="outline"
+                      className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                    >
+                      <Edit className="h-4 w-4 ml-2" />
+                      تعديل
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {isEditingRestaurant ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-slate-300">اسم المطعم</Label>
+                        <Input
+                          value={editRestaurantData.name}
+                          onChange={(e) => setEditRestaurantData(prev => ({ ...prev, name: e.target.value }))}
+                          className="bg-slate-700/50 border-slate-600 text-white"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-slate-300">نوع النشاط</Label>
+                        <Select
+                          value={editRestaurantData.category}
+                          onValueChange={(value) => setEditRestaurantData(prev => ({ ...prev, category: value }))}
+                        >
+                          <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="restaurant">مطعم</SelectItem>
+                            <SelectItem value="cafe">مقهى</SelectItem>
+                            <SelectItem value="both">مطعم ومقهى</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-slate-300">رقم الهاتف</Label>
+                        <Input
+                          value={editRestaurantData.phone}
+                          onChange={(e) => setEditRestaurantData(prev => ({ ...prev, phone: e.target.value }))}
+                          className="bg-slate-700/50 border-slate-600 text-white"
+                          placeholder="+966 50 123 4567"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-slate-300">البريد الإلكتروني</Label>
+                        <Input
+                          value={editRestaurantData.email}
+                          onChange={(e) => setEditRestaurantData(prev => ({ ...prev, email: e.target.value }))}
+                          className="bg-slate-700/50 border-slate-600 text-white"
+                          placeholder="info@restaurant.com"
+                        />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label className="text-slate-300">العنوان</Label>
+                        <Textarea
+                          value={editRestaurantData.address}
+                          onChange={(e) => setEditRestaurantData(prev => ({ ...prev, address: e.target.value }))}
+                          className="bg-slate-700/50 border-slate-600 text-white"
+                          placeholder="العنوان الكامل للمطعم"
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handleUpdateRestaurant}
+                        className="bg-emerald-600 hover:bg-emerald-700"
+                      >
+                        <Save className="h-4 w-4 ml-2" />
+                        حفظ التغييرات
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setIsEditingRestaurant(false)
+                          setEditRestaurantData({
+                            name: restaurant.name,
+                            category: restaurant.category,
+                            address: restaurant.address || "",
+                            phone: restaurant.phone || "",
+                            email: restaurant.email || ""
+                          })
+                        }}
+                        variant="outline"
+                        className="border-slate-600 text-slate-300"
+                      >
+                        <X className="h-4 w-4 ml-2" />
+                        إلغاء
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Logo Section */}
+                    <div className="flex items-center gap-4">
+                      <div className="relative group">
+                        {restaurant.logo_url ? (
+                          <Image
+                            src={restaurant.logo_url}
+                            alt={`${restaurant.name} logo`}
+                            width={80}
+                            height={80}
+                            className="rounded-lg object-cover"
+                          />
+                        ) : (
+                          <div className="w-20 h-20 bg-slate-700 rounded-lg flex items-center justify-center">
+                            <Building className="h-8 w-8 text-slate-400" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                          <label htmlFor="logo-upload" className="cursor-pointer text-white">
+                            <Upload className="h-6 w-6" />
+                            <input
+                              id="logo-upload"
+                              type="file"
+                              accept="image/*"
+                              onChange={handleLogoUpload}
+                              className="hidden"
+                              disabled={isUploadingLogo}
+                            />
+                          </label>
                         </div>
                       </div>
-                    ))}
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">{restaurant.name}</h3>
+                        <p className="text-slate-400">{restaurant.category === 'both' ? 'مطعم ومقهى' : restaurant.category}</p>
+                      </div>
+                    </div>
+
+                    {/* Info Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-center gap-3 p-3 bg-slate-700/30 rounded-lg">
+                        <Phone className="h-5 w-5 text-emerald-400" />
+                        <div>
+                          <p className="text-slate-400 text-sm">رقم الهاتف</p>
+                          <p className="text-white">{restaurant.phone || "غير محدد"}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 bg-slate-700/30 rounded-lg">
+                        <Mail className="h-5 w-5 text-emerald-400" />
+                        <div>
+                          <p className="text-slate-400 text-sm">البريد الإلكتروني</p>
+                          <p className="text-white">{restaurant.email || "غير محدد"}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 bg-slate-700/30 rounded-lg md:col-span-2">
+                        <MapPin className="h-5 w-5 text-emerald-400" />
+                        <div>
+                          <p className="text-slate-400 text-sm">العنوان</p>
+                          <p className="text-white">{restaurant.address || "غير محدد"}</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
-
-          <TabsContent value="qr-cards">
-            <div className="space-y-6">
-              {/* QR Card Generator */}
-              <Card className="bg-slate-800/50 border-slate-700 backdrop-blur rounded-xl">
-                <CardHeader>
-                  <CardTitle className="text-white">إنشاء بطاقة QR جديدة</CardTitle>
-                  <p className="text-slate-300">أنشئ بطاقة QR مخصصة لمطعمك</p>
-                </CardHeader>
-                <CardContent>
-                  {restaurant && <QrCardGenerator restaurant={restaurant} menuPublicUrl={getMenuPublicUrl(restaurant.id)} />}
-                </CardContent>
-              </Card>
-
-              {/* Published QR Cards */}
-              <Card className="bg-slate-800/50 border-slate-700 backdrop-blur rounded-xl">
-                <CardHeader>
-                  <CardTitle className="text-white">بطاقات QR المنشورة</CardTitle>
-                  <p className="text-slate-300">اعرض وحمل وأدر بطاقات QR المُنشأة.</p>
-                </CardHeader>
-                <CardContent>
-                  {publishedQrCards.length === 0 ? (
-                    <p className="text-slate-400">لم تنشئ أي بطاقات QR بعد. استخدم المولد أعلاه لإنشاء واحدة.</p>
-                  ) : (
-                    <div className="space-y-6">
-                      {publishedQrCards.map((card) => (
-                        <div
-                          key={card.id}
-                          className="p-6 border border-slate-700 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-slate-700/30 hover:bg-slate-700/50 transition-all duration-300"
-                        >
-                          <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-white">{card.card_name}</h3>
-                            <p className="text-sm text-slate-400 mb-1">
-                              نُشرت في: {new Date(card.created_at).toLocaleDateString("ar-SA")}
-                            </p>
-                            <p className="text-sm text-slate-300">{card.custom_text}</p>
-                            <p className="text-xs text-slate-400 mt-1">
-                              يشير إلى: {card.qr_code_url}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <div className="p-2 bg-white rounded-lg">
-                              <QRCodeCanvas value={card.qr_code_url} size={80} level="M" />
-                            </div>
-                            <div className="flex flex-col gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                asChild
-                                className="border-slate-600 hover:bg-slate-700 rounded-lg"
-                              >
-                                <a href={card.pdf_url} target="_blank" rel="noopener noreferrer">
-                                  <Eye className="h-4 w-4 mr-2" /> عرض
-                                </a>
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                asChild
-                                className="border-slate-600 hover:bg-slate-700 rounded-lg"
-                              >
-                                <a href={card.pdf_url} download={`${card.card_name}.pdf`}>
-                                  <Download className="h-4 w-4 mr-2" /> تحميل
-                                </a>
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => handleDeleteQrCard(card.id, card.pdf_url)}
-                                className="rounded-lg"
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" /> حذف
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
         </Tabs>
       </main>
+
+      {/* Modals */}
+      <ConfirmationModal
+        isOpen={confirmAction.show}
+        onClose={() => setConfirmAction(prev => ({ ...prev, show: false }))}
+        onConfirm={() => {
+          confirmAction.action()
+          setConfirmAction(prev => ({ ...prev, show: false }))
+        }}
+        title={confirmAction.title}
+        description={confirmAction.description}
+        type={confirmAction.type}
+        confirmText="تأكيد"
+        cancelText="إلغاء"
+      />
+
+      <NotificationModal
+        isOpen={notification.show}
+        onClose={() => setNotification(prev => ({ ...prev, show: false }))}
+        title={notification.title}
+        description={notification.description}
+        type={notification.type}
+      />
     </div>
   )
 }
 
-// Wrap with Suspense for useSearchParams
 export default function DashboardClient(props: DashboardClientProps) {
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
-        </div>
-      }
-    >
+    <Suspense fallback={<div>جاري التحميل...</div>}>
       <DashboardContent {...props} />
     </Suspense>
   )

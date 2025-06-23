@@ -118,10 +118,25 @@ export async function getDashboardData() {
       console.error("Error fetching published menus:", menusError)
     }
 
+    // Get total menu items count for the restaurant (approximation for all menus)
+    const { count: totalMenuItems } = await supabase
+      .from("menu_items")
+      .select("*", { count: 'exact', head: true })
+      .eq("restaurant_id", restaurantData.id)
+      .eq("is_available", true)
+
+    // Add estimated item count to each menu (since we can't track items per published menu)
+    const menusWithCounts = (menusData || []).map(menu => ({
+      ...menu,
+      _count: {
+        menu_items: Math.floor((totalMenuItems || 0) / Math.max(1, menusData?.length || 1))
+      }
+    }))
+
     return {
       data: {
         restaurant: restaurantData,
-        publishedMenus: menusData || [],
+        publishedMenus: menusWithCounts,
         user,
       },
       error: null,
