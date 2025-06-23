@@ -26,38 +26,67 @@ export async function createPaymobPayment(
   restaurantId: string,
   integrationId?: string
 ) {
+  console.log('💳 [PAYMENT] Starting createPaymobPayment...');
+  console.log('💳 [PAYMENT] Input parameters:', {
+    amount,
+    restaurantId,
+    integrationId,
+    billing: {
+      ...billing,
+      email: billing.email ? billing.email.substring(0, 10) + '...' : 'N/A',
+      phone: billing.phone ? billing.phone.substring(0, 8) + '...' : 'N/A'
+    },
+    timestamp: new Date().toISOString()
+  });
+
   try {
     // Validate inputs
+    console.log('💳 [PAYMENT] Validating inputs...');
     if (!amount || isNaN(amount) || amount <= 0) {
+      console.error('💳 [PAYMENT] ERROR: Invalid amount:', amount);
       throw new Error(`Invalid amount: ${amount}`);
     }
     
     if (!restaurantId) {
+      console.error('💳 [PAYMENT] ERROR: Restaurant ID is required');
       throw new Error('Restaurant ID is required');
     }
+
+    console.log('💳 [PAYMENT] Input validation passed');
 
     const supabase = createClient();
     
     // Get the current user
+    console.log('💳 [PAYMENT] Getting current user...');
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
+      console.error('💳 [PAYMENT] ERROR: User authentication failed:', userError);
       throw new Error('User not authenticated');
     }
 
+    console.log('💳 [PAYMENT] User authenticated:', user.id);
+
     // Get auth token from Paymob
+    console.log('💳 [PAYMENT] Getting auth token from Paymob...');
     const token = await getAuthToken();
+    console.log('💳 [PAYMENT] ✅ Auth token received');
     
     // Register order with Paymob (with metadata for webhook)
+    console.log('💳 [PAYMENT] Registering order with Paymob...');
     const orderId = await registerOrder(token, amount, {
       user_id: user.id,
       restaurant_id: restaurantId,
       integration_id: integrationId
     });
+    console.log('💳 [PAYMENT] ✅ Order registered with ID:', orderId);
     
     // Get payment key with specified integration ID
+    console.log('💳 [PAYMENT] Getting payment key...');
     const paymentToken = await getPaymentKey(token, orderId, amount, billing, integrationId);
+    console.log('💳 [PAYMENT] ✅ Payment key received');
 
     // Don't save to database here - webhook will create the record on success
+    console.log('💳 [PAYMENT] ✅ Payment creation completed successfully');
     return { 
       success: true, 
       paymentToken,
@@ -70,7 +99,8 @@ export async function createPaymobPayment(
     }
     };
   } catch (error) {
-    console.error('Payment creation error:', error);
+    console.error('💳 [PAYMENT] ERROR: Payment creation failed:', error);
+    console.error('💳 [PAYMENT] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Payment creation failed' 

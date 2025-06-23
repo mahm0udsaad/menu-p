@@ -1,5 +1,6 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -18,9 +19,23 @@ import {
 import Link from "next/link"
 import PaymentButton from "@/components/payment-button"
 
-export default async function LandingPage() {
-  // Properly await cookies to fix the warning
-  const cookieStore = await cookies()
+interface PageProps {
+  searchParams: { [key: string]: string | string[] | undefined }
+}
+
+export default async function LandingPage({ searchParams }: PageProps) {
+  console.log('🏠 [HOME] Landing page loading with searchParams:', searchParams)
+  
+  // Check if this is an auth callback - if so, redirect to callback handler immediately
+  const code = searchParams?.code as string
+  if (code) {
+    console.log('🏠 [HOME] Auth code detected, redirecting to callback handler')
+    const callbackUrl = `/auth/callback?code=${encodeURIComponent(code)}&next=/`
+    redirect(callbackUrl)
+  }
+  
+  // Get cookies (no await needed in App Router)
+  const cookieStore = cookies()
   const supabase = createServerComponentClient({ cookies: () => cookieStore })
 
   const {
