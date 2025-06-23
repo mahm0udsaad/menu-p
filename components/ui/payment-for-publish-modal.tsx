@@ -53,7 +53,7 @@ interface PaymentForPublishModalProps {
   restaurantId: string;
   currentPath: string;
   currentTab?: string;
-  currentStep?: string;
+  returnStep?: string;
 }
 
 type ModalStep = 'method-selection' | 'payment-iframe' | 'processing';
@@ -64,7 +64,7 @@ export default function PaymentForPublishModal({
   restaurantId,
   currentPath,
   currentTab,
-  currentStep
+  returnStep
 }: PaymentForPublishModalProps) {
   const [currentStep, setCurrentStep] = useState<ModalStep>('method-selection');
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
@@ -139,13 +139,13 @@ export default function PaymentForPublishModal({
       console.log('💾 Saving comprehensive return state for post-payment redirect:', {
         url: currentUrl,
         tab: currentTab,
-        step: currentStep,
+        step: returnStep,
         timestamp: new Date().toISOString()
       });
       
       localStorage.setItem('paymentReturnUrl', currentUrl);
       if (currentTab) localStorage.setItem('paymentReturnTab', currentTab);
-      if (currentStep) localStorage.setItem('paymentReturnStep', currentStep);
+      if (returnStep) localStorage.setItem('paymentReturnStep', returnStep);
       localStorage.setItem('paymentReturnTimestamp', new Date().toISOString());
 
       // Generate unique debouncing key
