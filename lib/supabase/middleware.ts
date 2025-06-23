@@ -9,11 +9,6 @@ export const isSupabaseConfigured =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.length > 0
 
 export async function updateSession(request: NextRequest): Promise<NextResponse> {
-  // Allow home page to be accessed without authentication
-  if (request.nextUrl.pathname === "/") {
-    return NextResponse.next()
-  }
-
   // If Supabase is not configured, just continue without auth
   if (!isSupabaseConfigured) {
     return NextResponse.next({
@@ -21,13 +16,31 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     })
   }
 
-  const res = NextResponse.next()
+  let res = NextResponse.next()
 
   // Create a Supabase client configured to use cookies
   const supabase = createMiddlewareClient({ req: request, res })
 
-  // Refresh session if expired - required for Server Components
-  await supabase.auth.getSession()
+  // Check if this is an auth callback with code parameter
+  const code = request.nextUrl.searchParams.get('code')
+  const isAuthCallback = code && (
+    request.nextUrl.pathname === "/" || 
+    request.nextUrl.pathname.startsWith("/dashboard") ||
+    request.nextUrl.pathname.startsWith("/payment-status")
+  )
+
+  if (isAuthCallback) {
+    // Redirect auth callbacks to the dedicated callback handler
+    const callbackUrl = new URL('/auth/callback', request.url)
+    callbackUrl.searchParams.set('code', code)
+    callbackUrl.searchParams.set('next', request.nextUrl.pathname + request.nextUrl.search)
+    
+    console.log('Redirecting auth callback to route handler:', callbackUrl.toString())
+    return NextResponse.redirect(callbackUrl)
+  } else {
+    // Regular session refresh for non-callback requests
+    await supabase.auth.getSession()
+  }
 
   // Protected routes - redirect to login if not authenticated
   const isAuthRoute =
@@ -37,7 +50,10 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     request.nextUrl.pathname.startsWith("/auth/reset-password") ||
     request.nextUrl.pathname === "/auth/callback"
 
-  if (!isAuthRoute) {
+  // Allow home page for public access (no auth required)
+  const isHomePage = request.nextUrl.pathname === "/"
+
+  if (!isAuthRoute && !isHomePage) {
     const {
       data: { session },
     } = await supabase.auth.getSession()

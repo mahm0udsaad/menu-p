@@ -2,7 +2,6 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import PricingPlans from "@/components/pricing-plans"
 import {
   QrCode,
   Menu,
@@ -18,12 +17,10 @@ import {
 } from "lucide-react" // Added LayoutDashboard icon
 import Link from "next/link"
 import PaymentButton from "@/components/payment-button"
-import { Suspense } from "react"
-import AuthHandler from "@/components/auth-handler"
 
 export default async function LandingPage() {
-  // Made async
-  const cookieStore = cookies()
+  // Properly await cookies to fix the warning
+  const cookieStore = await cookies()
   const supabase = createServerComponentClient({ cookies: () => cookieStore })
 
   const {
@@ -31,25 +28,29 @@ export default async function LandingPage() {
   } = await supabase.auth.getSession()
 
   const user = session?.user
+  let restaurantData = null
 
-  // Get user's restaurant data if logged in
-  let restaurantData = null;
-  if (user) {
-    const { data: restaurant } = await supabase
-      .from('restaurants')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-    restaurantData = restaurant;
+  // Only fetch restaurant data if user exists to prevent UUID errors
+  if (user?.id) {
+    try {
+      const { data: restaurant, error: restaurantError } = await supabase
+        .from('restaurants')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      if (restaurantError) {
+        console.error('Error fetching restaurant data:', restaurantError)
+      } else {
+        restaurantData = restaurant
+      }
+    } catch (error) {
+      console.error('Error in restaurant fetch:', error)
+    }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir="rtl">
-      {/* Auth Handler - handles auth codes from email confirmations and OAuth */}
-      <Suspense fallback={null}>
-        <AuthHandler />
-      </Suspense>
-
       {/* Floating Background Icons */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 right-20 animate-bounce delay-100">

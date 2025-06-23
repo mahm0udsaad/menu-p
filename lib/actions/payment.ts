@@ -67,7 +67,7 @@ export async function createPaymobPayment(
         restaurant_id: restaurantId,
         amount: amount,
         integration_id: integrationId
-      }
+    }
     };
   } catch (error) {
     console.error('Payment creation error:', error);

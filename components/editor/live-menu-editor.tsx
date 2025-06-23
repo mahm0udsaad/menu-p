@@ -17,6 +17,7 @@ import {
 import NotificationModal from "@/components/ui/notification-modal"
 import dynamic from "next/dynamic"
 import PaymentForPublishModal from '@/components/ui/payment-for-publish-modal'
+import { usePaymentStatus } from '@/lib/hooks/use-payment-status'
 
 const PdfPreviewModal = dynamic(() => import("@/components/pdf-preview-modal"), {
   loading: () => <div className="h-96 bg-slate-800 rounded-lg animate-pulse"></div>,
@@ -70,10 +71,10 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
   const [showSuccessDialog, setShowSuccessDialog] = useState(false)
   const [publishResult, setPublishResult] = useState<{ pdfUrl?: string; menuId?: string } | null>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [userEmail, setUserEmail] = useState<string>('')
-  const [userName, setUserName] = useState<string>('')
-  const [hasPaidPlan, setHasPaidPlan] = useState<boolean>(false)
   const router = useRouter()
+
+  // Use optimized payment status hook
+  const { hasPaidPlan, loading: paymentLoading, refetch: refetchPaymentStatus } = usePaymentStatus()
 
   // Notification modal state
   const [notification, setNotification] = useState<{
@@ -92,40 +93,18 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
     setNotification({ show: true, type, title, description })
   }
 
-  // Check user payment status and details
-  useEffect(() => {
-    const checkUserStatus = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        setUserEmail(user.email || '')
-        setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || 'User')
-        
-        // Check if restaurant has paid plan
-        const { data: restaurantData } = await supabase
-          .from('restaurants')
-          .select('available_menus')
-          .eq('id', restaurant.id)
-          .single()
-        
-        setHasPaidPlan((restaurantData?.available_menus || 0) > 0)
-      }
-    }
-    
-    checkUserStatus()
-  }, [restaurant.id])
-
   // Auto-publish if redirected after payment
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     if (urlParams.get('auto_publish') === 'true') {
       // Clear the URL parameter
       window.history.replaceState({}, '', window.location.pathname)
-      // Auto-publish
-      if (hasPaidPlan) {
+      // Auto-publish when payment status is loaded and user has paid
+      if (!paymentLoading && hasPaidPlan) {
         handlePublishMenu()
       }
     }
-  }, [hasPaidPlan])
+  }, [hasPaidPlan, paymentLoading])
 
   useEffect(() => {
     // Only fetch if we don't have initial data
@@ -298,6 +277,7 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
               size="sm"
               className={`border-slate-600 ${!hasPaidPlan ? 'opacity-75' : ''}`}
               title={!hasPaidPlan ? 'يتطلب اشتراك مدفوع' : ''}
+              disabled={paymentLoading}
             >
               <Eye className="h-3 w-3 mr-1" />
               معاينة PDF
@@ -305,7 +285,7 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
             </Button>
             <Button
               onClick={handlePublishMenu}
-              disabled={isPublishing || categories.length === 0}
+              disabled={isPublishing || categories.length === 0 || paymentLoading}
               size="sm"
               className={`bg-emerald-600 hover:bg-emerald-700 ${!hasPaidPlan ? 'opacity-75' : ''}`}
               title={!hasPaidPlan ? 'يتطلب اشتراك مدفوع' : ''}
@@ -398,8 +378,6 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
         restaurantId={restaurant.id}
-        userEmail={userEmail}
-        userName={userName}
         currentPath={typeof window !== 'undefined' ? window.location.pathname : '/menu-editor'}
       />
     </>

@@ -7,6 +7,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, CreditCard, Wallet, X, ArrowLeft, FileText, Zap, Crown } from 'lucide-react';
 import { createPaymobPayment } from '@/lib/actions/payment';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase/client';
+import { debouncePaymentRequest, generatePaymentKey } from '@/lib/utils/debounce-payment';
 
 interface PaymentMethod {
   id: string;
@@ -49,8 +51,6 @@ interface PaymentForPublishModalProps {
   isOpen: boolean;
   onClose: () => void;
   restaurantId: string;
-  userEmail: string;
-  userName: string;
   currentPath: string;
 }
 
@@ -60,23 +60,37 @@ export default function PaymentForPublishModal({
   isOpen,
   onClose,
   restaurantId,
-  userEmail,
-  userName,
   currentPath
 }: PaymentForPublishModalProps) {
   const [currentStep, setCurrentStep] = useState<ModalStep>('method-selection');
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
   const [iframeUrl, setIframeUrl] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [userEmail, setUserEmail] = useState<string>('');
+  const [userName, setUserName] = useState<string>('');
+  const [processingMethod, setProcessingMethod] = useState<string | null>(null); // Track which method is being processed
 
   const amount = 8000; // $80 in cents
 
+  // Get user details when modal opens
   useEffect(() => {
     if (isOpen) {
       setCurrentStep('method-selection');
       setSelectedMethod(null);
       setIframeUrl('');
       setIsProcessing(false);
+      setProcessingMethod(null); // Reset processing method
+      
+      // Get user details
+      const getUserDetails = async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setUserEmail(user.email || '');
+          setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || 'User');
+        }
+      };
+      
+      getUserDetails();
     }
   }, [isOpen]);
 
@@ -90,9 +104,18 @@ export default function PaymentForPublishModal({
   };
 
   const handleMethodSelect = async (method: PaymentMethod) => {
+    // Prevent duplicate requests
+    if (isProcessing || processingMethod === method.id) {
+      console.log('Payment already in progress, ignoring duplicate request');
+      return;
+    }
+
+    console.log(`Starting payment process for method: ${method.id}`);
+    
     setSelectedMethod(method);
     setCurrentStep('processing');
     setIsProcessing(true);
+    setProcessingMethod(method.id);
 
     try {
       const billingData = {
@@ -102,11 +125,37 @@ export default function PaymentForPublishModal({
         phone: '+201000000000',
       };
 
-      const result = await createPaymobPayment(
-        amount, 
-        billingData, 
+      console.log('Creating payment with Paymob...', {
+        amount,
+        method: method.id,
+        restaurant: restaurantId,
+        user: userEmail
+      });
+
+      // Get current user for debouncing key
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Generate unique debouncing key
+      const paymentKey = generatePaymentKey({
+        userId: user.id,
         restaurantId,
-        method.integrationId
+        amount,
+        integrationId: method.integrationId
+      });
+
+      // Use debounced payment request
+      const result = await debouncePaymentRequest(
+        paymentKey,
+        () => createPaymobPayment(
+          amount, 
+          billingData, 
+          restaurantId,
+          method.integrationId
+        ),
+        3000 // 3 second debounce
       );
       
       if (result.success && result.paymentToken) {
@@ -114,6 +163,8 @@ export default function PaymentForPublishModal({
         if (!iframeId) {
           throw new Error('PAYMOB_IFRAME_ID is not configured');
         }
+        
+        console.log('Payment created successfully, loading iframe...');
         
         // Add current path and auto-publish parameter for redirect after payment
         const redirectUrl = `${window.location.origin}/payment-status?success={{success}}&redirect=${encodeURIComponent(currentPath)}&auto_publish=true`;
@@ -125,10 +176,22 @@ export default function PaymentForPublishModal({
       }
     } catch (error) {
       console.error('Payment error:', error);
-      toast.error('فشل في معالجة الدفع');
+      
+      // Show user-friendly error message
+      let errorMessage = 'فشل في معالجة الدفع';
+      if (error instanceof Error) {
+        if (error.message.includes('duplicate') || error.message.includes('اعتذر')) {
+          errorMessage = 'يبدو أن هناك طلب دفع مشابه. يرجى المحاولة مرة أخرى بعد قليل.';
+        } else if (error.message.includes('auth')) {
+          errorMessage = 'خطأ في المصادقة. يرجى تسجيل الدخول مرة أخرى.';
+        }
+      }
+      
+      toast.error(errorMessage);
       setCurrentStep('method-selection');
     } finally {
       setIsProcessing(false);
+      setProcessingMethod(null);
     }
   };
 
@@ -214,17 +277,28 @@ export default function PaymentForPublishModal({
                   {paymentMethods.map((method) => (
                     <Card 
                       key={method.id}
-                      className={`cursor-pointer transition-all duration-200 border-2 ${method.bgColor} ${method.borderColor} hover:scale-[1.02] hover:shadow-lg bg-slate-800/50`}
-                      onClick={() => handleMethodSelect(method)}
+                      className={`cursor-pointer transition-all duration-200 border-2 ${
+                        isProcessing && processingMethod !== method.id ? 'opacity-50 cursor-not-allowed' : ''
+                      } ${method.bgColor} ${method.borderColor} hover:scale-[1.02] hover:shadow-lg bg-slate-800/50`}
+                      onClick={() => !isProcessing && handleMethodSelect(method)}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className={`p-2 rounded-lg ${method.bgColor} ${method.color}`}>
-                              {method.icon}
+                              {processingMethod === method.id ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                              ) : (
+                                method.icon
+                              )}
                             </div>
                             <div>
-                              <h3 className="font-semibold text-white">{method.nameAr}</h3>
+                              <h3 className="font-semibold text-white">
+                                {method.nameAr}
+                                {processingMethod === method.id && (
+                                  <span className="text-sm text-emerald-400 mr-2">جاري المعالجة...</span>
+                                )}
+                              </h3>
                               <p className="text-sm text-slate-400">{method.name}</p>
                             </div>
                           </div>

@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Cairo } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "sonner"
+import AuthHandler from "@/components/auth-handler"
 
 const cairo = Cairo({
   subsets: ["arabic"],
