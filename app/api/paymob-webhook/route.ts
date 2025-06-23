@@ -28,19 +28,38 @@ export async function POST(req: Request) {
       return NextResponse.json({ status: 'ok' });
     }
 
-    // Extract metadata from merchant_order_id (if available)
+    // Extract metadata from merchant_order_id or extras
     let metadata = null;
     try {
+      // First try to parse merchant_order_id as JSON (legacy)
       if (order?.merchant_order_id) {
-        metadata = JSON.parse(order.merchant_order_id);
+        try {
+          metadata = JSON.parse(order.merchant_order_id);
+        } catch {
+          // If JSON parsing fails, try to extract from order extras
+          if (order?.extras) {
+            metadata = order.extras;
+          } else {
+            // If no extras, try to parse merchant_order_id structure (user-restaurant-timestamp-random)
+            const parts = order.merchant_order_id.split('-');
+            if (parts.length >= 2) {
+              metadata = {
+                user_id: parts[0],
+                restaurant_id: parts[1]
+              };
+            }
+          }
+        }
       }
     } catch (error) {
       console.error('Error parsing order metadata:', error);
     }
 
+    console.log('📋 Extracted metadata from webhook:', metadata);
+
     // If no metadata, we can't create the payment record
     if (!metadata || !metadata.user_id || !metadata.restaurant_id) {
-      console.error('Missing required metadata in order:', metadata);
+      console.error('❌ Missing required metadata in order:', metadata);
       return NextResponse.json({ error: 'Missing order metadata' }, { status: 400 });
     }
 

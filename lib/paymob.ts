@@ -253,54 +253,93 @@ export async function getPaymentKey(
   billing: any,
   integrationId?: string
 ): Promise<string> {
+  console.log('🔑 [PAYMOB] Starting getPaymentKey process...');
+  console.log('🔑 [PAYMOB] Input parameters:', {
+    token_length: token?.length || 0,
+    orderId,
+    amount,
+    integrationId,
+    billing: {
+      ...billing,
+      email: billing?.email ? billing.email.substring(0, 10) + '...' : 'N/A',
+      phone: billing?.phone ? billing.phone.substring(0, 8) + '...' : 'N/A'
+    }
+  });
+
   // Use provided integration ID or fallback to environment variable
   const finalIntegrationId = integrationId || process.env.PAYMOB_INTEGRATION_ID;
+  console.log('🔑 [PAYMOB] Final integration ID:', finalIntegrationId);
   
   // Validate integration ID
   if (!finalIntegrationId || finalIntegrationId === 'undefined') {
+    console.error('🔑 [PAYMOB] ERROR: Integration ID is required but not provided');
     throw new Error('Integration ID is required but not provided');
   }
   
   // Convert to number and validate
   const integrationIdNumber = parseInt(finalIntegrationId, 10);
   if (isNaN(integrationIdNumber)) {
+    console.error('🔑 [PAYMOB] ERROR: Invalid integration ID:', finalIntegrationId);
     throw new Error(`Invalid integration ID: ${finalIntegrationId}`);
   }
+
+  console.log('🔑 [PAYMOB] Integration ID validated:', integrationIdNumber);
+
+  const paymentKeyPayload = {
+    auth_token: token,
+    amount_cents: amount,
+    expiration: 3600,
+    order_id: orderId,
+    billing_data: {
+      apartment: billing.apartment || 'N/A',
+      email: billing.email,
+      floor: billing.floor || 'N/A',
+      first_name: billing.firstName,
+      street: billing.street || 'N/A',
+      building: billing.building || 'N/A',
+      phone_number: billing.phone,
+      shipping_method: 'N/A',
+      postal_code: billing.postalCode || 'N/A',
+      city: billing.city || 'N/A',
+      country: billing.country || 'EG',
+      last_name: billing.lastName,
+      state: billing.state || 'N/A'
+    },
+    currency: 'EGP',
+    integration_id: integrationIdNumber
+  };
+
+  console.log('🔑 [PAYMOB] Making payment key request to Paymob...');
   
-  const res = await fetch('https://accept.paymob.com/api/acceptance/payment_keys', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      auth_token: token,
-      amount_cents: amount,
-      expiration: 3600,
-      order_id: orderId,
-      billing_data: {
-        apartment: billing.apartment || 'N/A',
-        email: billing.email,
-        floor: billing.floor || 'N/A',
-        first_name: billing.firstName,
-        street: billing.street || 'N/A',
-        building: billing.building || 'N/A',
-        phone_number: billing.phone,
-        shipping_method: 'N/A',
-        postal_code: billing.postalCode || 'N/A',
-        city: billing.city || 'N/A',
-        country: billing.country || 'EG',
-        last_name: billing.lastName,
-        state: billing.state || 'N/A'
-      },
-      currency: 'EGP',
-      integration_id: integrationIdNumber
-    })
-  });
+  try {
+    const res = await fetch('https://accept.paymob.com/api/acceptance/payment_keys', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(paymentKeyPayload)
+    });
 
-  if (!res.ok) {
-    throw new Error('Failed to get payment key from Paymob');
+    console.log('🔑 [PAYMOB] Payment key response status:', res.status);
+    console.log('🔑 [PAYMOB] Payment key response ok:', res.ok);
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('🔑 [PAYMOB] Payment key request failed:', {
+        status: res.status,
+        statusText: res.statusText,
+        response: errorText
+      });
+      throw new Error(`Failed to get payment key from Paymob: ${res.status} ${errorText}`);
+    }
+
+    const data = await res.json();
+    console.log('🔑 [PAYMOB] Payment key received successfully');
+    console.log('🔑 [PAYMOB] Payment key length:', data.token?.length || 0);
+    
+    return data.token;
+  } catch (error) {
+    console.error('🔑 [PAYMOB] Payment key error:', error);
+    throw error;
   }
-
-  const data = await res.json();
-  return data.token;
 }
 
 // Alternative: Consider using the Intention API for better reliability

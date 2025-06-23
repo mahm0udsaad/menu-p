@@ -60,15 +60,44 @@ function PaymentStatusContent() {
   }, [success, orderId]);
 
   const handleContinue = () => {
+    // Get saved return URL from localStorage (more reliable than URL params)
+    const savedReturnUrl = localStorage.getItem('paymentReturnUrl');
+    const savedStep = localStorage.getItem('paymentReturnStep');
+    const savedTab = localStorage.getItem('paymentReturnTab');
     const redirect = searchParams.get('redirect');
     const autoPublish = searchParams.get('auto_publish');
     
-    if (redirect && autoPublish === 'true') {
-      // Redirect back to the original page with auto_publish parameter
-      router.push(`${redirect}?auto_publish=true`);
-    } else {
-      router.push('/dashboard');
+    console.log('🔄 Payment status redirect - Saved state:', { savedReturnUrl, savedStep, savedTab });
+    
+    let finalUrl = savedReturnUrl || redirect || '/dashboard';
+    
+    // If we have saved state, construct the URL with those parameters
+    if (savedReturnUrl && (savedStep || savedTab)) {
+      const url = new URL(savedReturnUrl);
+      if (savedStep && !url.searchParams.has('step')) {
+        url.searchParams.set('step', savedStep);
+      }
+      if (savedTab && !url.searchParams.has('tab')) {
+        url.searchParams.set('tab', savedTab);
+      }
+      finalUrl = url.href;
     }
+    
+    // Add auto_publish parameter for automatic action after payment
+    if ((autoPublish === 'true' || savedReturnUrl) && !finalUrl.includes('auto_publish=true')) {
+      const separator = finalUrl.includes('?') ? '&' : '?';
+      finalUrl += `${separator}auto_publish=true`;
+    }
+    
+    console.log('🔄 Redirecting to:', finalUrl);
+    console.log('🧹 Cleaning up localStorage...');
+    
+    // Clean up localStorage
+    localStorage.removeItem('paymentReturnUrl');
+    localStorage.removeItem('paymentReturnStep');
+    localStorage.removeItem('paymentReturnTab');
+    
+    router.push(finalUrl);
   };
 
   const handleRetry = () => {

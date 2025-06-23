@@ -112,6 +112,22 @@ export default function PaymentForPublishModal({
 
     console.log(`Starting payment process for method: ${method.id}`);
     
+    // Save current URL and state to localStorage for return after payment
+    const currentUrl = window.location.href;
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentStep = urlParams.get('step');
+    const currentTab = urlParams.get('tab');
+    
+    localStorage.setItem('paymentReturnUrl', currentUrl);
+    if (currentStep) localStorage.setItem('paymentReturnStep', currentStep);
+    if (currentTab) localStorage.setItem('paymentReturnTab', currentTab);
+    
+    console.log('💾 Saved return state for post-payment redirect:', { 
+      currentUrl, 
+      currentStep, 
+      currentTab 
+    });
+    
     setSelectedMethod(method);
     setCurrentStep('processing');
     setIsProcessing(true);
@@ -166,8 +182,6 @@ export default function PaymentForPublishModal({
         
         console.log('Payment created successfully, loading iframe...');
         
-        // Add current path and auto-publish parameter for redirect after payment
-        const redirectUrl = `${window.location.origin}/payment-status?success={{success}}&redirect=${encodeURIComponent(currentPath)}&auto_publish=true`;
         const frameUrl = `https://accept.paymob.com/api/acceptance/iframes/${iframeId}?payment_token=${result.paymentToken}`;
         setIframeUrl(frameUrl);
         setCurrentStep('payment-iframe');

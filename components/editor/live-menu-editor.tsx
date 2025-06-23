@@ -93,18 +93,41 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
     setNotification({ show: true, type, title, description })
   }
 
-  // Auto-publish if redirected after payment
+  // Auto-publish if redirected after payment and refresh payment status
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     if (urlParams.get('auto_publish') === 'true') {
+      console.log('🔄 Auto-publish detected, refreshing payment status...')
+      
       // Clear the URL parameter
       window.history.replaceState({}, '', window.location.pathname)
+      
+      // Force refresh payment status first
+      refetchPaymentStatus()
+      
       // Auto-publish when payment status is loaded and user has paid
       if (!paymentLoading && hasPaidPlan) {
-        handlePublishMenu()
+        console.log('✅ User has paid plan, auto-publishing menu...')
+        setTimeout(() => {
+          handlePublishMenu()
+        }, 1000) // Small delay to ensure UI updates
       }
     }
-  }, [hasPaidPlan, paymentLoading])
+  }, [hasPaidPlan, paymentLoading, refetchPaymentStatus])
+
+  // Additional effect to handle when payment status becomes available after auto_publish
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get('auto_publish') === 'true' && !paymentLoading && hasPaidPlan) {
+      console.log('✅ Payment status updated - user has paid plan, proceeding with auto-publish')
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname)
+      // Auto-publish
+      setTimeout(() => {
+        handlePublishMenu()
+      }, 1000)
+    }
+  }, [hasPaidPlan])
 
   useEffect(() => {
     // Only fetch if we don't have initial data
@@ -275,24 +298,24 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
               variant="outline"
               onClick={handlePdfPreview}
               size="sm"
-              className={`border-slate-600 ${!hasPaidPlan ? 'opacity-75' : ''}`}
-              title={!hasPaidPlan ? 'يتطلب اشتراك مدفوع' : ''}
+              className={`border-slate-600 ${!hasPaidPlan && !paymentLoading ? 'opacity-75' : ''}`}
+              title={!hasPaidPlan && !paymentLoading ? 'يتطلب اشتراك مدفوع' : paymentLoading ? 'جاري التحقق من حالة الاشتراك...' : ''}
               disabled={paymentLoading}
             >
-              <Eye className="h-3 w-3 mr-1" />
+              {paymentLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Eye className="h-3 w-3 mr-1" />}
               معاينة PDF
-              {!hasPaidPlan && <span className="text-yellow-400 ml-1">👑</span>}
+              {!hasPaidPlan && !paymentLoading && <span className="text-yellow-400 ml-1">👑</span>}
             </Button>
             <Button
               onClick={handlePublishMenu}
               disabled={isPublishing || categories.length === 0 || paymentLoading}
               size="sm"
-              className={`bg-emerald-600 hover:bg-emerald-700 ${!hasPaidPlan ? 'opacity-75' : ''}`}
-              title={!hasPaidPlan ? 'يتطلب اشتراك مدفوع' : ''}
+              className={`bg-emerald-600 hover:bg-emerald-700 ${!hasPaidPlan && !paymentLoading ? 'opacity-75' : ''}`}
+              title={!hasPaidPlan && !paymentLoading ? 'يتطلب اشتراك مدفوع' : paymentLoading ? 'جاري التحقق من حالة الاشتراك...' : ''}
             >
-              {isPublishing ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <FileText className="h-3 w-3 mr-1" />}
-              {isPublishing ? "جاري النشر..." : "نشر القائمة"}
-              {!hasPaidPlan && <span className="text-yellow-400 ml-1">👑</span>}
+              {isPublishing ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : paymentLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <FileText className="h-3 w-3 mr-1" />}
+              {isPublishing ? "جاري النشر..." : paymentLoading ? "جاري التحقق..." : "نشر القائمة"}
+              {!hasPaidPlan && !paymentLoading && <span className="text-yellow-400 ml-1">👑</span>}
             </Button>
           </div>
         </div>
