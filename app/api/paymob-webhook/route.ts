@@ -10,21 +10,31 @@ const supabase = createClient(
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    console.log('Paymob webhook received:', body);
+    console.log('🔔 [WEBHOOK] Paymob webhook received:', JSON.stringify(body, null, 2));
+    console.log('🔔 [WEBHOOK] Request headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
 
     const success = body.obj?.success;
     const orderId = body.obj?.order?.id;
     const transactionId = body.obj?.id;
     const order = body.obj?.order;
 
+    console.log('🔔 [WEBHOOK] Payment details:', {
+      success,
+      orderId,
+      transactionId,
+      merchant_order_id: order?.merchant_order_id,
+      extras: order?.extras,
+      amount: order?.amount_cents
+    });
+
     if (!orderId) {
-      console.error('Missing order ID in webhook');
+      console.error('❌ [WEBHOOK] Missing order ID in webhook');
       return NextResponse.json({ error: 'Missing order ID' }, { status: 400 });
     }
 
     // Only process successful payments
     if (!success) {
-      console.log(`Payment failed for order ${orderId}`);
+      console.log('❌ [WEBHOOK] Payment failed for order', orderId);
       return NextResponse.json({ status: 'ok' });
     }
 
@@ -35,11 +45,15 @@ export async function POST(req: Request) {
       if (order?.merchant_order_id) {
         try {
           metadata = JSON.parse(order.merchant_order_id);
+          console.log('✅ [WEBHOOK] Parsed metadata from merchant_order_id:', metadata);
         } catch {
+          console.log('ℹ️ [WEBHOOK] merchant_order_id is not JSON, checking extras...');
           // If JSON parsing fails, try to extract from order extras
           if (order?.extras) {
             metadata = order.extras;
+            console.log('✅ [WEBHOOK] Got metadata from extras:', metadata);
           } else {
+            console.log('ℹ️ [WEBHOOK] No extras, trying to parse merchant_order_id structure...');
             // If no extras, try to parse merchant_order_id structure (user-restaurant-timestamp-random)
             const parts = order.merchant_order_id.split('-');
             if (parts.length >= 2) {
@@ -47,23 +61,29 @@ export async function POST(req: Request) {
                 user_id: parts[0],
                 restaurant_id: parts[1]
               };
+              console.log('✅ [WEBHOOK] Extracted metadata from merchant_order_id parts:', metadata);
             }
           }
         }
       }
     } catch (error) {
-      console.error('Error parsing order metadata:', error);
+      console.error('❌ [WEBHOOK] Error parsing order metadata:', error);
     }
 
-    console.log('📋 Extracted metadata from webhook:', metadata);
+    console.log('📋 [WEBHOOK] Final extracted metadata:', metadata);
 
     // If no metadata, we can't create the payment record
     if (!metadata || !metadata.user_id || !metadata.restaurant_id) {
-      console.error('❌ Missing required metadata in order:', metadata);
+      console.error('❌ [WEBHOOK] Missing required metadata in order:', {
+        metadata,
+        merchant_order_id: order?.merchant_order_id,
+        extras: order?.extras
+      });
       return NextResponse.json({ error: 'Missing order metadata' }, { status: 400 });
     }
 
     // Create payment record for successful payment
+    console.log('💾 [WEBHOOK] Creating payment record...');
     const { data: createdPayment, error: paymentError } = await supabase
       .from('payments')
       .insert({
@@ -87,13 +107,14 @@ export async function POST(req: Request) {
       .single();
 
     if (paymentError) {
-      console.error('Error creating payment:', paymentError);
+      console.error('❌ [WEBHOOK] Error creating payment:', paymentError);
       return NextResponse.json({ error: 'Failed to create payment record' }, { status: 500 });
     }
 
-    console.log(`Payment record created for order ${orderId}`);
+    console.log('✅ [WEBHOOK] Payment record created:', createdPayment);
 
     // Get user email for notification
+    console.log('📧 [WEBHOOK] Getting user email for notification...');
     const { data: userData, error: userError } = await supabase.auth.admin.getUserById(createdPayment.user_id);
     
     if (!userError && userData.user?.email) {
@@ -117,14 +138,15 @@ export async function POST(req: Request) {
           })
         });
         
-        console.log(`Payment notification email sent to ${userData.user.email} for order ${orderId}`);
+        console.log('✅ [WEBHOOK] Payment notification email sent to', userData.user.email);
       } catch (emailError) {
-        console.error('Failed to send payment notification email:', emailError);
+        console.error('❌ [WEBHOOK] Failed to send payment notification email:', emailError);
         // Don't fail the webhook if email fails
       }
     }
 
     // Update restaurant's available menus to 1
+    console.log('🏪 [WEBHOOK] Updating restaurant available_menus...');
     const { error: restaurantError } = await supabase
       .from('restaurants')
       .update({ 
@@ -135,13 +157,14 @@ export async function POST(req: Request) {
       .eq('user_id', createdPayment.user_id);
 
     if (restaurantError) {
-      console.error('Error updating restaurant:', restaurantError);
+      console.error('❌ [WEBHOOK] Error updating restaurant:', restaurantError);
       return NextResponse.json({ error: 'Failed to update restaurant' }, { status: 500 });
     }
 
+    console.log('✅ [WEBHOOK] Restaurant updated successfully');
     return NextResponse.json({ status: 'ok' });
   } catch (error) {
-    console.error('Webhook error:', error);
+    console.error('❌ [WEBHOOK] Webhook error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 

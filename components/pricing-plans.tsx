@@ -124,8 +124,16 @@ export default function PricingPlans({ restaurantId, userEmail, userName }: Pric
 
         if (result.success && result.paymentToken) {
           // Redirect to Paymob checkout
-          const iframeUrl = `https://accept.paymob.com/api/acceptance/iframes/${process.env.NEXT_PUBLIC_PAYMOB_IFRAME_ID}?payment_token=${result.paymentToken}`;
-          window.location.href = iframeUrl;
+          const iframeId = process.env.NEXT_PUBLIC_PAYMOB_IFRAME_ID;
+          if (!iframeId) {
+            throw new Error('PAYMOB_IFRAME_ID is not configured');
+          }
+          
+          // Add redirect URL for payment status page
+          const redirectUrl = `${window.location.origin}/payment-status?success={{success}}`;
+          const frameUrl = `https://accept.paymob.com/api/acceptance/iframes/${iframeId}?payment_token=${result.paymentToken}&callback_url=${encodeURIComponent(redirectUrl)}`;
+          
+          window.location.href = frameUrl;
         } else {
           toast.error(result.error || 'Failed to create payment');
         }
