@@ -14,7 +14,7 @@ export class IframeStyleInjector {
   private static readonly DEFAULT_STYLES = `
     /* Dark theme for Paymob */
     body { 
-      background: #0f172a !important; 
+      background: #0a384b !important; 
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
       color: #f8fafc !important;
     }
@@ -237,17 +237,20 @@ export class IframeStyleInjector {
    * Method 4: CSS Filter overlay (visual approximation)
    */
   static applyVisualFilters(iframe: HTMLIFrameElement): void {
-    // Apply CSS filters to approximate dark theme
+    // Apply CSS filters to approximate dark theme with emerald accent
     iframe.style.filter = `
-      contrast(1.1) 
-      brightness(0.85) 
-      saturate(1.2) 
-      hue-rotate(10deg)
-      sepia(0.1)
+      contrast(1.15) 
+      brightness(0.75) 
+      saturate(1.3) 
+      hue-rotate(15deg)
+      sepia(0.15)
+      invert(0.1)
     `;
     iframe.style.transition = 'filter 0.3s ease';
+    iframe.style.borderRadius = '12px';
+    iframe.style.overflow = 'hidden';
     
-    console.log('🎨 Applied visual filters to iframe');
+    console.log('🎨 Applied enhanced visual filters to iframe');
   }
 
   /**

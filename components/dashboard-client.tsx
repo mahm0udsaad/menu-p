@@ -349,7 +349,7 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
         <div className="px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
-              <div className="bg-gradient-to-l from-emerald-500 to-emerald-600 p-1.5 sm:p-2 rounded-lg sm:rounded-xl shadow-lg flex-shrink-0">
+              <div className="hidden sm:block bg-gradient-to-l from-emerald-500 to-emerald-600 p-1.5 sm:p-2 rounded-lg sm:rounded-xl shadow-lg flex-shrink-0">
                 <QrCode className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
               </div>
               {restaurant.logo_url && (
@@ -498,7 +498,7 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                 <div className="grid grid-cols-1 gap-3 sm:gap-4">
                   <Button
                     asChild
-                    className="bg-emerald-600 hover:bg-emerald-700 h-12 sm:h-16 text-sm sm:text-base justify-start"
+                    className="text-center bg-emerald-600 hover:bg-emerald-700 h-12 sm:h-16 text-sm sm:text-base justify-start"
                   >
                     <Link href="/menu-editor">
                       <Plus className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />
@@ -507,23 +507,23 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                   </Button>
                   
                   <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                    <Button
-                      onClick={() => setActiveTab("qr-cards")}
-                      variant="outline"
-                      className="border-slate-600 text-slate-300 hover:bg-slate-700 h-12 sm:h-16 text-xs sm:text-base flex-col sm:flex-row gap-1 sm:gap-2"
-                    >
+                  <Button
+                    onClick={() => setActiveTab("qr-cards")}
+                    variant="outline"
+                      className="border-slate-600 text-slate-800 hover:bg-slate-700 h-12 sm:h-16 text-xs sm:text-base flex-col sm:flex-row gap-1 sm:gap-2"
+                  >
                       <QrCode className="h-4 w-4 sm:h-5 sm:w-5" />
                       <span>إنشاء بطاقة QR</span>
-                    </Button>
-                    
-                    <Button
-                      onClick={() => setActiveTab("restaurant-info")}
-                      variant="outline"
-                      className="border-slate-600 text-slate-300 hover:bg-slate-700 h-12 sm:h-16 text-xs sm:text-base flex-col sm:flex-row gap-1 sm:gap-2"
-                    >
+                  </Button>
+                  
+                  <Button
+                    onClick={() => setActiveTab("restaurant-info")}
+                    variant="outline"
+                      className="border-slate-600 text-slate-800 hover:bg-slate-700 h-12 sm:h-16 text-xs sm:text-base flex-col sm:flex-row gap-1 sm:gap-2"
+                  >
                       <Edit className="h-4 w-4 sm:h-5 sm:w-5" />
                       <span>تعديل المعلومات</span>
-                    </Button>
+                  </Button>
                   </div>
                 </div>
               </CardContent>
@@ -579,7 +579,7 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                         <Link
                           href={getMenuPublicUrl(menu.id)}
                           target="_blank"
-                          className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors p-2 rounded hover:bg-slate-700/30"
+                          className="flex items-center gap-2 text-slate-800 hover:text-white transition-colors p-2 rounded hover:bg-slate-700/30"
                         >
                           <Eye className="h-4 w-4" />
                           عرض القائمة
@@ -588,7 +588,7 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                           href={menu.pdf_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors p-2 rounded hover:bg-slate-700/30"
+                          className="flex items-center gap-2 text-slate-800 hover:text-white transition-colors p-2 rounded hover:bg-slate-700/30"
                         >
                           <Download className="h-4 w-4" />
                           تحميل PDF
@@ -646,7 +646,7 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                               href={card.pdf_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors p-2 rounded hover:bg-slate-700/30"
+                              className="flex items-center gap-2 text-slate-800 hover:text-white transition-colors p-2 rounded hover:bg-slate-700/30"
                             >
                               <Download className="h-4 w-4" />
                               تحميل PDF

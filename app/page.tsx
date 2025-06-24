@@ -481,7 +481,7 @@ export default async function LandingPage({ searchParams }: PageProps) {
             className="bg-white text-emerald-700 hover:bg-slate-100 text-lg px-8 py-4 transform transition-all duration-200 shadow-lg"
             asChild
           >
-            <Link href="/auth/sign-up">ابدأ تجربتك المجانية</Link>
+            <Link href="/dashboard">ابدأ تجربتك المجانية</Link>
           </Button>
         </div>
       </section>

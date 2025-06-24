@@ -743,8 +743,8 @@ export default function ProfessionalCafeMenuPreview({
                     />
                   </label>
                 </div>
-              </div>
-            </div>
+                  </div>
+          </div>
 
             <h1 className="text-2xl sm:text-4xl font-serif mb-2 sm:mb-4" style={{ color: currentPalette.primary }}>
               {restaurant.name}
@@ -752,98 +752,98 @@ export default function ProfessionalCafeMenuPreview({
             
             <div className="w-16 sm:w-24 h-px mx-auto mb-3 sm:mb-6" style={{ backgroundColor: currentPalette.accent }}></div>
               
-            <div className="flex items-center gap-2">
-              <Dialog open={showColorModal} onOpenChange={setShowColorModal}>
-                <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
+              <div className="flex items-center gap-2">
+                <Dialog open={showColorModal} onOpenChange={setShowColorModal}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
                     className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
-                  >
+                    >
                     <Palette className="h-3 w-3 ml-1" />
                     <span className="hidden sm:inline">تغيير الألوان</span>
                     <span className="sm:hidden">ألوان</span>
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle className="text-right">اختر لوحة الألوان</DialogTitle>
-                  </DialogHeader>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    {colorPalettes.map((palette) => (
-                      <div key={palette.id} className="flex items-center space-x-2 space-x-reverse">
-                        <input
-                          type="radio"
-                          name="colorPalette"
-                          value={palette.id}
-                          id={`modal-${palette.id}`}
-                          checked={selectedPalette === palette.id}
-                          onChange={() => setSelectedPalette(palette.id)}
-                          className="sr-only"
-                        />
-                        <Label
-                          htmlFor={`modal-${palette.id}`}
-                          className={`cursor-pointer p-4 rounded-xl border transition-all duration-300 flex-1 ${
-                            selectedPalette === palette.id
-                              ? 'border-blue-400 bg-blue-50'
-                              : 'border-gray-300 hover:bg-gray-50'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="font-medium">{palette.name}</span>
-                            <div className="flex space-x-1 space-x-reverse">
-                              {palette.preview.map((color, index) => (
-                                <div
-                                  key={index}
-                                  className="w-4 h-4 rounded-full border border-gray-200"
-                                  style={{ backgroundColor: color }}
-                                />
-                              ))}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle className="text-right">اختر لوحة الألوان</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      {colorPalettes.map((palette) => (
+                        <div key={palette.id} className="flex items-center space-x-2 space-x-reverse">
+                          <input
+                            type="radio"
+                            name="colorPalette"
+                            value={palette.id}
+                            id={`modal-${palette.id}`}
+                            checked={selectedPalette === palette.id}
+                            onChange={() => setSelectedPalette(palette.id)}
+                            className="sr-only"
+                          />
+                          <Label
+                            htmlFor={`modal-${palette.id}`}
+                            className={`cursor-pointer p-4 rounded-xl border transition-all duration-300 flex-1 ${
+                              selectedPalette === palette.id
+                                ? 'border-blue-400 bg-blue-50'
+                                : 'border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="font-medium">{palette.name}</span>
+                              <div className="flex space-x-1 space-x-reverse">
+                                {palette.preview.map((color, index) => (
+                                  <div
+                                    key={index}
+                                    className="w-4 h-4 rounded-full border border-gray-200"
+                                    style={{ backgroundColor: color }}
+                                  />
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex justify-end gap-2 mt-6">
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowColorModal(false)}
-                      disabled={isUpdatingPalette}
-                    >
-                      إلغاء
-                    </Button>
-                    <Button
-                      onClick={() => handleUpdateColorPalette(selectedPalette)}
-                      disabled={isUpdatingPalette || selectedPalette === restaurant.color_palette?.id}
-                      style={{ backgroundColor: colorPalettes.find(p => p.id === selectedPalette)?.primary }}
-                      className="text-white"
-                    >
-                      {isUpdatingPalette ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      ) : null}
-                      {isUpdatingPalette ? "جاري التحديث..." : "تطبيق الألوان"}
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-              
-              <Button
-                onClick={handleLoadDummyData}
-                disabled={isLoadingDummy}
-                variant="outline"
-                size="sm"
-                className="border-blue-600 text-blue-600 hover:bg-blue-50"
-              >
-                {isLoadingDummy ? (
-                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-1"></div>
-                ) : (
-                  <FileText className="h-3 w-3 mr-1" />
-                )}
-                {isLoadingDummy ? "جاري التحميل..." : "إضافة بيانات تجريبية"}
-              </Button>
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex justify-end gap-2 mt-6">
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowColorModal(false)}
+                        disabled={isUpdatingPalette}
+                      >
+                        إلغاء
+                      </Button>
+                      <Button
+                        onClick={() => handleUpdateColorPalette(selectedPalette)}
+                        disabled={isUpdatingPalette || selectedPalette === restaurant.color_palette?.id}
+                        style={{ backgroundColor: colorPalettes.find(p => p.id === selectedPalette)?.primary }}
+                        className="text-white"
+                      >
+                        {isUpdatingPalette ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        ) : null}
+                        {isUpdatingPalette ? "جاري التحديث..." : "تطبيق الألوان"}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                
+                <Button
+                  onClick={handleLoadDummyData}
+                  disabled={isLoadingDummy}
+                  variant="outline"
+                  size="sm"
+                  className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                >
+                  {isLoadingDummy ? (
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-1"></div>
+                  ) : (
+                    <FileText className="h-3 w-3 mr-1" />
+                  )}
+                  {isLoadingDummy ? "جاري التحميل..." : "إضافة بيانات تجريبية"}
+                </Button>
+              </div>
             </div>
-          </div>
 
           {/* Menu Content */}
           <div className="bg-white shadow-xl rounded-lg" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.1)" }}>

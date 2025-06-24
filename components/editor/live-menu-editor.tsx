@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { RefreshCw, FileText, Loader2, Eye, CheckCircle, QrCode, ExternalLink } from "lucide-react" // Added new icons
+import { RefreshCw, FileText, Loader2, Eye, CheckCircle, QrCode, ExternalLink, Languages } from "lucide-react" // Added Languages icon
 import { supabase } from "@/lib/supabase/client"
 import ProfessionalCafeMenuPreview from "./professional-cafe-menu-preview"
 import { generateAndSaveMenuPdf } from "@/lib/actions/pdf-actions"
@@ -18,6 +18,7 @@ import NotificationModal from "@/components/ui/notification-modal"
 import dynamic from "next/dynamic"
 import PaymentForPublishModal from '@/components/ui/payment-for-publish-modal'
 import { usePaymentStatus } from '@/lib/hooks/use-payment-status'
+import MenuTranslationDrawer from "@/components/menu-translation-drawer" // Added translation drawer import
 
 const PdfPreviewModal = dynamic(() => import("@/components/pdf-preview-modal"), {
   loading: () => <div className="h-96 bg-slate-800 rounded-lg animate-pulse"></div>,
@@ -71,6 +72,8 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
   const [showSuccessDialog, setShowSuccessDialog] = useState(false)
   const [publishResult, setPublishResult] = useState<{ pdfUrl?: string; menuId?: string } | null>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [showTranslationDrawer, setShowTranslationDrawer] = useState(false) // Changed to drawer
+  const [translatedVersions, setTranslatedVersions] = useState<{ [language: string]: MenuCategory[] }>({}) // Store translated versions
   const router = useRouter()
 
   // Use optimized payment status hook
@@ -175,6 +178,20 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
     setRefreshing(false)
   }
 
+  // Updated translation handler to handle multiple languages
+  const handleTranslationComplete = (translatedCategories: MenuCategory[], targetLanguage: string) => {
+    // Store translated version
+    setTranslatedVersions(prev => ({
+      ...prev,
+      [targetLanguage]: translatedCategories
+    }))
+    
+    // Update current categories with the first translation (or keep original if multiple)
+    if (Object.keys(translatedVersions).length === 0) {
+      setCategories(translatedCategories)
+    }
+  }
+
   const handlePublishMenu = async () => {
     // Check if user has paid plan
     if (!hasPaidPlan) {
@@ -199,26 +216,12 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
         }
       }
       
-      // Ensure categories have proper structure
-      const categoriesForPdf = categories.map(cat => ({
-        ...cat,
-        description: cat.description || undefined,
-        background_image_url: cat.background_image_url || undefined,
-        menu_items: cat.menu_items.map(item => ({
-          ...item,
-          description: item.description || undefined,
-          price: item.price || 0,
-          image_url: item.image_url || undefined
-        }))
-      }))
-      
+      // Create PDF blob
       const pdfBlob = await pdf(
-        <CafeMenuPDF 
-          restaurant={restaurantForPdf} 
-          categories={categoriesForPdf} 
-        />
+        <CafeMenuPDF restaurant={restaurantForPdf} categories={categories} />
       ).toBlob()
 
+      // Create FormData and upload
       const formData = new FormData()
       formData.append("pdfFile", pdfBlob, "menu.pdf")
       formData.append("restaurantId", restaurant.id)
@@ -294,6 +297,17 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
             >
               {refreshing ? <RefreshCw className="h-3 w-3 sm:mr-1 animate-spin" /> : <RefreshCw className="h-3 w-3 sm:mr-1" />}
               <span className="hidden sm:inline">تحديث</span>
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowTranslationDrawer(true)}
+              disabled={loading || categories.length === 0}
+              size="sm"
+              className="hover:bg-gradient-to-r from-purple-600/20 to-purple-700/20 border-purple-500/30 hover:text-purple-300 bg-purple-600/30 text-purple-200 px-2 sm:px-3"
+              title="ترجمة القائمة بالذكاء الاصطناعي"
+            >
+              <Languages className="h-3 w-3 sm:mr-1" />
+              <span className="hidden sm:inline">ترجمة AI</span>
             </Button>
             <Button
               variant="outline"
@@ -407,6 +421,14 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
         currentPath={typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/menu-editor'}
         currentTab={typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tab') || undefined : undefined}
         returnStep={typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('step') || undefined : undefined}
+      />
+
+      {/* Translation Drawer */}
+      <MenuTranslationDrawer
+        isOpen={showTranslationDrawer}
+        onClose={() => setShowTranslationDrawer(false)}
+        categories={categories}
+        onTranslationComplete={handleTranslationComplete}
       />
     </>
   )
