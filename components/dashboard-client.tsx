@@ -149,7 +149,25 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
   })
 
   const showNotification = (type: "success" | "error" | "warning" | "info", title: string, description: string) => {
-    setNotification({ show: true, type, title, description })
+    if (type === "success") {
+      toast({
+        title,
+        description,
+        variant: "default",
+      })
+    } else if (type === "error") {
+      toast({
+        title,
+        description,
+        variant: "destructive",
+      })
+    } else {
+      toast({
+        title,
+        description,
+        variant: "default",
+      })
+    }
   }
 
   const showConfirmation = (title: string, description: string, action: () => void, type: "danger" | "warning" | "success" | "info" = "warning") => {
@@ -313,67 +331,95 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
   return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
       {/* Simple Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
-                <QrCode className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">{restaurant.name}</h1>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge variant={hasPaidPlan ? "default" : "secondary"} className="text-xs">
-                    <Crown className="ml-1 h-3 w-3" />
-                    {hasPaidPlan ? 'خطة مميزة' : 'خطة مجانية'}
-                  </Badge>
-                  <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-xs text-green-700">نشط</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm" className="gap-2">
-            <Settings className="h-4 w-4" />
-            الإعدادات
-          </Button>
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => signOut()}>
-                <LogOut className="h-4 w-4" />
-                تسجيل الخروج
-              </Button>
+      <header className="bg-gradient-to-r from-white to-gray-50/50 border-b border-gray-200/80 shadow-sm backdrop-blur-sm">
+  <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
+    <div className="flex items-center justify-between gap-3 sm:gap-4">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div className="relative">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-red-500/25">
+            <QrCode className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+          </div>
+          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-sm"></div>
+        </div>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-base sm:text-lg font-bold text-gray-900 truncate bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text">
+            {restaurant.name}
+          </h1>
+          <div className="flex items-center gap-2 mt-1">
+            <Badge 
+              variant={hasPaidPlan ? "default" : "secondary"} 
+              className={`text-xs h-6 px-2 font-medium ${
+                hasPaidPlan 
+                  ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-amber-900 border-amber-300 shadow-sm' 
+                  : 'bg-gray-100 text-gray-600 border-gray-200'
+              }`}
+            >
+              <Crown className={`ml-1 h-3 w-3 ${hasPaidPlan ? 'text-amber-800' : 'text-gray-500'}`} />
+              <span className="hidden sm:inline">{hasPaidPlan ? 'خطة مميزة' : 'خطة مجانية'}</span>
+              <span className="sm:hidden">{hasPaidPlan ? 'مميزة' : 'مجانية'}</span>
+            </Badge>
+            <div className="flex items-center gap-1.5 bg-green-50 px-2 py-1 rounded-full">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-xs font-medium text-green-700">نشط</span>
             </div>
           </div>
         </div>
-      </header>
+      </div>
+      
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="h-9 px-3 sm:px-4 text-xs font-medium gap-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 hover:shadow-sm"
+        >
+          <Settings className="h-3.5 w-3.5 text-gray-600" />
+          <span className="hidden sm:inline text-gray-700">الإعدادات</span>
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="h-9 px-3 sm:px-4 text-xs font-medium gap-2 border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 transition-all duration-200 hover:shadow-sm" 
+          onClick={() => signOut()}
+        >
+          <LogOut className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">خروج</span>
+        </Button>
+      </div>
+    </div>
+  </div>
+</header>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-          <TabsList className="bg-white border border-gray-200 shadow-sm">
-            <TabsTrigger value="overview" className="gap-2">
-              <BarChart3 className="h-4 w-4" />
-              نظرة عامة
-            </TabsTrigger>
-            <TabsTrigger value="menus" className="gap-2">
-              <MenuIcon className="h-4 w-4" />
-              القوائم
-            </TabsTrigger>
-            <TabsTrigger value="qr-cards" className="gap-2">
-              <QrCode className="h-4 w-4" />
-              QR كود
-            </TabsTrigger>
-            <TabsTrigger value="restaurant-info" className="gap-2">
-              <Building className="h-4 w-4" />
-              معلومات المطعم
-            </TabsTrigger>
-            <TabsTrigger value="languages" className="gap-2">
-              <Languages className="h-4 w-4" />
-              اللغات
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto">
+            <TabsList className="bg-white border border-gray-200 shadow-sm w-full sm:w-auto min-w-max">
+              <TabsTrigger value="overview" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4">
+                <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">نظرة عامة</span>
+                <span className="sm:hidden">عامة</span>
+              </TabsTrigger>
+              <TabsTrigger value="menus" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4">
+                <MenuIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">القوائم</span>
+                <span className="sm:hidden">قوائم</span>
+              </TabsTrigger>
+              <TabsTrigger value="qr-cards" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4">
+                <QrCode className="h-3 w-3 sm:h-4 sm:w-4" />
+                QR
+              </TabsTrigger>
+              <TabsTrigger value="restaurant-info" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4">
+                <Building className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">المطعم</span>
+                <span className="sm:hidden">مطعم</span>
+              </TabsTrigger>
+              <TabsTrigger value="languages" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4">
+                <Languages className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">اللغات</span>
+                <span className="sm:hidden">لغات</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="overview" className="space-y-6">
               {/* Quick Actions */}

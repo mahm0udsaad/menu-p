@@ -1,5 +1,6 @@
 "use server"
 
+import React from "react"
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
@@ -45,6 +46,8 @@ export async function generateAndSaveMenuPdf(
   const pdfFile = formData.get("pdfFile") as File
   const restaurantId = formData.get("restaurantId") as string
   const menuName = formData.get("menuName")?.toString() || "Current Menu"
+  const languageCode = formData.get("languageCode")?.toString() || "ar"
+  const parentMenuId = formData.get("parentMenuId")?.toString() || null
 
   if (!pdfFile || pdfFile.size === 0) {
     return { error: "No PDF file provided." }
@@ -54,8 +57,13 @@ export async function generateAndSaveMenuPdf(
   }
 
   try {
-    // Upload PDF to Supabase Storage
-    const filePath = `${restaurantId}/menus/${Date.now()}_${menuName.replace(/\s+/g, "_")}.pdf`
+    // Generate a UUID for the menu first
+    const { data: newUuid } = await supabase.rpc('gen_random_uuid')
+    const menuUuid = newUuid || crypto.randomUUID()
+
+    // Create organized file path: menus/menu-version-{language}/{id}-version-{language}.pdf
+    const filePath = `menus/menu-version-${languageCode}/${menuUuid}-version-${languageCode}.pdf`
+    
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from("restaurant-logos")
       .upload(filePath, pdfFile, {
@@ -73,13 +81,26 @@ export async function generateAndSaveMenuPdf(
       data: { publicUrl },
     } = supabase.storage.from("restaurant-logos").getPublicUrl(uploadData.path)
 
-    // Save PDF info to published_menus table
+    // Get language name for version_name
+    const languageNames: { [key: string]: string } = {
+      'ar': 'الأصل',
+      'en': 'English',
+      'fr': 'Français',
+      'es': 'Español'
+    }
+
+    // Save PDF info to published_menus table with the generated UUID
     const { data: publishedMenu, error: dbError } = await supabase
       .from("published_menus")
       .insert({
+        id: menuUuid, // Use the generated UUID
         restaurant_id: restaurantId,
         menu_name: menuName,
         pdf_url: publicUrl,
+        language_code: languageCode,
+        version_name: languageNames[languageCode] || languageCode,
+        parent_menu_id: parentMenuId,
+        is_primary_version: languageCode === 'ar' && !parentMenuId
       })
       .select("id")
       .single()

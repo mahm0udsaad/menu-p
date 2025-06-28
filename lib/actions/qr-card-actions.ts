@@ -163,10 +163,7 @@ export async function deleteQrCard(cardId: string): Promise<{ success?: boolean;
       .from("published_qr_cards")
       .select(`
         pdf_url,
-        restaurant_id,
-        restaurants!inner (
-          user_id
-        )
+        restaurant_id
       `)
       .eq("id", cardId)
       .single()
@@ -175,8 +172,19 @@ export async function deleteQrCard(cardId: string): Promise<{ success?: boolean;
       return { error: "QR card not found" }
     }
 
+    // Get restaurant info to verify ownership
+    const { data: restaurant, error: restaurantError } = await supabase
+      .from("restaurants")
+      .select("user_id")
+      .eq("id", qrCard.restaurant_id)
+      .single()
+
+    if (restaurantError || !restaurant) {
+      return { error: "Restaurant not found" }
+    }
+
     // Verify ownership through restaurant
-    if ((qrCard.restaurants as any).user_id !== user.id) {
+    if (restaurant.user_id !== user.id) {
       return { error: "Access denied" }
     }
 

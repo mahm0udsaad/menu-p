@@ -19,6 +19,7 @@ import dynamic from "next/dynamic"
 import PaymentForPublishModal from '@/components/ui/payment-for-publish-modal'
 import { usePaymentStatus } from '@/lib/hooks/use-payment-status'
 import MenuTranslationDrawer from "@/components/menu-translation-drawer" // Added translation drawer import
+import { useToast } from "@/hooks/use-toast"
 
 const PdfPreviewModal = dynamic(() => import("@/components/pdf-preview-modal"), {
   loading: () => <div className="h-96 bg-slate-800 rounded-lg animate-pulse"></div>,
@@ -106,8 +107,28 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
     description: ""
   })
 
+  const { toast } = useToast()
+  
   const showNotification = (type: "success" | "error" | "warning" | "info", title: string, description: string) => {
-    setNotification({ show: true, type, title, description })
+    if (type === "success") {
+      toast({
+        title,
+        description,
+        variant: "default",
+      })
+    } else if (type === "error") {
+      toast({
+        title,
+        description,
+        variant: "destructive",
+      })
+    } else {
+      toast({
+        title,
+        description,
+        variant: "default",
+      })
+    }
   }
 
   // Auto-publish if redirected after payment and refresh payment status
@@ -221,27 +242,18 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
 
   // Updated translation handler to handle multiple languages with versions
   const handleTranslationComplete = (translatedCategories: MenuCategory[], targetLanguage: string) => {
-    const versionName = targetLanguage === 'en' ? 'English' : 
-                       targetLanguage === 'fr' ? 'Français' : 
-                       targetLanguage === 'es' ? 'Español' : 
-                       'العربية'
-    
-    // Add to menu versions
     setMenuVersions(prev => ({
       ...prev,
       [targetLanguage]: {
         categories: translatedCategories,
-        pdfUrl: undefined // Will be set when published
+        languageCode: targetLanguage
       }
     }))
     
-    // Store in translated versions for backward compatibility
-    setTranslatedVersions(prev => ({
-      ...prev,
-      [targetLanguage]: translatedCategories
-    }))
+    setShowTranslationDrawer(false)
+    showNotification("success", "تمت الترجمة بنجاح", `تمت ترجمة القائمة إلى ${targetLanguage === 'en' ? 'الإنجليزية' : targetLanguage === 'fr' ? 'الفرنسية' : targetLanguage === 'es' ? 'الإسبانية' : targetLanguage}. يمكنك الآن معاينة النسخة المترجمة والنشر عند الاستعداد.`)
     
-    // Switch to the new version
+    // Switch to the newly translated version for preview
     setActiveVersion(targetLanguage)
       setCategories(translatedCategories)
   }
@@ -265,6 +277,7 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
     setIsPublishing(true)
     try {
       const { CafeMenuPDF } = await import("@/components/pdf/cafe-menu-pdf")
+      const { generateAndSaveMenuPdf } = await import("@/lib/actions/pdf-actions")
       
       // Ensure restaurant has all required properties for PDF generation
       const restaurantForPdf = {
@@ -279,25 +292,71 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
         }
       }
       
-      // Create PDF blob
+      const menuName = `Menu - ${new Date().toLocaleDateString()}`
+      let primaryMenuId: string | null = null
+      let publishResults: Array<{ pdfUrl: string; menuId: string; language: string }> = []
+
+      // Publish all language versions
+      const languagesToPublish = [
+        { code: 'ar', categories: menuVersions.ar?.categories || categories, isPrimary: true },
+        ...Object.entries(menuVersions)
+          .filter(([code]) => code !== 'ar')
+          .map(([code, version]) => ({ code, categories: version.categories, isPrimary: false }))
+      ]
+
+      for (const { code, categories: langCategories, isPrimary } of languagesToPublish) {
+        try {
+          // Create PDF blob for this language
       const pdfBlob = await pdf(
-        <CafeMenuPDF restaurant={restaurantForPdf} categories={categories} />
+            <CafeMenuPDF restaurant={restaurantForPdf} categories={langCategories} />
       ).toBlob()
 
       // Create FormData and upload
       const formData = new FormData()
-      formData.append("pdfFile", pdfBlob, "menu.pdf")
+          formData.append("pdfFile", pdfBlob, `menu_${code}.pdf`)
       formData.append("restaurantId", restaurant.id)
-      formData.append("menuName", `Menu - ${new Date().toLocaleDateString()}`)
+          formData.append("menuName", menuName)
+          formData.append("languageCode", code)
+          
+          // Add parent menu ID for non-primary versions
+          if (!isPrimary && primaryMenuId) {
+            formData.append("parentMenuId", primaryMenuId)
+          }
 
       const result = await generateAndSaveMenuPdf(null, formData)
 
       if (result.pdfUrl && result.menuId) {
-        setPublishResult(result)
-        setShowSuccessDialog(true)
-      } else {
-        showNotification("error", "فشل في نشر القائمة", result.error || "حدث خطأ غير متوقع أثناء نشر القائمة")
+            if (isPrimary) {
+              primaryMenuId = result.menuId
+            }
+            publishResults.push({
+              pdfUrl: result.pdfUrl,
+              menuId: result.menuId,
+              language: code
+            })
+          } else {
+            throw new Error(`Failed to publish ${code} version: ${result.error}`)
+          }
+        } catch (langError: any) {
+          console.error(`Error publishing ${code} version:`, langError)
+          throw new Error(`خطأ في نشر النسخة ${code === 'ar' ? 'العربية' : code === 'en' ? 'الإنجليزية' : code === 'fr' ? 'الفرنسية' : 'الإسبانية'}: ${langError.message}`)
+        }
       }
+
+      // Show success for all published versions
+      const primaryResult = publishResults.find(r => r.language === 'ar')
+      if (primaryResult) {
+        setPublishResult({
+          pdfUrl: primaryResult.pdfUrl,
+          menuId: primaryResult.menuId
+        })
+        setShowSuccessDialog(true)
+      }
+
+      const languageCount = publishResults.length
+      showNotification("success", "تم نشر القائمة بنجاح", 
+        `تم نشر القائمة بـ ${languageCount} ${languageCount === 1 ? 'لغة' : 'لغات'} بنجاح!`)
+      
     } catch (error: any) {
       console.error("Publishing error:", error)
       showNotification("error", "خطأ في النشر", `حدث خطأ أثناء نشر القائمة: ${error.message}`)
@@ -341,22 +400,43 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
     <>
       <div className="space-y-4 h-full flex flex-col">
         {/* Compact Header */}
-        <div className="flex items-center justify-between bg-white/70 backdrop-blur-sm border border-red-200 rounded-xl p-3 shadow-sm">
-          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
-            <h2 className="text-base sm:text-lg font-bold text-gray-900 truncate">محرر القائمة المباشر</h2>
-            <div className="text-xs text-gray-500 hidden sm:flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white/70 backdrop-blur-sm border border-red-200 rounded-xl p-3 shadow-sm space-y-3 sm:space-y-0">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1 w-full sm:w-auto">
+            <div className="text-xs text-gray-500 hidden lg:flex items-center gap-3">
               <span>💡 اضغط للتعديل</span>
               <span>⭐ اضغط النجمة للمميز</span>
             </div>
+            
+            {/* Mobile Language Selection Button */}
+            {Object.keys(menuVersions).length > 1 && (
+              <div className="flex sm:hidden items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowTranslationDrawer(true)}
+                  className="bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100 px-3 py-1 text-xs"
+                >
+                  <Languages className="h-3 w-3 mr-1" />
+                  <span>{Object.keys(menuVersions).length} لغات</span>
+                </Button>
+                <span className="text-xs text-gray-500">
+                  {activeVersion === 'ar' ? 'العربية' : 
+                   activeVersion === 'en' ? 'English' :
+                   activeVersion === 'fr' ? 'Français' :
+                   activeVersion === 'es' ? 'Español' : activeVersion}
+                </span>
+              </div>
+            )}
           </div>
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 w-full sm:w-auto overflow-x-auto">
             {/* Plan Info */}
             {planInfo && (
-              <div className="hidden sm:flex items-center gap-2 px-2 py-1 bg-red-50 rounded-lg border border-red-200">
-                <span className="text-xs text-red-600 font-medium">
+              <div className="hidden md:flex items-center gap-2 px-2 py-1 bg-red-50 rounded-lg border border-red-200 flex-shrink-0">
+                <span className="text-xs text-red-600 font-medium whitespace-nowrap">
                   {planInfo.currentMenus}/{planInfo.maxMenus} قائمة
                 </span>
-                <span className="text-xs text-red-500">
+                <span className="text-xs text-red-500 whitespace-nowrap">
                   ({planInfo.planType === 'basic' ? 'أساسي' : planInfo.planType === 'pro' ? 'احترافي' : 'مجاني'})
                 </span>
               </div>
@@ -367,40 +447,45 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
               onClick={handleRefresh}
               disabled={refreshing}
               size="sm"
-              className="border-red-200 text-gray-600 hover:text-red-600 hover:bg-red-50 px-2 sm:px-3 transition-colors"
+              className="border-red-200 text-gray-600 hover:text-red-600 hover:bg-red-50 px-2 sm:px-3 transition-colors flex-shrink-0"
               title="تحديث"
             >
               {refreshing ? <RefreshCw className="h-3 w-3 sm:mr-1 animate-spin" /> : <RefreshCw className="h-3 w-3 sm:mr-1" />}
-              <span className="hidden sm:inline">تحديث</span>
+              <span className="hidden lg:inline">تحديث</span>
             </Button>
+            
+            <Button
+              variant="outline"
+              onClick={handlePdfPreview}
+              size="sm"
+              className={`border-red-200 text-gray-600 hover:text-red-600 hover:bg-red-50 px-2 sm:px-3 transition-colors flex-shrink-0 ${!hasPaidPlan && !paymentLoading ? 'opacity-75' : ''}`}
+              title={!hasPaidPlan && !paymentLoading ? 'يتطلب اشتراك مدفوع - معاينة PDF' : paymentLoading ? 'جاري التحقق من حالة الاشتراك...' : 'معاينة PDF'}
+              disabled={paymentLoading}
+            >
+              {paymentLoading ? <Loader2 className="h-3 w-3 sm:mr-1 animate-spin" /> : <Eye className="h-3 w-3 sm:mr-1" />}
+              <span className="hidden lg:inline">معاينة PDF</span>
+              {!hasPaidPlan && !paymentLoading && <span className="text-yellow-500 ml-1 hidden sm:inline">👑</span>}
+            </Button>
+            
+            {/* Desktop Translation Button */}
             <Button
               variant="outline"
               onClick={() => setShowTranslationDrawer(true)}
               disabled={loading || categories.length === 0}
               size="sm"
-              className="hover:bg-purple-50 border-purple-200 hover:text-purple-600 bg-purple-50 text-purple-600 px-2 sm:px-3 transition-colors"
+              className="flex hover:bg-purple-50 border-purple-200 hover:text-purple-600 bg-purple-50 text-purple-600 px-2 sm:px-3 transition-colors flex-shrink-0"
               title="ترجمة القائمة بالذكاء الاصطناعي"
             >
               <Languages className="h-3 w-3 sm:mr-1" />
-              <span className="hidden sm:inline">ترجمة AI</span>
+              <span className="hidden lg:inline">ترجمة AI</span>
+              <span className="lg:hidden">ترجمة</span>
             </Button>
-            <Button
-              variant="outline"
-              onClick={handlePdfPreview}
-              size="sm"
-              className={`border-red-200 text-gray-600 hover:text-red-600 hover:bg-red-50 px-2 sm:px-3 transition-colors ${!hasPaidPlan && !paymentLoading ? 'opacity-75' : ''}`}
-              title={!hasPaidPlan && !paymentLoading ? 'يتطلب اشتراك مدفوع - معاينة PDF' : paymentLoading ? 'جاري التحقق من حالة الاشتراك...' : 'معاينة PDF'}
-              disabled={paymentLoading}
-            >
-              {paymentLoading ? <Loader2 className="h-3 w-3 sm:mr-1 animate-spin" /> : <Eye className="h-3 w-3 sm:mr-1" />}
-              <span className="hidden sm:inline">معاينة PDF</span>
-              {!hasPaidPlan && !paymentLoading && <span className="text-yellow-500 ml-1">👑</span>}
-            </Button>
+            
             <Button
               onClick={handlePublishMenu}
               disabled={isPublishing || categories.length === 0 || paymentLoading || (planInfo && !planInfo.canPublish && hasPaidPlan)}
               size="sm"
-              className={`bg-red-500 hover:bg-red-600 text-white px-2 sm:px-3 transition-colors shadow-sm ${!hasPaidPlan && !paymentLoading ? 'opacity-75' : ''} ${planInfo && !planInfo.canPublish && hasPaidPlan ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`bg-red-500 hover:bg-red-600 text-white px-2 sm:px-3 transition-colors shadow-sm flex-shrink-0 ${!hasPaidPlan && !paymentLoading ? 'opacity-75' : ''} ${planInfo && !planInfo.canPublish && hasPaidPlan ? 'opacity-50 cursor-not-allowed' : ''}`}
               title={
                 !hasPaidPlan && !paymentLoading ? 'يتطلب اشتراك مدفوع - نشر القائمة' : 
                 paymentLoading ? 'جاري التحقق من حالة الاشتراك...' :
@@ -417,9 +502,9 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
           </div>
         </div>
 
-        {/* Version Tabs */}
+        {/* Desktop Version Tabs */}
         {Object.keys(menuVersions).length > 1 && (
-          <div className="bg-white/70 backdrop-blur-sm border border-red-200 rounded-xl p-1 shadow-sm">
+          <div className="hidden sm:block bg-white/70 backdrop-blur-sm border border-red-200 rounded-xl p-1 shadow-sm">
             <div className="flex gap-1 overflow-x-auto">
               {Object.entries(menuVersions).map(([langCode, version]) => {
                 const isActive = activeVersion === langCode

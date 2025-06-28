@@ -110,7 +110,7 @@ export default async function LandingPage({ searchParams }: PageProps) {
 
       {/* Enhanced Header */}
       <header className="relative z-50 px-4 lg:px-6 h-24 flex items-center border-b border-red-200/50 bg-white/90 backdrop-blur-2xl supports-[backdrop-filter]:bg-white/70 sticky top-0 shadow-lg shadow-red-500/10">
-        <Link className="flex items-center justify-center group" href="#">
+        <Link className="flex items-center justify-between sm:justify-center group" href="#">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-rose-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity"></div>
             <div className="relative bg-gradient-to-r from-red-600 to-rose-600 p-3 rounded-2xl shadow-2xl group-hover:scale-110 transition-transform duration-300">
@@ -120,7 +120,7 @@ export default async function LandingPage({ searchParams }: PageProps) {
          <AnimatedLogo />
         </Link>
 
-        <nav className="mr-auto lg:flex md:flex gap-8  sm:hidden">
+        <nav className="mr-auto lg:flex md:flex gap-8 hidden">
           <Link
             className="text-sm font-semibold text-gray-600 hover:text-red-600 transition-all duration-300 hover:scale-110 relative group"
             href="#features"
@@ -144,9 +144,9 @@ export default async function LandingPage({ searchParams }: PageProps) {
           </Link>
         </nav>
 
-        <Button asChild className="mr-8 bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:via-rose-500 hover:to-red-500 shadow-2xl hover:shadow-red-500/30 transition-all duration-500 hover:scale-110 border border-red-400/50 text-lg px-6 py-3 text-white">
-          <Link href="/auth/sign-up">
-            ابدأ الآن
+        <Button asChild className="mx-8 bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:via-rose-500 hover:to-red-500 shadow-2xl hover:shadow-red-500/30 transition-all duration-500 hover:scale-110 border border-red-400/50 text-lg px-6 py-3 text-white">
+          <Link href={user ? "/dashboard" : "/auth/sign-up"}>
+            {user ? "لوحة التحكم" : "ابدأ الآن"}
           </Link>
         </Button>
       </header>

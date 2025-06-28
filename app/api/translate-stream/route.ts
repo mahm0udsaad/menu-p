@@ -98,6 +98,11 @@ export async function POST(req: Request) {
     const targetLangName = LANGUAGE_NAMES[targetLanguage] || targetLanguage
     console.log(`🌍 Translating from ${sourceLangName} to ${targetLangName}`)
 
+    // Calculate estimated token requirement based on menu size
+    const totalItems = categories.reduce((sum, cat) => sum + (cat.menu_items?.length || 0), 0)
+    const estimatedTokens = Math.max(8000, totalItems * 150 + categories.length * 200)
+    console.log(`📏 Estimated tokens needed: ${estimatedTokens} (${categories.length} categories, ${totalItems} items)`)
+
     // Initialize Google AI model
     console.log('🤖 Initializing Google AI model...')
     let model
@@ -118,33 +123,35 @@ export async function POST(req: Request) {
 
 Translate the following menu from ${sourceLangName} to ${targetLangName}. 
 
-IMPORTANT INSTRUCTIONS:
-1. Preserve the exact same structure and IDs - do not change any IDs
-2. Translate only the "name" and "description" fields for categories and menu items
-3. Keep all other fields (price, image_url, is_available, is_featured, dietary_info, etc.) exactly the same
-4. For food names, use culturally appropriate translations that sound appetizing in ${targetLangName}
-5. For descriptions, maintain the appetizing and descriptive tone while being accurate
-6. If dietary_info contains terms like "vegan", "vegetarian", "gluten-free", translate them appropriately
-7. Keep prices in the same currency and format
-8. Preserve all boolean values and arrays exactly as they are
-9. If a description is null, keep it as null
+CRITICAL REQUIREMENTS:
+1. You MUST complete the entire JSON structure - do not truncate or leave incomplete
+2. Preserve the exact same structure and IDs - do not change any IDs
+3. Translate only the "name" and "description" fields for categories and menu items
+4. Keep all other fields (price, image_url, is_available, is_featured, dietary_info, etc.) exactly the same
+5. For food names, use culturally appropriate translations that sound appetizing in ${targetLangName}
+6. For descriptions, maintain the appetizing and descriptive tone while being accurate
+7. If dietary_info contains terms like "vegan", "vegetarian", "gluten-free", translate them appropriately
+8. Keep prices in the same currency and format
+9. Preserve all boolean values and arrays exactly as they are
+10. If a description is null, keep it as null
+11. ENSURE ALL CATEGORIES AND MENU ITEMS ARE INCLUDED IN THE RESPONSE
 
 Here is the menu to translate:
 
 ${JSON.stringify(categories, null, 2)}
 
-Return the translated menu with the exact same structure, only changing the text content where appropriate.`
+Return the complete translated menu with the exact same structure, ensuring every category and menu item is fully translated and included.`
 
     console.log('🚀 Starting streaming translation...')
     
-    // Start streaming translation
+    // Start streaming translation with increased token limit
     let streamResult
     try {
       streamResult = streamObject({
         model,
         schema: TranslatedMenuSchema,
         prompt,
-        maxTokens: 4000,
+        maxTokens: estimatedTokens, // Dynamic token limit based on menu size
       })
     } catch (streamError) {
       console.error('❌ Failed to start streaming:', streamError)
@@ -176,6 +183,12 @@ Return the translated menu with the exact same structure, only changing the text
           // Send final complete object
           console.log('🏁 Getting final object...')
           const finalObject = await object
+          
+          // Validate the final object has all required data
+          if (!finalObject.categories || finalObject.categories.length !== categories.length) {
+            throw new Error(`Translation incomplete: Expected ${categories.length} categories, got ${finalObject.categories?.length || 0}`)
+          }
+          
           console.log('✅ Translation completed successfully')
           
           const finalChunk = encoder.encode(`data: ${JSON.stringify({ final: true, object: finalObject })}\n\n`)
@@ -213,4 +226,4 @@ Return the translated menu with the exact same structure, only changing the text
       headers: { 'Content-Type': 'application/json' }
     })
   }
-} 
+}

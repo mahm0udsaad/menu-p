@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { DndProvider } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { Plus, Trash2, Edit, Upload, FileText, Palette, Image as ImageIcon, Type } from "lucide-react"
+import { Plus, Trash2, Edit, Upload, FileText, Palette, Image as ImageIcon, Type, RefreshCw, Download, TestTube } from "lucide-react"
 import { quickAddItem, quickDeleteItem, reorderMenuItems } from "@/lib/actions/editor/quick-menu-actions"
 import { quickUpdateCategory, quickDeleteCategory, quickAddCategory } from "@/lib/actions/editor/quick-category-actions"
 import InlineEditable from "../inline-editable"
@@ -17,6 +17,7 @@ import NotificationModal from "@/components/ui/notification-modal"
 import ConfirmationModal from "@/components/ui/confirmation-modal"
 import ImageUploadModal from "@/components/ui/image-upload-modal"
 import FontSettings from "../font-settings"
+import { useToast } from "@/hooks/use-toast"
 
 interface MenuItem {
   id: string
@@ -151,8 +152,28 @@ const MenuSectionPreview = ({
     description: ""
   })
 
+  const { toast } = useToast()
+  
   const showNotification = (type: "success" | "error" | "warning" | "info", title: string, description: string) => {
-    setNotification({ show: true, type, title, description })
+    if (type === "success") {
+      toast({
+        title,
+        description,
+        variant: "default",
+      })
+    } else if (type === "error") {
+      toast({
+        title,
+        description,
+        variant: "destructive",
+      })
+    } else {
+      toast({
+        title,
+        description,
+        variant: "default",
+      })
+    }
   }
 
   const handleBgImageUpload = async (file: File) => {
@@ -441,8 +462,28 @@ export default function ProfessionalCafeMenuPreview({
     type: "warning"
   })
 
+  const { toast } = useToast()
+  
   const showNotification = (type: "success" | "error" | "warning" | "info", title: string, description: string) => {
-    setNotification({ show: true, type, title, description })
+    if (type === "success") {
+      toast({
+        title,
+        description,
+        variant: "default",
+      })
+    } else if (type === "error") {
+      toast({
+        title,
+        description,
+        variant: "destructive",
+      })
+    } else {
+      toast({
+        title,
+        description,
+        variant: "default",
+      })
+    }
   }
 
   const showConfirmation = (title: string, description: string, action: () => void, type: "danger" | "warning" | "success" | "info" = "warning") => {

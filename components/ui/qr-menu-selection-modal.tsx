@@ -2,17 +2,12 @@
 
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { QrCode, Calendar, CheckCircle, X, Menu, Languages, ArrowRight, Users } from "lucide-react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import { toast } from "sonner"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
-import Link from "next/link"
+import { Languages, Globe, Users, ArrowRight, MapPin, Clock } from "lucide-react"
+import { supabase } from "@/lib/supabase/client"
+import Image from "next/image"
 
 interface Language {
   code: string
@@ -36,6 +31,20 @@ const SUPPORTED_LANGUAGES: Language[] = [
     nativeName: 'العربية',
     flag: '🇸🇦',
     dir: 'rtl'
+  },
+  {
+    code: 'fr',
+    name: 'French',
+    nativeName: 'Français',
+    flag: '🇫🇷',
+    dir: 'ltr'
+  },
+  {
+    code: 'es',
+    name: 'Spanish',
+    nativeName: 'Español',
+    flag: '🇪🇸',
+    dir: 'ltr'
   }
 ]
 
@@ -46,6 +55,8 @@ interface MenuVersion {
   created_at: string
   item_count: number
   restaurant_name: string
+  restaurant_logo: string | null
+  restaurant_category: string
 }
 
 interface QrMenuSelectionModalProps {
@@ -62,69 +73,76 @@ export default function QrMenuSelectionModal({
   onLanguageSelect
 }: QrMenuSelectionModalProps) {
   const [menuVersions, setMenuVersions] = useState<MenuVersion[]>([])
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("")
   const [loading, setLoading] = useState(true)
-  const [selectedLanguage, setSelectedLanguage] = useState<string>('')
-  const supabase = createClientComponentClient()
 
   useEffect(() => {
-    if (isOpen && menuId) {
+    if (isOpen) {
       fetchMenuVersions()
     }
   }, [isOpen, menuId])
 
   const fetchMenuVersions = async () => {
+    setLoading(true)
     try {
-      setLoading(true)
-      
-      // First get the base menu info
-      const { data: baseMenu, error: baseError } = await supabase
+      // First get the current menu to find restaurant info
+      const { data: currentMenu } = await supabase
         .from("published_menus")
-        .select(`
-          id,
-          menu_name,
-          language,
-          created_at,
-          restaurants (
-            name
-          )
-        `)
+        .select('menu_name, restaurant_id')
         .eq("id", menuId)
         .single()
 
-      if (baseError) throw baseError
+      if (!currentMenu) return
 
-      // Then get all language versions for this restaurant with the same menu name
-      const { data: versions, error: versionsError } = await supabase
+      // Get restaurant info separately
+      const { data: restaurant } = await supabase
+        .from("restaurants")
+        .select('id, name, logo_url, category')
+        .eq("id", currentMenu.restaurant_id)
+        .single()
+
+      if (!restaurant) return
+
+      // Get all language versions of this menu
+      const { data: versions } = await supabase
         .from("published_menus")
         .select(`
           id,
           menu_name,
-          language,
-          created_at,
-          restaurants!inner (
-            name
-          ),
-          menu_categories (
-            menu_items (
-              id
-            )
-          )
+          language_code,
+          created_at
         `)
-        .eq("restaurants.id", baseMenu.restaurants?.id)
-        .eq("menu_name", baseMenu.menu_name)
-        .order("created_at", { ascending: false })
+        .eq("restaurant_id", currentMenu.restaurant_id)
+        .eq("menu_name", currentMenu.menu_name)
 
-      if (versionsError) throw versionsError
+      if (!versions) return
 
-      const formattedVersions: MenuVersion[] = versions.map(version => ({
+      // Get menu categories to count items for each version
+      const versionIds = versions.map(v => v.id)
+      const { data: categories } = await supabase
+        .from("menu_categories")
+        .select(`
+          id,
+          menu_items (id)
+        `)
+        .in("restaurant_id", [currentMenu.restaurant_id])
+
+      const formattedVersions: MenuVersion[] = versions.map(version => {
+        // Count items for this version (simplified - all versions share same categories for now)
+        const itemCount = categories?.reduce((total, category) => 
+          total + (category.menu_items?.length || 0), 0) || 0
+
+        return {
         id: version.id,
         menu_name: version.menu_name,
-        language: version.language || 'ar',
+          language: version.language_code || 'ar',
         created_at: version.created_at,
-        item_count: version.menu_categories?.reduce((total, category) => 
-          total + (category.menu_items?.length || 0), 0) || 0,
-        restaurant_name: version.restaurants?.name || ''
-      }))
+          item_count: itemCount,
+          restaurant_name: restaurant.name,
+          restaurant_logo: restaurant.logo_url,
+          restaurant_category: restaurant.category
+        }
+      })
 
       setMenuVersions(formattedVersions)
       
@@ -153,41 +171,88 @@ export default function QrMenuSelectionModal({
     return SUPPORTED_LANGUAGES.find(lang => lang.code === code) || SUPPORTED_LANGUAGES[0]
   }
 
+  const getCategoryText = (category: string) => {
+    switch(category) {
+      case 'both': return 'مطعم ومقهى / Restaurant & Café'
+      case 'restaurant': return 'مطعم / Restaurant'
+      case 'cafe': return 'مقهى / Café'
+      default: return category
+    }
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-md mx-auto">
+      <DialogContent className="w-full max-w-lg mx-auto bg-gradient-to-br from-red-50 via-white to-rose-50">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-center">
-            <Languages className="h-5 w-5" />
+          <DialogTitle className="flex items-center gap-2 text-center justify-center">
+            <Languages className="h-5 w-5 text-red-600" />
+            <span className="bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent font-bold">
             اختر اللغة / Choose Language
+            </span>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           {loading ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
+              <Skeleton className="h-20 w-full" />
               <Skeleton className="h-16 w-full" />
               <Skeleton className="h-16 w-full" />
             </div>
           ) : menuVersions.length === 1 ? (
             <div className="text-center space-y-4">
               <div className="animate-pulse">
-                <Globe className="h-12 w-12 mx-auto text-primary" />
+                <Globe className="h-12 w-12 mx-auto text-red-500" />
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-gray-600">
                 جاري تحميل القائمة... / Loading menu...
               </p>
             </div>
           ) : (
             <>
-              <div className="text-center space-y-2">
-                <h3 className="font-medium">
+              {/* Restaurant Header */}
+              <div className="text-center space-y-4 pb-4 border-b border-red-200">
+                <div className="flex items-center justify-center gap-4">
+                  {menuVersions[0]?.restaurant_logo ? (
+                    <Image
+                      src={menuVersions[0].restaurant_logo}
+                      alt={`${menuVersions[0].restaurant_name} logo`}
+                      width={60}
+                      height={60}
+                      className="rounded-lg object-cover border-2 border-red-200 shadow-sm"
+                    />
+                  ) : (
+                    <div className="w-15 h-15 bg-gradient-to-br from-red-100 to-rose-100 rounded-lg flex items-center justify-center border-2 border-red-200">
+                      <Globe className="h-8 w-8 text-red-600" />
+                    </div>
+                  )}
+                  <div className="text-right">
+                    <h3 className="text-xl font-bold text-gray-900">
                   {menuVersions[0]?.restaurant_name}
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  القائمة متوفرة بلغات متعددة / Menu available in multiple languages
-                </p>
+                    <p className="text-sm text-gray-600">
+                      {getCategoryText(menuVersions[0]?.restaurant_category || '')}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-center gap-4 text-xs text-gray-500">
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    <span>متوفرة بـ {menuVersions.length} لغات</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    <span>محدّثة حديثاً</span>
+                  </div>
+                </div>
               </div>
+
+              {/* Language Selection */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium text-gray-700 text-center">
+                  اختر لغتك المفضلة / Choose your preferred language
+                </h4>
 
               <div className="space-y-3">
                 {menuVersions.map((version) => {
@@ -195,41 +260,47 @@ export default function QrMenuSelectionModal({
                   return (
                     <Card 
                       key={version.id}
-                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        className="cursor-pointer hover:bg-red-50 transition-all duration-200 border-2 hover:border-red-300 hover:shadow-md"
                       onClick={() => handleLanguageSelection(version.id, version.language)}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <span className="text-2xl">{languageInfo.flag}</span>
-                            <div>
-                              <div className="font-medium">
-                                {languageInfo.nativeName}
+                              <div className="text-2xl">
+                                {languageInfo.flag}
                               </div>
-                              <div className="text-sm text-muted-foreground">
+                              <div>
+                                <div className="font-medium text-gray-900">
+                                  {languageInfo.nativeName}
+                                </div>
+                                <div className="text-sm text-gray-600">
                                 {languageInfo.name}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className="text-xs">
+                            <div className="flex items-center gap-3">
+                              <div className="text-right">
+                                <Badge variant="secondary" className="text-xs bg-red-100 text-red-700">
                               <Users className="h-3 w-3 mr-1" />
-                              {version.item_count} items
+                                  {version.item_count} عنصر
                             </Badge>
-                            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                              </div>
+                              <ArrowRight className="h-5 w-5 text-red-500" />
                           </div>
                         </div>
                       </CardContent>
                     </Card>
                   )
                 })}
+                </div>
               </div>
 
-              <div className="text-center">
-                <p className="text-xs text-muted-foreground">
+              {/* Footer Message */}
+              <div className="text-center bg-gradient-to-r from-red-50 to-rose-50 p-3 rounded-lg border border-red-200">
+                <p className="text-xs text-gray-600">
                   انقر على اللغة المفضلة لعرض القائمة
                   <br />
-                  Click your preferred language to view the menu
+                  <span className="text-red-600 font-medium">Click your preferred language to view the menu</span>
                 </p>
               </div>
             </>

@@ -183,40 +183,52 @@ export default function MenuEditorClient({
       </div>
 
       {/* Header */}
-      <header className="border-b border-red-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
-        <div className="px-4 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 sm:space-x-4 space-x-reverse min-w-0 flex-1">
-              <Button variant="ghost" asChild className="text-gray-600 hover:text-red-600 hover:bg-red-50 p-2 sm:px-4 sm:py-2 transition-colors">
-              <Link href="/dashboard">
-                  <ArrowLeft className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">العودة للوحة التحكم</span>
-                </Link>
-                </Button>
-              <div className="w-px h-6 bg-red-200 hidden sm:block"></div>
-              <div className="bg-gradient-to-r from-red-500 to-rose-500 p-1.5 sm:p-2 rounded-lg sm:rounded-xl shadow-lg flex-shrink-0">
-                <FileText className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">محرر القائمة</h1>
-                <p className="text-xs sm:text-sm text-gray-600 truncate">{restaurant.name}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <Badge variant="secondary" className="bg-red-100 text-red-700 border-red-200 text-xs sm:text-sm hidden sm:flex">
-                {restaurant.category === "both" ? "مطعم ومقهى" : restaurant.category}
-                  </Badge>
-            </div>
-          </div>
-          
-          {/* Mobile category badge */}
-          <div className="mt-2 sm:hidden">
-            <Badge variant="secondary" className="bg-red-100 text-red-700 border-red-200 text-xs">
-              {restaurant.category === "both" ? "مطعم ومقهى" : restaurant.category}
-            </Badge>
-          </div>
+      <header className="border-b border-red-200/50 bg-white/95 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
+  <div className="px-3 sm:px-4 py-2 sm:py-2.5">
+    <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+        <Button 
+          variant="ghost" 
+          asChild 
+          className="text-gray-600 hover:text-red-600 hover:bg-red-50 p-1.5 sm:p-2 transition-colors h-8 w-8 sm:h-auto sm:w-auto sm:px-3"
+        >
+          <Link href="/dashboard">
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline sm:mr-2">العودة</span>
+          </Link>
+        </Button>
+        
+        <div className="w-px h-4 bg-red-200 hidden sm:block"></div>
+        
+        <div className="bg-gradient-to-r from-red-500 to-rose-500 p-1.5 rounded-lg shadow-md flex-shrink-0">
+          <FileText className="h-4 w-4 text-white" />
         </div>
-      </header>
+        
+        <div className="min-w-0 flex-1">
+          <h1 className="text-base sm:text-lg font-bold text-gray-900 truncate leading-tight">
+            محرر القائمة
+          </h1>
+          <p className="text-xs text-gray-600 truncate leading-tight">
+            {restaurant.name}
+          </p>
+        </div>
+      </div>
+      
+      <Badge 
+        variant="secondary" 
+        className="bg-red-50 text-red-700 border-red-200 text-xs px-2 py-1 font-medium flex-shrink-0"
+      >
+        <span className="hidden sm:inline">
+          {restaurant.category === "both" ? "مطعم ومقهى" : restaurant.category}
+        </span>
+        <span className="sm:hidden">
+          {restaurant.category === "both" ? "مختلط" : 
+           restaurant.category === "restaurant" ? "مطعم" : "مقهى"}
+        </span>
+      </Badge>
+    </div>
+  </div>
+</header>
 
       {/* Main Content */}
       <main className="px-3 sm:px-4 py-4 sm:py-8 relative z-10">
