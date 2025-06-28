@@ -4,7 +4,7 @@ import { useActionState } from "react"
 import { useFormStatus } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Loader2, QrCode, ArrowRight, Eye, EyeOff, Check } from "lucide-react"
+import { Loader2, QrCode, ArrowRight, Eye, EyeOff, Check, Crown, Sparkles, Users, Heart } from "lucide-react"
 import Link from "next/link"
 import { signUp, signInWithGoogle } from "@/lib/actions"
 import { useState } from "react"
@@ -16,7 +16,7 @@ function SubmitButton() {
     <Button
       type="submit"
       disabled={pending}
-      className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white py-6 text-lg font-medium rounded-xl transition-all duration-200 shadow-lg hover:shadow-emerald-500/25 disabled:opacity-50"
+      className="w-full bg-gradient-to-r from-rose-600 via-pink-600 to-rose-600 hover:from-rose-500 hover:via-pink-500 hover:to-rose-500 text-white shadow-2xl hover:shadow-rose-500/30 transition-all duration-500 hover:scale-105 border border-rose-400/50 py-6 text-lg font-bold rounded-2xl disabled:opacity-50"
     >
       {pending ? (
         <>
@@ -51,7 +51,7 @@ function GoogleSignUpButton() {
       type="button"
       onClick={handleGoogleSignUp}
       disabled={isPending}
-      className="w-full bg-white hover:bg-gray-50 text-gray-900 py-6 text-lg font-medium rounded-xl transition-all duration-200 shadow-lg hover:shadow-lg border border-gray-200 disabled:opacity-50"
+      className="w-full border-2 border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 backdrop-blur-xl transition-all duration-500 hover:scale-105 py-6 text-lg font-bold rounded-2xl hover:shadow-rose-500/20 disabled:opacity-50"
     >
       {isPending ? (
         <>
@@ -79,128 +79,143 @@ export default function SignUpForm() {
   const [state, formAction] = useActionState(signUp, { error: null, success: null })
 
   return (
-    <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-slate-700 w-full max-w-md">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <div className="mx-auto mb-6 w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl flex items-center justify-center">
-          <QrCode className="h-8 w-8 text-white" />
-        </div>
-        <h1 className="text-3xl font-bold text-white mb-2">إنشاء حساب جديد</h1>
-        <p className="text-slate-400">انضم إلى Menu-P وابدأ في إنشاء قائمة طعامك الرقمية</p>
-      </div>
-
-      {/* Messages */}
-      {state?.error && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-6">
-          <p className="text-red-400 text-center text-sm">{state.error}</p>
-        </div>
-      )}
-
-      {state?.success && (
-        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 mb-6">
-          <div className="flex items-center justify-center text-emerald-400 mb-2">
-            <Check className="h-5 w-5 mr-2" />
-            <p className="text-sm font-medium">تم إنشاء الحساب بنجاح!</p>
+    <div className="w-full max-w-md">
+      <div className="group border-0 bg-white/90 backdrop-blur-2xl shadow-2xl hover:shadow-rose-500/25 transition-all duration-700 hover:scale-[1.02] rounded-3xl overflow-hidden border border-rose-200/50 p-8">
+        <div className="absolute inset-0 bg-gradient-to-br from-rose-50/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        
+        {/* Header */}
+        <div className="text-center mb-8 relative">
+          <div className="mx-auto mb-6 relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl blur-lg opacity-75"></div>
+            <div className="relative w-16 h-16 bg-gradient-to-r from-rose-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-2xl mx-auto">
+              <QrCode className="h-8 w-8 text-white animate-pulse" />
+            </div>
           </div>
-          <p className="text-emerald-300 text-center text-sm">{state.success}</p>
-        </div>
-      )}
-
-      {/* Google Sign Up - Primary Option */}
-      <div className="mb-6">
-        <GoogleSignUpButton />
-      </div>
-
-      {/* Divider */}
-      <div className="relative mb-6">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-slate-600"></div>
-        </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="px-4 bg-slate-800/50 text-slate-400">أو</span>
-        </div>
-      </div>
-
-      {/* Email Form */}
-      <form action={formAction} className="space-y-6">
-        {/* Email */}
-        <div className="space-y-2">
-          <label htmlFor="email" className="text-white text-sm font-medium">
-            البريد الإلكتروني *
-          </label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="example@domain.com"
-            required
-            className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 py-6 rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 transition-all duration-200"
-            dir="ltr"
-          />
+          
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Users className="h-6 w-6 text-rose-600" />
+            <h1 className="text-3xl font-black bg-gradient-to-r from-gray-900 via-rose-800 to-gray-900 bg-clip-text text-transparent">
+              إنشاء حساب جديد
+            </h1>
+            <Heart className="h-6 w-6 text-rose-600 animate-pulse" />
+          </div>
+          
+          <p className="text-gray-600 font-semibold">انضم إلى Menu-P وابدأ في إنشاء قائمة طعامك الرقمية</p>
         </div>
 
-        {/* Password */}
-        <div className="space-y-2">
-          <label htmlFor="password" className="text-white text-sm font-medium">
-            كلمة المرور *
-          </label>
-          <div className="relative">
+        {/* Messages */}
+        {state?.error && (
+          <div className="bg-red-100 border border-red-200 rounded-2xl p-4 mb-6 relative">
+            <p className="text-red-800 text-center font-semibold">{state.error}</p>
+          </div>
+        )}
+
+        {state?.success && (
+          <div className="bg-green-100 border border-green-200 rounded-2xl p-4 mb-6 relative">
+            <div className="flex items-center justify-center text-green-700 mb-2">
+              <Check className="h-5 w-5 mr-2" />
+              <p className="font-bold">تم إنشاء الحساب بنجاح!</p>
+            </div>
+            <p className="text-green-600 text-center font-semibold">{state.success}</p>
+          </div>
+        )}
+
+        {/* Google Sign Up - Primary Option */}
+        <div className="mb-6 relative">
+          <GoogleSignUpButton />
+        </div>
+
+        {/* Divider */}
+        <div className="relative mb-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-rose-200"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-4 bg-white/90 text-gray-600 font-semibold">أو</span>
+          </div>
+        </div>
+
+        {/* Email Form */}
+        <form action={formAction} className="space-y-6 relative">
+          {/* Email */}
+          <div className="space-y-2">
+            <label htmlFor="email" className="text-gray-900 text-sm font-bold">
+              البريد الإلكتروني *
+            </label>
             <Input
-              id="password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="أدخل كلمة مرور قوية"
+              id="email"
+              name="email"
+              type="email"
+              placeholder="example@domain.com"
               required
-              minLength={6}
-              className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 py-6 rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 transition-all duration-200 pl-12"
+              className="w-full rounded-2xl border border-rose-200 bg-rose-50/50 px-4 py-6 text-gray-900 transition-all focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 hover:bg-rose-50 font-semibold text-lg"
+              dir="ltr"
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
-            >
-              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-            </button>
           </div>
-          <p className="text-slate-400 text-xs">يجب أن تحتوي على 6 أحرف على الأقل</p>
-        </div>
 
-        {/* Confirm Password */}
-        <div className="space-y-2">
-          <label htmlFor="confirmPassword" className="text-white text-sm font-medium">
-            تأكيد كلمة المرور *
-          </label>
-          <div className="relative">
-            <Input
-              id="confirmPassword"
-              name="confirmPassword"
-              type={showConfirmPassword ? "text" : "password"}
-              placeholder="أعد إدخال كلمة المرور"
-              required
-              minLength={6}
-              className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 py-6 rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 transition-all duration-200 pl-12"
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
-            >
-              {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-            </button>
+          {/* Password */}
+          <div className="space-y-2">
+            <label htmlFor="password" className="text-gray-900 text-sm font-bold">
+              كلمة المرور *
+            </label>
+            <div className="relative">
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="أدخل كلمة مرور قوية"
+                required
+                minLength={6}
+                className="w-full rounded-2xl border border-rose-200 bg-rose-50/50 px-4 py-6 text-gray-900 transition-all focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 hover:bg-rose-50 font-semibold text-lg pl-12"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-rose-500 hover:text-rose-700 transition-colors"
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
+            <p className="text-gray-500 text-xs font-semibold">يجب أن تحتوي على 6 أحرف على الأقل</p>
           </div>
+
+          {/* Confirm Password */}
+          <div className="space-y-2">
+            <label htmlFor="confirmPassword" className="text-gray-900 text-sm font-bold">
+              تأكيد كلمة المرور *
+            </label>
+            <div className="relative">
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="أعد إدخال كلمة المرور"
+                required
+                minLength={6}
+                className="w-full rounded-2xl border border-rose-200 bg-rose-50/50 px-4 py-6 text-gray-900 transition-all focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 hover:bg-rose-50 font-semibold text-lg pl-12"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-rose-500 hover:text-rose-700 transition-colors"
+              >
+                {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
+          </div>
+
+          <SubmitButton />
+        </form>
+
+        {/* Login Link */}
+        <div className="text-center mt-6 relative">
+          <p className="text-gray-600 font-semibold">
+            لديك حساب بالفعل؟{" "}
+            <Link href="/auth/login" className="text-rose-600 hover:text-rose-800 font-bold transition-colors hover:scale-105 inline-block">
+              تسجيل الدخول
+            </Link>
+          </p>
         </div>
-
-        <SubmitButton />
-      </form>
-
-      {/* Login Link */}
-      <div className="text-center mt-6">
-        <p className="text-slate-400">
-          لديك حساب بالفعل؟{" "}
-          <Link href="/auth/login" className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors">
-            تسجيل الدخول
-          </Link>
-        </p>
       </div>
     </div>
   )

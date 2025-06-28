@@ -17,10 +17,19 @@ import {
   Star,
   Heart,
   BarChart3,
+  Package,
+  Plus,
+  Languages,
+  Type,
+  Palette
 } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import TemplateSelector from "./template-selector"
 import Link from "next/link"
 import LiveMenuEditor from "./editor/live-menu-editor"
+import MenuImportModal from "./ui/menu-import-modal"
+import LanguageSelector from "./language-selector"
+import FontSettings from "./font-settings"
 
 interface Restaurant {
   id: string
@@ -42,6 +51,7 @@ interface MenuCategory {
   id: string
   name: string
   description: string | null
+  background_image_url: string | null
   menu_items: MenuItem[]
 }
 
@@ -72,6 +82,8 @@ export default function MenuEditorClient({
   const [totalPages, setTotalPages] = useState(1)
   const [activeTab, setActiveTab] = useState("template")
   const [draftData, setDraftData] = useState<any>({})
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [menuData, setMenuData] = useState<MenuCategory[]>(initialMenuData)
 
   useEffect(() => {
     if (selectedTemplate) {
@@ -79,6 +91,23 @@ export default function MenuEditorClient({
       setActiveTab("editor")
     }
   }, [selectedTemplate])
+
+  // Check if this is a new menu (no items) to show import option
+  const isNewMenu = menuData.every(category => 
+    !category.menu_items || category.menu_items.length === 0
+  )
+
+  // Show import modal automatically for new menus
+  useEffect(() => {
+    if (isNewMenu && selectedTemplate && activeTab === "editor") {
+      // Only show once per session
+      const hasShownImport = sessionStorage.getItem(`import-shown-${restaurant.id}`)
+      if (!hasShownImport) {
+        setShowImportModal(true)
+        sessionStorage.setItem(`import-shown-${restaurant.id}`, "true")
+      }
+    }
+  }, [isNewMenu, selectedTemplate, activeTab, restaurant.id])
 
   const handleTemplateSelect = (template: Template) => {
     setSelectedTemplate(template)
@@ -98,61 +127,83 @@ export default function MenuEditorClient({
     }
   }
 
+  const handleImportComplete = (importedCategories: MenuCategory[]) => {
+    // Merge imported categories with existing ones
+    setMenuData(prevData => {
+      const newData = [...prevData]
+      
+      importedCategories.forEach(importedCategory => {
+        // Check if category already exists
+        const existingCategoryIndex = newData.findIndex(
+          cat => cat.name.toLowerCase() === importedCategory.name.toLowerCase()
+        )
+        
+        if (existingCategoryIndex >= 0) {
+          // Merge items into existing category
+          const existingCategory = newData[existingCategoryIndex]
+          const mergedItems = [
+            ...existingCategory.menu_items,
+            ...importedCategory.menu_items.map(item => ({
+              ...item,
+              id: `imported-${Date.now()}-${Math.random()}`, // Generate new ID for imported items
+              category_id: existingCategory.id
+            }))
+          ]
+          newData[existingCategoryIndex] = {
+            ...existingCategory,
+            menu_items: mergedItems
+          }
+        } else {
+          // Add new category
+          newData.push({
+            ...importedCategory,
+            id: `imported-cat-${Date.now()}-${Math.random()}`, // Generate new ID for imported category
+            menu_items: importedCategory.menu_items.map(item => ({
+              ...item,
+              id: `imported-${Date.now()}-${Math.random()}`, // Generate new ID for imported items
+              category_id: importedCategory.id
+            }))
+          })
+        }
+      })
+      
+      return newData
+    })
+  }
+
   const canNavigateNext = currentPage < totalPages
   const canNavigatePrev = currentPage > 1
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
-      {/* Floating Background Icons */}
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-red-50 relative overflow-hidden">
+      {/* Subtle background elements - no animations for performance */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-20 animate-bounce delay-100">
-          <Coffee className="h-8 w-8 text-emerald-400/5" />
-        </div>
-        <div className="absolute top-40 left-32 animate-pulse delay-300">
-          <UtensilsCrossed className="h-12 w-12 text-emerald-300/5" />
-        </div>
-        <div className="absolute top-60 right-1/3 animate-bounce delay-500">
-          <QrCode className="h-10 w-10 text-emerald-500/5" />
-        </div>
-        <div className="absolute bottom-40 left-20 animate-pulse delay-700">
-          <FileText className="h-14 w-14 text-emerald-400/5" />
-        </div>
-        <div className="absolute bottom-60 right-20 animate-bounce delay-1000">
-          <Star className="h-8 w-8 text-emerald-300/5" />
-        </div>
-        <div className="absolute top-1/3 left-1/4 animate-pulse delay-200">
-          <Star className="h-6 w-6 text-yellow-400/5" />
-        </div>
-        <div className="absolute bottom-1/3 right-1/4 animate-bounce delay-800">
-          <Heart className="h-7 w-7 text-red-400/5" />
-        </div>
-        <div className="absolute top-1/2 right-10 animate-pulse delay-600">
-          <BarChart3 className="h-9 w-9 text-emerald-400/5" />
-        </div>
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-red-100/20 to-rose-100/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 left-1/4 w-80 h-80 bg-gradient-to-tr from-pink-100/20 to-red-100/20 rounded-full blur-3xl"></div>
       </div>
 
       {/* Header */}
-      <header className="border-b border-slate-700 bg-slate-800/50 backdrop-blur sticky top-0 z-50">
+      <header className="border-b border-red-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
         <div className="px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-4 space-x-reverse min-w-0 flex-1">
-              <Button variant="ghost" asChild className="text-slate-400 hover:text-white p-2 sm:px-4 sm:py-2">
+              <Button variant="ghost" asChild className="text-gray-600 hover:text-red-600 hover:bg-red-50 p-2 sm:px-4 sm:py-2 transition-colors">
               <Link href="/dashboard">
                   <ArrowLeft className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">العودة للوحة التحكم</span>
                 </Link>
                 </Button>
-              <div className="w-px h-6 bg-slate-600 hidden sm:block"></div>
-              <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-1.5 sm:p-2 rounded-lg sm:rounded-xl shadow-lg flex-shrink-0">
+              <div className="w-px h-6 bg-red-200 hidden sm:block"></div>
+              <div className="bg-gradient-to-r from-red-500 to-rose-500 p-1.5 sm:p-2 rounded-lg sm:rounded-xl shadow-lg flex-shrink-0">
                 <FileText className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
               </div>
               <div className="min-w-0 flex-1">
-                <h1 className="text-lg sm:text-2xl font-bold text-white truncate">محرر القائمة</h1>
-                <p className="text-xs sm:text-sm text-slate-300 truncate">{restaurant.name}</p>
+                <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">محرر القائمة</h1>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">{restaurant.name}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
-              <Badge variant="secondary" className="bg-emerald-600/20 text-emerald-400 border-emerald-400/30 text-xs sm:text-sm hidden sm:flex">
+              <Badge variant="secondary" className="bg-red-100 text-red-700 border-red-200 text-xs sm:text-sm hidden sm:flex">
                 {restaurant.category === "both" ? "مطعم ومقهى" : restaurant.category}
                   </Badge>
             </div>
@@ -160,7 +211,7 @@ export default function MenuEditorClient({
           
           {/* Mobile category badge */}
           <div className="mt-2 sm:hidden">
-            <Badge variant="secondary" className="bg-emerald-600/20 text-emerald-400 border-emerald-400/30 text-xs">
+            <Badge variant="secondary" className="bg-red-100 text-red-700 border-red-200 text-xs">
               {restaurant.category === "both" ? "مطعم ومقهى" : restaurant.category}
             </Badge>
           </div>
@@ -170,10 +221,10 @@ export default function MenuEditorClient({
       {/* Main Content */}
       <main className="px-3 sm:px-4 py-4 sm:py-8 relative z-10">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="bg-slate-800/50 border border-slate-700 rounded-xl p-1 w-full flex h-auto sm:h-10 gap-1">
+          <TabsList className="bg-white/70 backdrop-blur-sm border border-red-200 rounded-xl p-1 w-full flex h-auto sm:h-10 gap-1 shadow-sm">
             <TabsTrigger
               value="template"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-emerald-700 data-[state=active]:text-white rounded-lg text-xs sm:text-sm px-2 sm:px-4 py-2 flex-1 sm:flex-none"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-rose-500 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-red-50 transition-all rounded-lg text-xs sm:text-sm px-2 sm:px-4 py-2 flex-1 sm:flex-none"
             >
               <Settings className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:mr-2" />
               <span className="hidden sm:inline">اختر القالب</span>
@@ -182,7 +233,7 @@ export default function MenuEditorClient({
             <TabsTrigger
               value="editor"
               disabled={!selectedTemplate}
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-emerald-700 data-[state=active]:text-white rounded-lg disabled:opacity-50 text-xs sm:text-sm px-2 sm:px-4 py-2 flex-1 sm:flex-none"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-rose-500 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-red-50 transition-all rounded-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm px-2 sm:px-4 py-2 flex-1 sm:flex-none"
             >
               <FileText className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:mr-2" />
               <span className="hidden sm:inline">محرر القائمة</span>
@@ -202,20 +253,52 @@ export default function MenuEditorClient({
           <TabsContent value="editor">
             {selectedTemplate && (
               <div className="space-y-4 sm:space-y-6">
+                {/* Import Option for New Menus */}
+                {isNewMenu && (
+                  <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-4 sm:p-6 shadow-sm">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div className="flex items-start gap-3">
+                        <div className="bg-red-500 p-2 rounded-lg flex-shrink-0 shadow-sm">
+                          <Package className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                            استيراد منتجات من قائمة سابقة؟
+                          </h3>
+                          <p className="text-gray-600 text-sm">
+                            يمكنك توفير الوقت بنسخ المنتجات من قوائمك السابقة وتعديلها حسب الحاجة
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => setShowImportModal(true)}
+                        className="bg-red-500 hover:bg-red-600 text-white shadow-sm transition-colors whitespace-nowrap"
+                      >
+                        <Package className="h-4 w-4 mr-2" />
+                        استيراد منتجات
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Live Editor */}
                 <LiveMenuEditor
                   restaurant={restaurant}
-                  selectedTemplate={selectedTemplate}
-                  currentPage={currentPage}
-                  menuData={initialMenuData}
-                  onSaveDraft={handleSaveDraft}
-                  draftData={draftData[currentPage]}
+                  initialMenuData={menuData}
                 />
-          </div>
-        )}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Import Modal */}
+      <MenuImportModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        restaurantId={restaurant.id}
+        onImportComplete={handleImportComplete}
+      />
     </div>
   )
 }

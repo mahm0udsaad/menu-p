@@ -4,7 +4,7 @@ import { useActionState } from "react"
 import { useFormStatus } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Loader2, QrCode, ArrowRight, Eye, EyeOff } from "lucide-react"
+import { Loader2, QrCode, ArrowRight, Eye, EyeOff, Crown, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { signIn, signInWithGoogle } from "@/lib/actions"
 import { useState } from "react"
@@ -16,7 +16,7 @@ function SubmitButton() {
     <Button
       type="submit"
       disabled={pending}
-      className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white py-6 text-lg font-medium rounded-xl transition-all duration-200 shadow-lg hover:shadow-emerald-500/25 disabled:opacity-50"
+      className="w-full bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:via-rose-500 hover:to-red-500 text-white shadow-2xl hover:shadow-red-500/30 transition-all duration-500 hover:scale-105 border border-red-400/50 py-6 text-lg font-bold rounded-2xl disabled:opacity-50"
     >
       {pending ? (
         <>
@@ -51,7 +51,7 @@ function GoogleSignInButton() {
       type="button"
       onClick={handleGoogleSignIn}
       disabled={isPending}
-      className="w-full bg-white hover:bg-gray-50 text-gray-900 py-6 text-lg font-medium rounded-xl transition-all duration-200 shadow-lg hover:shadow-lg border border-gray-200 disabled:opacity-50"
+      className="w-full border-2 border-red-300 bg-red-50 hover:bg-red-100 text-red-700 hover:text-red-800 backdrop-blur-xl transition-all duration-500 hover:scale-105 py-6 text-lg font-bold rounded-2xl hover:shadow-red-500/20 disabled:opacity-50"
     >
       {isPending ? (
         <>
@@ -78,98 +78,113 @@ export default function LoginForm() {
   const [state, formAction] = useActionState(signIn, { error: "" })
 
   return (
-    <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-slate-700 w-full max-w-md">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <div className="mx-auto mb-6 w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl flex items-center justify-center">
-          <QrCode className="h-8 w-8 text-white" />
-        </div>
-        <h1 className="text-3xl font-bold text-white mb-2">تسجيل الدخول</h1>
-        <p className="text-slate-400">مرحباً بك مرة أخرى في Menu-P</p>
-      </div>
-
-      {/* Error Message */}
-      {state?.error && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-6">
-          <p className="text-red-400 text-center text-sm">{state.error}</p>
-        </div>
-      )}
-
-      {/* Google Sign In - Primary Option */}
-      <div className="mb-6">
-        <GoogleSignInButton />
-      </div>
-
-      {/* Divider */}
-      <div className="relative mb-6">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-slate-600"></div>
-        </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="px-4 bg-slate-800/50 text-slate-400">أو</span>
-        </div>
-      </div>
-
-      {/* Email Form */}
-      <form action={formAction} className="space-y-6">
-        {/* Email */}
-        <div className="space-y-2">
-          <label htmlFor="email" className="text-white text-sm font-medium">
-            البريد الإلكتروني
-          </label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="example@domain.com"
-            required
-            className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 py-6 rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 transition-all duration-200"
-            dir="ltr"
-          />
+    <div className="w-full max-w-md">
+      <div className="group border-0 bg-white/90 backdrop-blur-2xl shadow-2xl hover:shadow-red-500/25 transition-all duration-700 hover:scale-[1.02] rounded-3xl overflow-hidden border border-red-200/50 p-8">
+        <div className="absolute inset-0 bg-gradient-to-br from-red-50/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        
+        {/* Header */}
+        <div className="text-center mb-8 relative">
+          <div className="mx-auto mb-6 relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-rose-500 rounded-2xl blur-lg opacity-75"></div>
+            <div className="relative w-16 h-16 bg-gradient-to-r from-red-600 to-rose-600 rounded-2xl flex items-center justify-center shadow-2xl mx-auto">
+              <QrCode className="h-8 w-8 text-white animate-pulse" />
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Crown className="h-6 w-6 text-red-600" />
+            <h1 className="text-3xl font-black bg-gradient-to-r from-gray-900 via-red-800 to-gray-900 bg-clip-text text-transparent">
+              تسجيل الدخول
+            </h1>
+            <Sparkles className="h-6 w-6 text-red-600 animate-pulse" />
+          </div>
+          
+          <p className="text-gray-600 font-semibold">مرحباً بك مرة أخرى في Menu-P</p>
         </div>
 
-        {/* Password */}
-        <div className="space-y-2">
-          <label htmlFor="password" className="text-white text-sm font-medium">
-            كلمة المرور
-          </label>
-          <div className="relative">
-            <Input
-              id="password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="أدخل كلمة المرور"
-              required
-              className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 py-6 rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 transition-all duration-200 pl-12"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
-            >
-              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-            </button>
+        {/* Error Message */}
+        {state?.error && (
+          <div className="bg-red-100 border border-red-200 rounded-2xl p-4 mb-6">
+            <p className="text-red-800 text-center font-semibold">{state.error}</p>
+          </div>
+        )}
+
+        {/* Google Sign In - Primary Option */}
+        <div className="mb-6 relative">
+          <GoogleSignInButton />
+        </div>
+
+        {/* Divider */}
+        <div className="relative mb-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-red-200"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-4 bg-white/90 text-gray-600 font-semibold">أو</span>
           </div>
         </div>
 
-        <SubmitButton />
-      </form>
+        {/* Email Form */}
+        <form action={formAction} className="space-y-6 relative">
+          {/* Email */}
+          <div className="space-y-2">
+            <label htmlFor="email" className="text-gray-900 text-sm font-bold">
+              البريد الإلكتروني
+            </label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="example@domain.com"
+              required
+              className="w-full rounded-2xl border border-red-200 bg-red-50/50 px-4 py-6 text-gray-900 transition-all focus:border-red-500 focus:ring-2 focus:ring-red-500/20 hover:bg-red-50 font-semibold text-lg"
+              dir="ltr"
+            />
+          </div>
 
-      {/* Forgot Password Link */}
-      <div className="text-center mt-4">
-        <Link href="/auth/forgot-password" className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">
-          نسيت كلمة المرور؟
-        </Link>
-      </div>
+          {/* Password */}
+          <div className="space-y-2">
+            <label htmlFor="password" className="text-gray-900 text-sm font-bold">
+              كلمة المرور
+            </label>
+            <div className="relative">
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="أدخل كلمة المرور"
+                required
+                className="w-full rounded-2xl border border-red-200 bg-red-50/50 px-4 py-6 text-gray-900 transition-all focus:border-red-500 focus:ring-2 focus:ring-red-500/20 hover:bg-red-50 font-semibold text-lg pl-12"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-red-500 hover:text-red-700 transition-colors"
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
+          </div>
 
-      {/* Sign Up Link */}
-      <div className="text-center mt-6">
-        <p className="text-slate-400">
-          ليس لديك حساب؟{" "}
-          <Link href="/auth/sign-up" className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors">
-            إنشاء حساب جديد
+          <SubmitButton />
+        </form>
+
+        {/* Forgot Password Link */}
+        <div className="text-center mt-6 relative">
+          <Link href="/auth/forgot-password" className="text-red-600 hover:text-red-800 font-bold transition-colors hover:scale-105 inline-block">
+            نسيت كلمة المرور؟
           </Link>
-        </p>
+        </div>
+
+        {/* Sign Up Link */}
+        <div className="text-center mt-6 relative">
+          <p className="text-gray-600 font-semibold">
+            ليس لديك حساب؟{" "}
+            <Link href="/auth/sign-up" className="text-red-600 hover:text-red-800 font-bold transition-colors hover:scale-105 inline-block">
+              إنشاء حساب جديد
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   )

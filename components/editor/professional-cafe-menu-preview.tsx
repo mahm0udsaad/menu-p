@@ -6,7 +6,7 @@ import { HTML5Backend } from "react-dnd-html5-backend"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { Plus, Trash2, Edit, Upload, FileText, Palette, Image as ImageIcon } from "lucide-react"
+import { Plus, Trash2, Edit, Upload, FileText, Palette, Image as ImageIcon, Type } from "lucide-react"
 import { quickAddItem, quickDeleteItem, reorderMenuItems } from "@/lib/actions/editor/quick-menu-actions"
 import { quickUpdateCategory, quickDeleteCategory, quickAddCategory } from "@/lib/actions/editor/quick-category-actions"
 import InlineEditable from "../inline-editable"
@@ -16,6 +16,7 @@ import { supabase } from "@/lib/supabase/client"
 import NotificationModal from "@/components/ui/notification-modal"
 import ConfirmationModal from "@/components/ui/confirmation-modal"
 import ImageUploadModal from "@/components/ui/image-upload-modal"
+import FontSettings from "../font-settings"
 
 interface MenuItem {
   id: string
@@ -387,8 +388,26 @@ export default function ProfessionalCafeMenuPreview({
   const [showPagination, setShowPagination] = useState(false)
   const [isLoadingDummy, setIsLoadingDummy] = useState(false)
   const [showColorModal, setShowColorModal] = useState(false)
+  const [showDesignModal, setShowDesignModal] = useState(false)
   const [selectedPalette, setSelectedPalette] = useState(restaurant.color_palette?.id || "emerald")
   const [isUpdatingPalette, setIsUpdatingPalette] = useState(false)
+  const [fontSettings, setFontSettings] = useState({
+    primaryFont: 'cairo',
+    secondaryFont: 'noto-kufi-arabic',
+    fontSize: 16,
+    lineHeight: 1.5,
+    fontWeight: '400',
+    textAlign: 'right' as const,
+    letterSpacing: 0,
+    enableCustomFonts: false
+  })
+  const [menuStyles, setMenuStyles] = useState({
+    backgroundColor: '#ffffff',
+    backgroundType: 'solid' as 'solid' | 'gradient',
+    gradientFrom: '#ffffff',
+    gradientTo: '#f8fafc',
+    gradientDirection: 'to-b' as 'to-b' | 'to-br' | 'to-r' | 'to-tr'
+  })
 
   // Local state for current palette to enable real-time updates
   const [currentPalette, setCurrentPalette] = useState(() => 
@@ -758,11 +777,11 @@ export default function ProfessionalCafeMenuPreview({
                     <Button
                       variant="outline"
                       size="sm"
-                    className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
+                      className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
                     >
-                    <Palette className="h-3 w-3 ml-1" />
-                    <span className="hidden sm:inline">تغيير الألوان</span>
-                    <span className="sm:hidden">ألوان</span>
+                      <Palette className="h-3 w-3 ml-1" />
+                      <span className="hidden sm:inline">تغيير الألوان</span>
+                      <span className="sm:hidden">ألوان</span>
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-2xl">
@@ -823,6 +842,161 @@ export default function ProfessionalCafeMenuPreview({
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                         ) : null}
                         {isUpdatingPalette ? "جاري التحديث..." : "تطبيق الألوان"}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                <Dialog open={showDesignModal} onOpenChange={setShowDesignModal}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
+                    >
+                      <Type className="h-3 w-3 ml-1" />
+                      <span className="hidden sm:inline">الخط والخلفية</span>
+                      <span className="sm:hidden">تصميم</span>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle className="text-right flex items-center gap-2">
+                        <Type className="h-5 w-5" />
+                        إعدادات الخط والخلفية
+                      </DialogTitle>
+                    </DialogHeader>
+                    
+                    <div className="space-y-6 py-4">
+                      {/* Background Settings */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold flex items-center gap-2">
+                          <div className="w-4 h-4 rounded bg-gradient-to-r from-blue-500 to-purple-500"></div>
+                          خلفية القائمة
+                        </h3>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">نوع الخلفية</label>
+                            <select 
+                              value={menuStyles.backgroundType}
+                              onChange={(e) => setMenuStyles(prev => ({
+                                ...prev, 
+                                backgroundType: e.target.value as 'solid' | 'gradient'
+                              }))}
+                              className="w-full p-2 rounded-md border border-gray-300 focus:border-emerald-500 focus:outline-none"
+                            >
+                              <option value="solid">لون واحد</option>
+                              <option value="gradient">تدرج لوني</option>
+                            </select>
+                          </div>
+                          
+                          {menuStyles.backgroundType === 'solid' ? (
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium">لون الخلفية</label>
+                              <input
+                                type="color"
+                                value={menuStyles.backgroundColor}
+                                onChange={(e) => setMenuStyles(prev => ({
+                                  ...prev,
+                                  backgroundColor: e.target.value
+                                }))}
+                                className="w-full h-10 rounded-md border border-gray-300 cursor-pointer"
+                              />
+                            </div>
+                          ) : (
+                            <>
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">اللون الأول</label>
+                                <input
+                                  type="color"
+                                  value={menuStyles.gradientFrom}
+                                  onChange={(e) => setMenuStyles(prev => ({
+                                    ...prev,
+                                    gradientFrom: e.target.value
+                                  }))}
+                                  className="w-full h-10 rounded-md border border-gray-300 cursor-pointer"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">اللون الثاني</label>
+                                <input
+                                  type="color"
+                                  value={menuStyles.gradientTo}
+                                  onChange={(e) => setMenuStyles(prev => ({
+                                    ...prev,
+                                    gradientTo: e.target.value
+                                  }))}
+                                  className="w-full h-10 rounded-md border border-gray-300 cursor-pointer"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">اتجاه التدرج</label>
+                                <select 
+                                  value={menuStyles.gradientDirection}
+                                  onChange={(e) => setMenuStyles(prev => ({
+                                    ...prev, 
+                                    gradientDirection: e.target.value as any
+                                  }))}
+                                  className="w-full p-2 rounded-md border border-gray-300 focus:border-emerald-500 focus:outline-none"
+                                >
+                                  <option value="to-b">من الأعلى للأسفل</option>
+                                  <option value="to-r">من اليسار لليمين</option>
+                                  <option value="to-br">قطري</option>
+                                  <option value="to-tr">قطري معكوس</option>
+                                </select>
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Background Preview */}
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">معاينة الخلفية</label>
+                          <div 
+                            className="w-full h-24 rounded-lg border border-gray-300"
+                            style={{
+                              background: menuStyles.backgroundType === 'solid' 
+                                ? menuStyles.backgroundColor
+                                : `linear-gradient(${menuStyles.gradientDirection}, ${menuStyles.gradientFrom}, ${menuStyles.gradientTo})`
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      {/* Font Settings */}
+                      <div className="border-t border-gray-200 pt-6">
+                        <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                          <Type className="h-5 w-5" />
+                          إعدادات الخط
+                        </h3>
+                        
+                        <FontSettings
+                          settings={fontSettings}
+                          onSettingsChange={setFontSettings}
+                          language="ar"
+                          preview={true}
+                          className="bg-transparent border-0 shadow-none p-0"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-4 border-t border-gray-200">
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowDesignModal(false)}
+                      >
+                        إغلاق
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          // Apply changes and close modal
+                          setShowDesignModal(false)
+                          // Here you would typically save the settings to the database
+                        }}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                      >
+                        تطبيق التغييرات
                       </Button>
                     </div>
                   </DialogContent>

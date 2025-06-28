@@ -79,7 +79,7 @@ export default function TemplateSelector({
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-red-500" />
       </div>
     )
   }
@@ -87,9 +87,9 @@ export default function TemplateSelector({
   if (error) {
     return (
       <div className="text-center p-8">
-        <p className="text-red-400 mb-4">{error}</p>
-        <Button onClick={fetchTemplates} variant="outline">
-          Try Again
+        <p className="text-red-500 mb-4">{error}</p>
+        <Button onClick={fetchTemplates} variant="outline" className="border-red-200 text-red-600 hover:bg-red-50">
+          حاول مرة أخرى
         </Button>
       </div>
     )
@@ -99,16 +99,16 @@ export default function TemplateSelector({
     <>
       <div className="space-y-4 sm:space-y-6">
         <div className="text-center sm:text-right">
-          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">اختر القالب المناسب</h2>
-          <p className="text-slate-300 text-sm sm:text-base">اختر قالب يناسب طابع {restaurantCategory === 'both' ? 'مطعمك ومقهاك' : restaurantCategory}</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">اختر القالب المناسب</h2>
+          <p className="text-gray-600 text-sm sm:text-base">اختر قالب يناسب طابع {restaurantCategory === 'both' ? 'مطعمك ومقهاك' : restaurantCategory}</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {templates.map((template) => (
             <div key={template.id} className="relative group cursor-pointer" onClick={() => onTemplateSelect(template)}>
               {/* Full Image Card */}
-              <div className={`relative w-full h-[350px] sm:h-[500px] rounded-xl sm:rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-[1.02] ${
-                selectedTemplateId === template.id ? "ring-2 ring-emerald-400" : ""
+              <div className={`relative w-full h-[350px] sm:h-[500px] rounded-xl sm:rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] ${
+                selectedTemplateId === template.id ? "ring-2 ring-red-400 shadow-red-200/50" : ""
               }`}>
                 
                 {/* Template Image - Full Coverage */}
@@ -116,11 +116,11 @@ export default function TemplateSelector({
                   src={template.preview_image_url || "/placeholder.svg?height=400&width=300"}
                   alt={template.name}
                   fill
-                  className="object-cover object-center transition-transform duration-700 group-hover:scale-110"
+                  className="object-cover object-center transition-transform duration-300 group-hover:scale-105"
                 />
                 
                 {/* Overlay for Better Button Visibility */}
-                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
                 
                 {/* Content Overlay - Bottom */}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 sm:p-6">
@@ -135,12 +135,12 @@ export default function TemplateSelector({
                 </div>
                 
                 {/* Floating Action Buttons - Mobile Optimized */}
-                <div className="absolute inset-0 flex items-center justify-center gap-2 sm:gap-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0">
+                <div className="absolute inset-0 flex items-center justify-center gap-2 sm:gap-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-4 group-hover:translate-y-0">
                   
                   {/* Preview Button */}
                   <Button
                     onClick={(e) => handlePreview(template, e)}
-                    className="flex items-center gap-1 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 bg-white/95 backdrop-blur-sm rounded-lg sm:rounded-xl font-semibold text-gray-800 shadow-lg hover:shadow-xl hover:bg-white transition-all duration-300 hover:scale-105 text-xs sm:text-sm"
+                    className="flex items-center gap-1 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 bg-white/95 backdrop-blur-sm rounded-lg sm:rounded-xl font-semibold text-gray-800 shadow-lg hover:shadow-xl hover:bg-white transition-all duration-200 hover:scale-105 text-xs sm:text-sm"
                   >
                     <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span>معاينة</span>
@@ -149,7 +149,7 @@ export default function TemplateSelector({
                   {/* Select Button */}
                   <Button
                     onClick={() => onTemplateSelect(template)}
-                    className="flex items-center gap-1 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 bg-emerald-600 rounded-lg sm:rounded-xl font-semibold text-white shadow-lg hover:shadow-xl hover:bg-emerald-700 transition-all duration-300 hover:scale-105 text-xs sm:text-sm"
+                    className="flex items-center gap-1 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 bg-red-500 rounded-lg sm:rounded-xl font-semibold text-white shadow-lg hover:shadow-xl hover:bg-red-600 transition-all duration-200 hover:scale-105 text-xs sm:text-sm"
                   >
                     <Check className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span>اختيار</span>
@@ -157,13 +157,13 @@ export default function TemplateSelector({
                 </div>
                 
                 {/* Category Badge - Top Right */}
-                <div className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-emerald-600/20 text-emerald-400 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium shadow-lg border border-emerald-400/30">
+                <div className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-red-100/90 text-red-700 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium shadow-lg border border-red-200">
                   {template.category === "both" ? "شامل" : template.category}
                 </div>
                 
                 {/* Selected Indicator */}
                 {selectedTemplateId === template.id && (
-                  <div className="absolute top-2 sm:top-4 left-2 sm:left-4 bg-emerald-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium shadow-lg flex items-center gap-1">
+                  <div className="absolute top-2 sm:top-4 left-2 sm:left-4 bg-red-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium shadow-lg flex items-center gap-1">
                     <Check className="w-3 h-3 sm:w-4 sm:h-4" />
                     مُختار
                   </div>
@@ -178,21 +178,21 @@ export default function TemplateSelector({
 
         {templates.length === 0 && (
           <div className="text-center p-6 sm:p-8">
-            <p className="text-slate-400 text-sm sm:text-base">لا توجد قوالب متاحة لنوع مطعمك.</p>
+            <p className="text-gray-500 text-sm sm:text-base">لا توجد قوالب متاحة لنوع مطعمك.</p>
           </div>
         )}
       </div>
 
       {/* Preview Drawer */}
       <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-        <DrawerContent className="bg-slate-900 border-slate-700 max-h-[90vh]">
-          <DrawerHeader className="border-b border-slate-700 px-4 sm:px-6">
+        <DrawerContent className="bg-white border-red-200 max-h-[90vh]">
+          <DrawerHeader className="border-b border-red-200 px-4 sm:px-6">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
-                <DrawerTitle className="text-white text-lg sm:text-xl truncate">
+                <DrawerTitle className="text-gray-900 text-lg sm:text-xl truncate">
                   {previewTemplate?.name}
                 </DrawerTitle>
-                <p className="text-slate-400 text-xs sm:text-sm mt-1 line-clamp-2">
+                <p className="text-gray-600 text-xs sm:text-sm mt-1 line-clamp-2">
                   {previewTemplate?.description}
                 </p>
               </div>
@@ -200,8 +200,7 @@ export default function TemplateSelector({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-slate-400 hover:text-white flex-shrink-0 ml-2"
-                  onClick={handleCloseDrawer}
+                  className="text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -209,43 +208,47 @@ export default function TemplateSelector({
             </div>
           </DrawerHeader>
           
-          <div className="p-6 overflow-auto">
-            {previewTemplate?.preview_image_url && (
-              <div className="flex justify-center">
-                <div className="relative max-w-4xl w-full">
+          <div className="flex-1 overflow-auto p-4 sm:p-6">
+            {previewTemplate && (
+              <div className="max-w-2xl mx-auto">
+                <div className="aspect-[3/4] w-full max-w-md mx-auto rounded-xl overflow-hidden shadow-xl border border-red-200">
                   <Image
-                    src={previewTemplate.preview_image_url}
-                    alt={`${previewTemplate.name} full preview`}
-                    width={800}
-                    height={1000}
-                    className="rounded-lg shadow-2xl object-contain w-full h-auto"
-                    priority
+                    src={previewTemplate.preview_image_url || "/placeholder.svg?height=600&width=450"}
+                    alt={previewTemplate.name}
+                    width={450}
+                    height={600}
+                    className="w-full h-full object-cover"
                   />
+                </div>
+                
+                <div className="mt-6 text-center space-y-4">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">{previewTemplate.name}</h3>
+                    <p className="text-gray-600">{previewTemplate.description}</p>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button
+                      onClick={() => {
+                        onTemplateSelect(previewTemplate)
+                        handleCloseDrawer()
+                      }}
+                      className="bg-red-500 hover:bg-red-600 text-white px-8 py-2 transition-colors"
+                    >
+                      <Check className="w-4 h-4 mr-2" />
+                      اختيار هذا القالب
+                    </Button>
+                    <Button
+                      onClick={handleCloseDrawer}
+                      variant="outline"
+                      className="border-red-200 text-red-600 hover:bg-red-50 px-8 py-2 transition-colors"
+                    >
+                      إغلاق
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
-            
-            <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                onClick={() => {
-                  if (previewTemplate) {
-                    onTemplateSelect(previewTemplate)
-                  }
-                  handleCloseDrawer()
-                }}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
-              >
-                <Check className="h-4 w-4 mr-2" />
-                Select This Template
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleCloseDrawer}
-                className="border-slate-600 text-slate-300 hover:bg-slate-800"
-              >
-                Close Preview
-              </Button>
-            </div>
           </div>
         </DrawerContent>
       </Drawer>

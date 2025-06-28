@@ -29,6 +29,7 @@ export async function generateAndSaveQrCardPdf(
   const qrCodeUrl = formData.get("qrCodeUrl")?.toString() || ""
   const customText = formData.get("customText")?.toString() || ""
   const cardOptions = formData.get("cardOptions")?.toString() || "{}"
+  const menuId = formData.get("menuId")?.toString() || null
 
   if (!pdfFile || pdfFile.size === 0) {
     return { error: "No PDF file provided." }
@@ -57,12 +58,17 @@ export async function generateAndSaveQrCardPdf(
       data: { publicUrl },
     } = supabase.storage.from("restaurant-logos").getPublicUrl(uploadData.path)
 
-    // Parse card options
+    // Parse card options and add menu ID
     let parsedCardOptions = {}
     try {
       parsedCardOptions = JSON.parse(cardOptions)
     } catch (e) {
       console.warn("Failed to parse card options, using empty object")
+    }
+    
+    // Add menu ID to card options for tracking
+    if (menuId) {
+      parsedCardOptions = { ...parsedCardOptions, menuId }
     }
 
     // Save QR card info to published_qr_cards table

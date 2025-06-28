@@ -7,5 +7,15 @@ import {
 } from 'next-themes'
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+  return (
+    <NextThemesProvider 
+      {...props} 
+      defaultTheme="light"
+      forcedTheme="light"
+      enableSystem={false}
+      attribute="class"
+    >
+      {children}
+    </NextThemesProvider>
+  )
 }

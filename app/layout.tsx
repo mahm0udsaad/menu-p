@@ -1,14 +1,8 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Cairo } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "sonner"
-import AuthHandler from "@/components/auth-handler"
-
-const cairo = Cairo({
-  subsets: ["arabic"],
-  display: "swap",
-})
+import { ThemeProvider } from "@/components/theme-provider"
 
 export const metadata: Metadata = {
   title: "Menu-p.com - قوائم طعام رقمية وأكواد QR",
@@ -22,18 +16,34 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ar" dir="rtl">
-      <body className={cairo.className}>
-        {children}
-        <Toaster 
-          position="top-center"
-          toastOptions={{
-            style: {
-              direction: 'rtl',
-              fontFamily: cairo.style.fontFamily,
-            },
-          }}
+    <html lang="ar" dir="rtl" className="light">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link 
+          href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@100;200;300;400;500;600;700&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" 
+          rel="stylesheet" 
         />
+      </head>
+      <body style={{ fontFamily: "'IBM Plex Sans Arabic', 'Rubik', sans-serif" }}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          forcedTheme="light"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
+            {children}
+          <Toaster 
+            position="top-center"
+            toastOptions={{
+              style: {
+                direction: 'rtl',
+                fontFamily: "'IBM Plex Sans Arabic', 'Rubik', sans-serif",
+              },
+            }}
+          />
+        </ThemeProvider>
       </body>
     </html>
   )

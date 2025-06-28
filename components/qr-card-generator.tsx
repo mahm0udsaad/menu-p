@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useEffect } from "react"
 import { QRCodeCanvas } from "qrcode.react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -16,6 +16,8 @@ import Image from "next/image"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { pdf } from "@react-pdf/renderer"
 import { QRCardPDF } from "@/components/pdf/qr-card-pdf"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { toast } from "sonner"
 
 interface Restaurant {
   id: string
@@ -23,9 +25,15 @@ interface Restaurant {
   logo_url: string | null
 }
 
+interface PublishedMenu {
+  id: string
+  menu_name: string
+  created_at: string
+}
+
 interface QrCardGeneratorProps {
   restaurant: Restaurant
-  menuPublicUrl: string // The URL the QR code will point to
+  menuPublicUrl: string // The URL the QR code will point to - kept for backward compatibility
 }
 
 // Function to generate QR code using web API (same as server-side)
@@ -60,6 +68,12 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
   const [cardName, setCardName] = useState("QR Card")
   const [isPending, startTransition] = useTransition()
   const [state, formAction] = useActionState(generateAndSaveQrCardPdf, null)
+  // Add menu selection state
+  const [publishedMenus, setPublishedMenus] = useState<PublishedMenu[]>([])
+  const [selectedMenuId, setSelectedMenuId] = useState<string>("")
+  const [selectedMenuUrl, setSelectedMenuUrl] = useState<string>(menuPublicUrl)
+  const [loadingMenus, setLoadingMenus] = useState(false)
+  const supabase = createClientComponentClient()
 
   // Define predefined color options
   const colorOptions = [
@@ -80,13 +94,62 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
     { name: "كلاهما (أعلى ومنتصف)", value: "both" },
   ]
 
+  // Fetch published menus when component mounts
+  useEffect(() => {
+    fetchPublishedMenus()
+  }, [restaurant.id])
+
+  const fetchPublishedMenus = async () => {
+    try {
+      setLoadingMenus(true)
+      
+      const { data: menus, error } = await supabase
+        .from("published_menus")
+        .select("id, menu_name, created_at")
+        .eq("restaurant_id", restaurant.id)
+        .order("created_at", { ascending: false })
+
+      if (error) throw error
+
+      setPublishedMenus(menus || [])
+      
+      // Auto-select the first menu if available
+      if (menus && menus.length > 0 && !selectedMenuId) {
+        setSelectedMenuId(menus[0].id)
+        setSelectedMenuUrl(`${window.location.origin}/menus/${menus[0].id}`)
+      }
+    } catch (error) {
+      console.error("Error fetching published menus:", error)
+      toast.error("فشل في تحميل القوائم المنشورة")
+    } finally {
+      setLoadingMenus(false)
+    }
+  }
+
+  const handleMenuSelection = (menuId: string) => {
+    setSelectedMenuId(menuId)
+    const selectedMenu = publishedMenus.find(menu => menu.id === menuId)
+    if (selectedMenu) {
+      setSelectedMenuUrl(`${window.location.origin}/menus/${menuId}`)
+      setCardName(`QR Card - ${selectedMenu.menu_name}`)
+    }
+  }
+
   const handleGeneratePdf = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (!selectedMenuId) {
+      toast.error("يرجى اختيار قائمة أولاً")
+      return
+    }
+
     startTransition(async () => {
       try {
+        // Use the selected menu URL instead of the default one
+        const qrUrl = selectedMenuUrl || menuPublicUrl
+        
         // Generate QR code data URL
-        const qrCodeDataUrl = await generateQrCodeDataUrl(menuPublicUrl, qrCodeSize)
+        const qrCodeDataUrl = await generateQrCodeDataUrl(qrUrl, qrCodeSize)
 
         // Prepare restaurant data for PDF
         const restaurantData = {
@@ -115,7 +178,7 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
         const pdfBlob = await pdf(
           QRCardPDF({
             restaurant: restaurantData,
-            qrCodeUrl: menuPublicUrl,
+            qrCodeUrl: qrUrl,
             qrCodeDataUrl,
             options
           })
@@ -126,8 +189,9 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
         formData.append("pdfFile", pdfBlob, `${cardName}.pdf`)
         formData.append("restaurantId", restaurant.id)
         formData.append("cardName", cardName)
-        formData.append("qrCodeUrl", menuPublicUrl)
+        formData.append("qrCodeUrl", qrUrl)
         formData.append("customText", customText)
+        formData.append("menuId", selectedMenuId) // Add menu ID for linking
         formData.append("cardOptions", JSON.stringify({
           cardBgColor,
           textColor,
@@ -156,6 +220,39 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
       </CardHeader>
       <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
         <form onSubmit={handleGeneratePdf} className="space-y-4 sm:space-y-6">
+          {/* Menu Selection */}
+          <div className="space-y-2 sm:space-y-4">
+            <Label htmlFor="menuSelect" className="text-slate-300 text-sm">
+              اختر القائمة المراد ربطها بكود QR
+            </Label>
+            {loadingMenus ? (
+              <div className="flex items-center gap-2 p-3 bg-slate-700/50 border border-slate-600 rounded-xl">
+                <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
+                <span className="text-slate-300 text-sm">جاري تحميل القوائم...</span>
+              </div>
+            ) : publishedMenus.length > 0 ? (
+              <Select value={selectedMenuId} onValueChange={handleMenuSelection}>
+                <SelectTrigger className="w-full bg-slate-700/50 border-slate-600 text-white rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 text-sm">
+                  <SelectValue placeholder="اختر قائمة" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-700 text-white">
+                  {publishedMenus.map((menu) => (
+                    <SelectItem key={menu.id} value={menu.id}>
+                      <div className="flex items-center gap-2">
+                        <LinkIcon className="w-4 h-4 text-emerald-500" />
+                        <span className="text-sm">{menu.menu_name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="p-3 bg-amber-900/20 border border-amber-400/30 rounded-xl text-amber-400 text-sm">
+                لا توجد قوائم منشورة. يرجى نشر قائمة أولاً لإنشاء كود QR.
+              </div>
+            )}
+          </div>
+
           <div className="space-y-2 sm:space-y-4">
             <Label htmlFor="cardName" className="text-slate-300 text-sm">
               اسم البطاقة
@@ -315,37 +412,49 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
               }}
             >
               {/* Logo at Top */}
-              {restaurant.logo_url && (logoPosition === 'top' || logoPosition === 'both') && (
+              {(logoPosition === 'top' || logoPosition === 'both') && (
                 <div className="mb-3 sm:mb-4">
-                <Image
-                    src={restaurant.logo_url}
-                    alt={restaurant.name}
-                  width={60}
-                  height={60}
-                    className="rounded-lg object-cover sm:w-[80px] sm:h-[80px]"
-                />
+                  {restaurant.logo_url ? (
+                    <Image
+                      src={restaurant.logo_url}
+                      alt={restaurant.name}
+                      width={60}
+                      height={60}
+                      className="rounded-lg object-cover sm:w-[80px] sm:h-[80px]"
+                    />
+                  ) : (
+                    <div className="w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] bg-gradient-to-r from-red-500 to-rose-500 rounded-lg flex items-center justify-center text-white font-bold text-lg sm:text-xl">
+                      {restaurant.name.slice(0, 2)}
+                    </div>
+                  )}
                 </div>
               )}
 
               {/* QR Code Container */}
               <div className="relative mb-3 sm:mb-4">
               <QRCodeCanvas
-                value={menuPublicUrl}
+                value={selectedMenuUrl || menuPublicUrl}
                   size={Math.min(qrCodeSize * 0.6, 150)} 
                   className="sm:scale-110"
                 />
                 
                 {/* Logo in Middle of QR Code */}
-                {restaurant.logo_url && (logoPosition === 'middle' || logoPosition === 'both') && (
+                {(logoPosition === 'middle' || logoPosition === 'both') && (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="bg-white rounded-full p-1 sm:p-2">
-                      <Image
-                        src={restaurant.logo_url}
-                        alt={restaurant.name}
-                        width={24}
-                        height={24}
-                        className="rounded-full object-cover sm:w-[32px] sm:h-[32px]"
-                      />
+                      {restaurant.logo_url ? (
+                        <Image
+                          src={restaurant.logo_url}
+                          alt={restaurant.name}
+                          width={24}
+                          height={24}
+                          className="rounded-full object-cover sm:w-[32px] sm:h-[32px]"
+                        />
+                      ) : (
+                        <div className="w-[24px] h-[24px] sm:w-[32px] sm:h-[32px] bg-gradient-to-r from-red-500 to-rose-500 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm">
+                          {restaurant.name.slice(0, 2)}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -391,10 +500,37 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
           </div>
 
           {/* Success/Error Messages */}
-          {state?.success && (
-            <div className="flex items-center gap-2 p-3 sm:p-4 bg-emerald-900/20 border border-emerald-400/30 rounded-xl text-emerald-400">
-              <Check className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-              <p className="text-sm sm:text-base">تم إنشاء بطاقة QR بنجاح!</p>
+          {state?.pdfUrl && (
+            <div className="space-y-3 p-3 sm:p-4 bg-emerald-900/20 border border-emerald-400/30 rounded-xl text-emerald-400">
+              <div className="flex items-center gap-2">
+                <Check className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                <p className="text-sm sm:text-base">تم إنشاء بطاقة QR بنجاح!</p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button
+                  size="sm"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1"
+                  asChild
+                >
+                  <a href={state.pdfUrl} target="_blank" rel="noopener noreferrer">
+                    <Download className="w-4 h-4 ml-1" />
+                    تحميل البطاقة
+                  </a>
+                </Button>
+                                 <Button
+                   size="sm"
+                   variant="outline"
+                   className="border-emerald-400 text-emerald-400 hover:bg-emerald-400/10 flex-1"
+                   onClick={() => {
+                     // Reset form and refetch data
+                     setCardName("QR Card")
+                     setCustomText("امسح الكود لعرض قائمتنا الرقمية!")
+                     window.location.href = "/dashboard?tab=qr-cards"
+                   }}
+                 >
+                   عرض البطاقات
+                 </Button>
+              </div>
             </div>
           )}
 

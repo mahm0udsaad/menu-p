@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, XCircle, Loader2, ArrowRight, CreditCard, Menu, Sparkles } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, ArrowRight, CreditCard, Menu, Sparkles, Crown } from 'lucide-react';
 import { checkPaymentStatus } from '@/lib/actions/payment';
 import { usePaymentStatus } from '@/lib/hooks/use-payment-status';
 
@@ -139,20 +139,37 @@ function PaymentStatusContent() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 p-4">
-        <Card className="w-full max-w-md shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 via-white to-red-50 p-4 relative overflow-hidden">
+        {/* Enhanced Animated Background */}
+        <div className="fixed inset-0 z-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-red-50/60 via-white to-rose-50/40"></div>
+          
+          {/* Animated gradient orbs */}
+          <div className="absolute top-0 right-1/4 w-96 h-96 bg-gradient-to-r from-red-200/50 to-rose-200/50 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-gradient-to-r from-rose-200/40 to-pink-200/40 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          
+          {/* Floating Particles */}
+          <div className="absolute top-20 right-20 w-3 h-3 bg-red-500 rounded-full animate-bounce delay-300 shadow-lg shadow-red-500/50"></div>
+          <div className="absolute top-40 left-32 w-2 h-2 bg-rose-500 rounded-full animate-bounce delay-700 shadow-lg shadow-rose-500/50"></div>
+          <div className="absolute bottom-32 right-1/3 w-2.5 h-2.5 bg-pink-500 rounded-full animate-bounce delay-1000 shadow-lg shadow-pink-500/50"></div>
+        </div>
+
+        <Card className="relative z-10 w-full max-w-md shadow-2xl border-0 bg-white/90 backdrop-blur-2xl supports-[backdrop-filter]:bg-white/70 hover:shadow-red-500/20 transition-all duration-500">
           <CardContent className="flex flex-col items-center justify-center py-12 px-6">
-            <div className="mb-6">
-              <Loader2 className="w-16 h-16 text-emerald-500 animate-spin" />
+            <div className="mb-6 relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-rose-500 rounded-full blur-lg opacity-75 animate-pulse"></div>
+              <div className="relative bg-gradient-to-r from-red-600 to-rose-600 p-4 rounded-full">
+                <Loader2 className="w-12 h-12 text-white animate-spin" />
+              </div>
             </div>
-            <h2 className="text-xl font-semibold mb-2 text-center">معالجة الدفع</h2>
-            <p className="text-muted-foreground text-center text-sm">
+            <h2 className="text-xl font-bold mb-2 text-center bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">معالجة الدفع</h2>
+            <p className="text-gray-600 text-center text-sm font-medium">
               يرجى الانتظار بينما نتحقق من دفعتك...
             </p>
-            <div className="mt-4 flex items-center space-x-2 text-xs text-muted-foreground">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+            <div className="mt-6 flex items-center space-x-2 text-xs">
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-lg shadow-red-500/50"></div>
+              <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse shadow-lg shadow-rose-500/50" style={{animationDelay: '0.2s'}}></div>
+              <div className="w-2 h-2 bg-pink-500 rounded-full animate-pulse shadow-lg shadow-pink-500/50" style={{animationDelay: '0.4s'}}></div>
             </div>
           </CardContent>
         </Card>
@@ -161,24 +178,56 @@ function PaymentStatusContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 p-4">
-      <div className="w-full max-w-md">
-        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 via-white to-red-50 p-4 relative overflow-hidden">
+      {/* Enhanced Animated Background */}
+      <div className="fixed inset-0 z-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-red-50/60 via-white to-rose-50/40"></div>
+        
+        {/* Animated gradient orbs */}
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-gradient-to-r from-red-200/50 to-rose-200/50 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-gradient-to-r from-rose-200/40 to-pink-200/40 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-red-100/30 to-rose-100/30 rounded-full blur-3xl animate-pulse delay-500"></div>
+
+        {/* Floating Particles */}
+        <div className="absolute top-20 right-20 w-3 h-3 bg-red-500 rounded-full animate-bounce delay-300 shadow-lg shadow-red-500/50"></div>
+        <div className="absolute top-40 left-32 w-2 h-2 bg-rose-500 rounded-full animate-bounce delay-700 shadow-lg shadow-rose-500/50"></div>
+        <div className="absolute bottom-32 right-1/3 w-2.5 h-2.5 bg-pink-500 rounded-full animate-bounce delay-1000 shadow-lg shadow-pink-500/50"></div>
+        <div className="absolute top-1/3 left-20 w-2 h-2 bg-red-600 rounded-full animate-bounce delay-500 shadow-lg shadow-red-600/50"></div>
+      </div>
+
+      <div className="relative z-10 w-full max-w-md">
+        <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-2xl supports-[backdrop-filter]:bg-white/70 overflow-hidden hover:shadow-red-500/20 transition-all duration-500">
           <CardHeader className="text-center pb-4">
             <div className="flex justify-center mb-4">
               {status === 'success' ? (
                 <div className="relative">
-                  <CheckCircle className="w-20 h-20 text-emerald-500" />
-                  <div className="absolute inset-0 w-20 h-20 border-4 border-emerald-200 rounded-full animate-pulse"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-rose-400 rounded-full blur-2xl opacity-75 animate-pulse"></div>
+                  <div className="relative bg-gradient-to-r from-red-600 to-rose-600 rounded-full p-2">
+                    <CheckCircle className="w-16 h-16 text-white" />
+                  </div>
+                  <div className="absolute inset-0 w-20 h-20 border-4 border-red-200 rounded-full animate-pulse"></div>
                 </div>
               ) : (
-                <XCircle className="w-20 h-20 text-red-500" />
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-rose-400 rounded-full blur-2xl opacity-50"></div>
+                  <div className="relative bg-gradient-to-r from-red-600 to-rose-600 rounded-full p-2">
+                    <XCircle className="w-16 h-16 text-white" />
+                  </div>
+                </div>
               )}
             </div>
-            <CardTitle className={`text-2xl font-bold ${status === 'success' ? 'text-emerald-600' : 'text-red-600'}`}>
-              {status === 'success' ? '🎉 تم الدفع بنجاح!' : '❌ فشل في الدفع'}
+            <CardTitle className={`text-2xl font-bold flex items-center justify-center gap-2 ${status === 'success' ? 'bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent' : 'text-red-600'}`}>
+              {status === 'success' ? (
+                <>
+                  <Crown className="w-6 h-6 text-red-600" />
+                  🎉 تم الدفع بنجاح!
+                  <Sparkles className="w-6 h-6 text-red-600" />
+                </>
+              ) : (
+                '❌ فشل في الدفع'
+              )}
             </CardTitle>
-            <CardDescription className="text-base">
+            <CardDescription className="text-base text-gray-600 font-medium">
               {status === 'success' 
                 ? 'تمت معالجة دفعتك بنجاح وتم ترقية حسابك.'
                 : 'حدثت مشكلة في معالجة دفعتك.'
@@ -190,124 +239,104 @@ function PaymentStatusContent() {
             {status === 'success' ? (
               <div className="space-y-4">
                 {paymentDetails && (
-                  <div className="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg p-4 space-y-3 border border-emerald-100">
+                  <div className="bg-gradient-to-r from-red-50 to-rose-50 rounded-lg p-4 space-y-3 border border-red-100 backdrop-blur-sm">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground flex items-center">
-                        <CreditCard className="w-4 h-4 mr-2" />
+                      <span className="text-gray-600 flex items-center font-medium">
+                        <CreditCard className="w-4 h-4 mr-2 text-red-500" />
                         المبلغ:
                       </span>
-                      <span className="font-bold text-emerald-600">{paymentDetails.amount / 100} جنيه</span>
+                      <span className="font-bold bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">{paymentDetails.amount / 100} جنيه</span>
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">الحالة:</span>
-                      <span className="font-medium capitalize text-emerald-600 flex items-center">
-                        <Sparkles className="w-4 h-4 mr-1" />
-                        مدفوع
-                      </span>
-                    </div>
-                  </div>
-                )}
-                
-                <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-emerald-800 mb-3 flex items-center">
-                    <Menu className="w-5 h-5 mr-2" />
-                    ما التالي؟
-                  </h3>
-                  <ul className="text-sm text-emerald-700 space-y-2">
-                    <li className="flex items-center">
-                      <span className="w-2 h-2 bg-emerald-500 rounded-full mr-3"></span>
-                      تم ترقية حسابك
-                    </li>
-                    <li className="flex items-center">
-                      <span className="w-2 h-2 bg-emerald-500 rounded-full mr-3"></span>
-                      يمكنك الآن إنشاء قوائم احترافية
-                    </li>
-                    <li className="flex items-center">
-                      <span className="w-2 h-2 bg-emerald-500 rounded-full mr-3"></span>
-                      الوصول لجميع المميزات المتقدمة
-                    </li>
-                    <li className="flex items-center">
-                      <span className="w-2 h-2 bg-emerald-500 rounded-full mr-3"></span>
-                      إنشاء رموز QR وملفات PDF
-                    </li>
-                  </ul>
-                </div>
 
-                {autoRedirect && countdown > 0 && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
-                    <p className="text-sm text-blue-700 mb-2">
-                      سيتم التوجيه تلقائياً خلال {countdown} ثانية
-                    </p>
-                    <button
-                      onClick={toggleAutoRedirect}
-                      className="text-xs text-blue-600 hover:text-blue-800 underline"
-                    >
-                      إلغاء التوجيه التلقائي
-                    </button>
+                    {paymentDetails.currency && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600 font-medium">العملة:</span>
+                        <span className="font-bold text-red-600">{paymentDetails.currency.toUpperCase()}</span>
+                      </div>
+                    )}
+
+                    {paymentDetails.created_at && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600 font-medium">التاريخ:</span>
+                        <span className="font-bold text-red-600">
+                          {new Date(paymentDetails.created_at).toLocaleDateString('ar-SA')}
+                        </span>
+                      </div>
+                    )}
+
+                    {paymentDetails.order_id && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600 font-medium">رقم الطلب:</span>
+                        <span className="font-mono text-xs bg-red-100 px-2 py-1 rounded text-red-700">
+                          #{paymentDetails.order_id}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
 
                 <div className="space-y-3">
-                  <Button 
-                    onClick={handleContinue} 
-                    className="w-full bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white"
-                    size="lg"
+                  <div className="flex items-center justify-center p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                    <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+                    <span className="text-green-700 font-medium text-sm">تم تفعيل الباقة المميزة</span>
+                  </div>
+
+                  {autoRedirect && (
+                    <div className="text-center text-sm text-gray-600 bg-red-50 p-3 rounded-lg border border-red-100">
+                      <p className="font-medium">سيتم التوجيه تلقائياً خلال <span className="font-bold text-red-600">{countdown}</span> ثانية</p>
+                      <button
+                        onClick={toggleAutoRedirect}
+                        className="text-xs text-red-500 hover:text-red-700 underline mt-1 transition-colors"
+                      >
+                        إلغاء التوجيه التلقائي
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    onClick={handleContinue}
+                    className="flex-1 bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:via-rose-500 hover:to-red-500 text-white font-bold py-3 px-6 rounded-xl shadow-xl hover:shadow-red-500/30 transition-all duration-300 group"
                   >
-                    <span className="flex items-center justify-center">
-                      {autoPublish === 'true' ? 'متابعة نشر القائمة' : 'الذهاب للوحة التحكم'}
-                      <ArrowRight className="w-4 h-4 mr-2" />
-                    </span>
+                    <ArrowRight className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                    متابعة إلى لوحة التحكم
                   </Button>
                   
-                  {!autoRedirect && (
-                    <button
+                  {autoRedirect && (
+                    <Button
+                      variant="outline"
                       onClick={toggleAutoRedirect}
-                      className="w-full text-sm text-muted-foreground hover:text-foreground underline"
+                      className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 font-medium py-3 px-4 rounded-xl transition-all duration-300"
                     >
-                      تفعيل التوجيه التلقائي
-                    </button>
+                      البقاء هنا
+                    </Button>
                   )}
                 </div>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-red-800 mb-3">ما الذي حدث؟</h3>
-                  <ul className="text-sm text-red-700 space-y-2">
-                    <li className="flex items-center">
-                      <span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>
-                      تم رفض الدفع من البنك
-                    </li>
-                    <li className="flex items-center">
-                      <span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>
-                      رصيد غير كافي
-                    </li>
-                    <li className="flex items-center">
-                      <span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>
-                      مشكلة في الاتصال بالإنترنت
-                    </li>
-                    <li className="flex items-center">
-                      <span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>
-                      بيانات البطاقة غير صحيحة
-                    </li>
-                  </ul>
+                <div className="bg-gradient-to-r from-red-50 to-rose-50 rounded-lg p-4 border border-red-200">
+                  <p className="text-red-700 text-sm text-center font-medium">
+                    لم تتم معالجة دفعتك بنجاح. يرجى المحاولة مرة أخرى أو التواصل معنا للمساعدة.
+                  </p>
                 </div>
 
-                <div className="space-y-3">
-                  <Button 
-                    onClick={handleRetry} 
-                    className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white"
-                    size="lg"
+                <div className="flex flex-col gap-3">
+                  <Button
+                    onClick={handleRetry}
+                    className="w-full bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:via-rose-500 hover:to-red-500 text-white font-bold py-3 px-6 rounded-xl shadow-xl hover:shadow-red-500/30 transition-all duration-300 group"
                   >
-                    المحاولة مرة أخرى
+                    <ArrowRight className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                    محاولة مرة أخرى
                   </Button>
                   
-                  <Button 
-                    onClick={() => router.push('/dashboard')} 
+                  <Button
                     variant="outline"
-                    className="w-full"
+                    onClick={() => router.push('/dashboard')}
+                    className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 font-medium py-3 px-6 rounded-xl transition-all duration-300"
                   >
-                    العودة للوحة التحكم
+                    العودة إلى لوحة التحكم
                   </Button>
                 </div>
               </div>
@@ -319,14 +348,16 @@ function PaymentStatusContent() {
   );
 }
 
-// Fallback component for Suspense
+// Loading fallback component
 function PaymentStatusFallback() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50">
-      <div className="text-center">
-        <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-emerald-500" />
-        <p className="text-muted-foreground">جاري التحميل...</p>
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 via-white to-red-50 p-4">
+      <Card className="w-full max-w-md shadow-2xl border-0 bg-white/90 backdrop-blur-2xl">
+        <CardContent className="flex flex-col items-center justify-center py-12 px-6">
+          <Loader2 className="w-12 h-12 text-red-500 animate-spin mb-4" />
+          <p className="text-gray-600 text-center font-medium">جاري التحميل...</p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

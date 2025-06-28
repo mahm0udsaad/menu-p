@@ -1,13 +1,13 @@
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import ResetPasswordForm from "@/components/reset-password-form"
-import { Coffee, UtensilsCrossed, QrCode, Menu, Smartphone, Star, Heart, BarChart3 } from "lucide-react"
+import { QrCode, Sparkles, Flame, Crown, Shield, Key, Lock, RefreshCw, CheckCircle, Zap, ArrowRight, Award } from "lucide-react"
 
 export default async function ResetPasswordPage() {
   // If Supabase is not configured, show setup message directly
   if (!isSupabaseConfigured) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-red-900 via-red-800 to-rose-900">
         <h1 className="text-2xl font-bold mb-4 text-white">اربط Supabase للبدء</h1>
       </div>
     )
@@ -25,38 +25,132 @@ export default async function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
-      {/* Floating Background Icons */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-20 animate-bounce delay-100">
-          <Coffee className="h-8 w-8 text-emerald-400/10" />
-        </div>
-        <div className="absolute top-40 left-32 animate-pulse delay-300">
-          <UtensilsCrossed className="h-12 w-12 text-emerald-300/10" />
-        </div>
-        <div className="absolute top-60 right-1/3 animate-bounce delay-500">
-          <QrCode className="h-10 w-10 text-emerald-500/10" />
-        </div>
-        <div className="absolute bottom-40 left-20 animate-pulse delay-700">
-          <Menu className="h-14 w-14 text-emerald-400/10" />
-        </div>
-        <div className="absolute bottom-60 right-20 animate-bounce delay-1000">
-          <Smartphone className="h-8 w-8 text-emerald-300/10" />
-        </div>
-        <div className="absolute top-1/3 left-1/4 animate-pulse delay-200">
-          <Star className="h-6 w-6 text-yellow-400/10" />
-        </div>
-        <div className="absolute bottom-1/3 right-1/4 animate-bounce delay-800">
-          <Heart className="h-7 w-7 text-red-400/10" />
-        </div>
-        <div className="absolute top-1/2 right-10 animate-pulse delay-600">
-          <BarChart3 className="h-9 w-9 text-emerald-400/10" />
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-red-50 text-gray-900 overflow-hidden" dir="rtl">
+      {/* Enhanced Animated Background */}
+      <div className="fixed inset-0 z-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-red-50/60 via-white to-rose-50/40"></div>
+        
+        {/* Animated gradient orbs */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-r from-red-200/20 to-rose-200/20 rounded-full blur-3xl animate-pulse delay-800"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gradient-to-r from-rose-200/15 to-pink-200/15 rounded-full blur-3xl animate-pulse delay-400"></div>
+        <div className="absolute top-1/2 right-1/2 transform translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-red-100/10 to-rose-100/10 rounded-full blur-3xl animate-pulse delay-1200"></div>
+
+        {/* Floating Particles */}
+        <div className="absolute top-24 left-28 w-3 h-3 bg-red-500 rounded-full animate-bounce delay-500 shadow-lg shadow-red-500/50"></div>
+        <div className="absolute top-48 right-36 w-2 h-2 bg-rose-500 rounded-full animate-bounce delay-1100 shadow-lg shadow-rose-500/50"></div>
+        <div className="absolute bottom-32 left-1/4 w-2.5 h-2.5 bg-pink-500 rounded-full animate-bounce delay-700 shadow-lg shadow-pink-500/50"></div>
       </div>
 
-      {/* Content */}
-      <div className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8 relative z-10">
-        <ResetPasswordForm />
+      <div className="relative z-10 flex min-h-screen">
+        {/* Brand Showcase Column */}
+        <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 bg-gradient-to-br from-red-700 via-rose-700 to-red-800 relative overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute inset-0">
+            <div className="absolute top-14 left-28 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse delay-500"></div>
+            <div className="absolute bottom-20 right-28 w-56 h-56 bg-white/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse delay-300"></div>
+          </div>
+
+          {/* Floating Brand Icons */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-16 left-20 w-20 h-20 bg-white/10 rounded-2xl shadow-2xl flex items-center justify-center backdrop-blur-xl border border-white/20 animate-bounce delay-900">
+              <RefreshCw className="h-10 w-10 text-white" />
+            </div>
+            <div className="absolute top-32 right-20 w-16 h-16 bg-white/10 rounded-xl shadow-2xl flex items-center justify-center backdrop-blur-xl border border-white/20 animate-bounce delay-1300">
+              <Lock className="h-8 w-8 text-white" />
+            </div>
+            <div className="absolute bottom-24 left-20 w-18 h-18 bg-white/10 rounded-xl shadow-2xl flex items-center justify-center backdrop-blur-xl border border-white/20 animate-bounce delay-600">
+              <Key className="h-9 w-9 text-white" />
+            </div>
+            <div className="absolute bottom-16 right-16 w-14 h-14 bg-white/10 rounded-xl shadow-2xl flex items-center justify-center backdrop-blur-xl border border-white/20 animate-bounce delay-1500">
+              <Award className="h-7 w-7 text-white" />
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="relative flex flex-col justify-center items-center w-full px-8 lg:px-16 text-center">
+            {/* Animated Logo */}
+            <div className="mb-8">
+              <div className="relative group">
+                <div className="absolute inset-0 bg-white rounded-3xl blur-2xl opacity-30 group-hover:opacity-50 transition-opacity animate-pulse"></div>
+                <div className="relative bg-white p-6 rounded-3xl shadow-2xl group-hover:scale-110 transition-transform duration-500">
+                  <QrCode className="h-16 w-16 text-red-600 animate-pulse" />
+                </div>
+              </div>
+            </div>
+
+            {/* Brand Text */}
+            <div className="space-y-6 mb-12">
+              <div>
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <Lock className="h-8 w-8 text-yellow-300" />
+                  <span className="text-6xl font-black text-white">Menu-p</span>
+                  <RefreshCw className="h-8 w-8 text-yellow-300 animate-pulse" />
+                </div>
+                <div className="text-red-200 font-bold tracking-wider flex items-center justify-center gap-2">
+                  <Flame className="h-5 w-5" />
+                  PASSWORD RESET
+                </div>
+              </div>
+              
+              <h1 className="text-4xl lg:text-5xl font-black text-white leading-tight">
+                كلمة مرور جديدة وآمنة
+              </h1>
+              
+              <p className="text-xl text-red-100 leading-relaxed max-w-2xl">
+                اختر كلمة مرور قوية وآمنة لحمايتك وحماية بياناتك مع أعلى معايير الأمان
+              </p>
+            </div>
+
+            {/* Feature Highlights - Security focused */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full max-w-2xl">
+              <div className="flex items-center gap-4 p-4 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Shield className="h-6 w-6 text-white" />
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-white">تشفير متقدم</p>
+                  <p className="text-sm text-red-200">حماية عسكرية المستوى</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4 p-4 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <CheckCircle className="h-6 w-6 text-white" />
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-white">تحديث فوري</p>
+                  <p className="text-sm text-red-200">نفاذ فوري بعد التحديث</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4 p-4 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Key className="h-6 w-6 text-white" />
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-white">مفاتيح آمنة</p>
+                  <p className="text-sm text-red-200">8 أحرف كحد أدنى</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4 p-4 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Zap className="h-6 w-6 text-white" />
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-white">إنجاز سريع</p>
+                  <p className="text-sm text-red-200">دقيقة واحدة فقط</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Form Column */}
+        <div className="w-full lg:w-1/2 xl:w-2/5 flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+          <ResetPasswordForm />
+        </div>
       </div>
     </div>
   )

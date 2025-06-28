@@ -5,76 +5,206 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 0%;
+    /* Light theme with modern red accents */
+    --background: 250 252 254;
+    --foreground: 15 23 42;
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 0%;
+    --card: 255 255 255;
+    --card-foreground: 15 23 42;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
+    --popover: 255 255 255;
+    --popover-foreground: 15 23 42;
 
-    --primary: 0 0% 0%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 220 38 127;
+    --primary-foreground: 255 255 255;
 
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 20%;
+    --secondary: 241 245 249;
+    --secondary-foreground: 51 65 85;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 248 250 252;
+    --muted-foreground: 100 116 139;
 
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 20%;
+    --accent: 254 242 242;
+    --accent-foreground: 153 27 27;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 0% 0%;
+    --border: 226 232 240;
+    --input: 241 245 249;
+    --ring: 220 38 127;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+
+    /* Modern red palette */
+    --red-50: 254 242 242;
+    --red-100: 254 226 226;
+    --red-200: 252 165 165;
+    --red-300: 248 113 113;
+    --red-400: 239 68 68;
+    --red-500: 220 38 38;
+    --red-600: 185 28 28;
+    --red-700: 153 27 27;
+    --red-800: 127 29 29;
+    --red-900: 109 40 40;
+    --red-950: 69 10 10;
+    
+    /* Light theme gradients */
+    --gradient-primary: linear-gradient(135deg, rgb(220 38 127) 0%, rgb(239 68 68) 100%);
+    --gradient-secondary: linear-gradient(135deg, rgb(248 113 113) 0%, rgb(252 165 165) 100%);
+    --gradient-accent: linear-gradient(135deg, rgb(252 165 165) 0%, rgb(254 226 226) 100%);
   }
 
   .dark {
-    --background: 0 0% 10%;
-    --foreground: 0 0% 98%;
+    /* Dark theme with red gradients */
+    --background: 12 16 23;
+    --foreground: 248 250 252;
 
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 98%;
+    --card: 15 23 42;
+    --card-foreground: 248 250 252;
 
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 15 23 42;
+    --popover-foreground: 248 250 252;
 
-    --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 0%;
+    --primary: 248 113 113;
+    --primary-foreground: 15 23 42;
 
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 30 41 59;
+    --secondary-foreground: 203 213 225;
 
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 65%;
+    --muted: 30 41 59;
+    --muted-foreground: 148 163 184;
 
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 153 27 27;
+    --accent-foreground: 248 250 252;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 239 68 68;
+    --destructive-foreground: 248 250 252;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 0 0% 100%;
+    --border: 30 41 59;
+    --input: 30 41 59;
+    --ring: 248 113 113;
+
+    /* Dark mode gradients */
+    --gradient-primary: linear-gradient(135deg, rgb(127 29 29) 0%, rgb(220 38 127) 100%);
+    --gradient-secondary: linear-gradient(135deg, rgb(185 28 28) 0%, rgb(239 68 68) 100%);
+    --gradient-accent: linear-gradient(135deg, rgb(153 27 27) 0%, rgb(220 38 127) 100%);
   }
 }
 
 @layer base {
   * {
     @apply border-border;
+    font-family: 'IBM Plex Sans Arabic', 'Rubik', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
   }
+  
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "kern" 1;
     text-rendering: optimizeLegibility;
+    font-family: 'IBM Plex Sans Arabic', 'Rubik', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  /* Light mode background styles */
+  .gradient-bg {
+    background: linear-gradient(135deg, rgb(250 252 254) 0%, rgb(241 245 249) 50%, rgb(248 250 252) 100%);
+    min-height: 100vh;
+  }
+
+  .gradient-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(220, 38, 127, 0.1);
+    box-shadow: 0 4px 20px rgba(220, 38, 127, 0.1);
+  }
+
+  .gradient-button {
+    background: linear-gradient(135deg, rgb(220 38 127) 0%, rgb(239 68 68) 100%);
+    transition: all 0.3s ease;
+  }
+
+  .gradient-button:hover {
+    background: linear-gradient(135deg, rgb(239 68 68) 0%, rgb(248 113 113) 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 25px rgba(220, 38, 127, 0.2);
+  }
+
+  /* Font utility classes with IBM Plex Sans Arabic */
+  .font-ibm-plex-arabic {
+    font-family: 'IBM Plex Sans Arabic', 'Rubik', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  .font-rubik {
+    font-family: 'Rubik', 'IBM Plex Sans Arabic', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  /* Language-specific fonts */
+  .font-arabic {
+    font-family: 'IBM Plex Sans Arabic', 'Rubik', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  .font-english {
+    font-family: 'Rubik', 'IBM Plex Sans Arabic', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  /* RTL and LTR support */
+  [dir="rtl"] {
+    font-family: 'IBM Plex Sans Arabic', 'Rubik', 'Segoe UI', sans-serif;
+  }
+
+  [dir="ltr"] {
+    font-family: 'Rubik', 'IBM Plex Sans Arabic', 'Segoe UI', sans-serif;
+  }
+
+  /* Light mode specific styles */
+  .card {
+    @apply bg-white shadow-lg hover:shadow-xl transition-shadow duration-300;
+    border: 1px solid rgba(220, 38, 127, 0.1);
+  }
+
+  .button-primary {
+    @apply bg-red-600 text-white hover:bg-red-700 transition-colors duration-300;
+  }
+
+  .button-secondary {
+    @apply bg-red-100 text-red-700 hover:bg-red-200 transition-colors duration-300;
+  }
+
+  .input-field {
+    @apply border border-red-200 focus:border-red-500 focus:ring-red-200 transition-colors duration-300;
+  }
+
+  .section-title {
+    @apply text-2xl font-bold text-gray-900 mb-6;
+  }
+
+  .text-muted {
+    @apply text-gray-600;
+  }
+
+  /* Enhanced hover effects */
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(220, 38, 127, 0.15);
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out forwards;
+  }
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
 
@@ -90,24 +220,29 @@
 /* Main container styling to match your design */
 .containers {
   font-family: Avenir, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0px 0px 71px rgba(10, 51, 69, 0.07);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.98) 100%);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0px 0px 71px rgba(59, 130, 246, 0.15);
   padding: 40px;
   margin: 20px auto;
   max-width: 800px;
   position: relative;
+  border: 1px solid rgba(59, 130, 246, 0.1);
 }
 
 /* Header styling to match your design language */
 header h1 {
   font-family: Avenir !important;
   font-weight: 600 !important;
-  color: #0a384b !important;
+  background: linear-gradient(135deg, rgb(59 130 246) 0%, rgb(37 99 235) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   font-size: 24px !important;
   text-align: center;
   margin-bottom: 30px;
-  border-bottom: 1px solid #e1ecf1;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.2);
   padding-bottom: 20px;
 }
 
@@ -135,12 +270,12 @@ header h1 {
 }
 
 .card-wrapper {
-  background: linear-gradient(135deg, #28AAE1 0%, #31D097 100%);
-  border-radius: 15px;
+  background: linear-gradient(135deg, rgb(59 130 246) 0%, rgb(147 51 234) 100%);
+  border-radius: 20px;
   padding: 30px;
   width: 100%;
   max-width: 350px;
-  box-shadow: 0px 10px 30px rgba(40, 170, 225, 0.3);
+  box-shadow: 0px 20px 40px rgba(59, 130, 246, 0.3);
 }
 
 /* Form inputs section */
@@ -153,30 +288,30 @@ header h1 {
 .input-containers input {
   width: 100%;
   height: 55px;
-  border-radius: 10px;
-  background: #efefef99;
-  border: 1px solid #f9fafa;
+  border-radius: 12px;
+  background: rgba(241, 245, 249, 0.8);
+  border: 1px solid rgba(59, 130, 246, 0.2);
   outline: none;
   padding: 0 15px;
   font-family: Avenir;
   font-weight: 500;
   font-size: 16px;
-  color: #0a384b;
+  color: rgb(15 23 42);
   margin-bottom: 20px;
   transition: all 0.3s ease;
 }
 
 .card-num-input input:focus,
 .input-containers input:focus {
-  border: 1px solid #28AAE1;
-  background: #fff;
-  box-shadow: 0px -1px 71px rgba(74, 74, 74, 0.07);
+  border: 2px solid rgb(59 130 246);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0px 0px 0px 4px rgba(59, 130, 246, 0.1);
 }
 
 /* Placeholder styling */
 .card-num-input input::placeholder,
 .input-containers input::placeholder {
-  color: #80959E;
+  color: rgb(100 116 139);
   font-size: 16px;
   font-family: Avenir;
   font-weight: 400;
@@ -194,274 +329,262 @@ header h1 {
 
 /* Installment check styling */
 .checkInstallmentTextDiv {
-  background: #f8f9fa;
-  border: 1px solid #e1ecf1;
-  border-radius: 8px;
+  background: rgba(219, 234, 254, 0.5);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
   padding: 15px;
-  margin-bottom: 20px;
-  text-align: center;
 }
 
 .checkInstallmentTextDiv p {
-  color: #0a384b;
-  font-family: Avenir;
+  color: rgb(30 64 175) !important;
+  font-weight: 500;
   font-size: 14px;
-  margin: 0 0 5px 0;
+  margin: 0;
 }
 
 .checkInstallmentTextDiv span {
-  color: #28AAE1;
-  font-family: Avenir;
-  font-size: 14px;
+  color: rgb(59 130 246) !important;
   font-weight: 600;
   cursor: pointer;
+  text-decoration: underline;
 }
 
-/* Card footer styling */
 .card-footer {
   margin-top: 30px;
+  text-align: center;
 }
 
-/* Save card checkbox styling */
 .saveCardText {
   display: flex;
   align-items: center;
+  justify-content: center;
+  gap: 8px;
   margin-bottom: 20px;
-  font-family: Avenir;
-  color: #0a384b;
-  font-size: 16px;
+  color: rgb(100 116 139);
 }
 
 .saveCardText input[type="checkbox"] {
-  margin-left: 10px;
+  accent-color: rgb(59 130 246);
   width: 18px;
   height: 18px;
-  accent-color: #28AAE1;
 }
 
-/* Submit button styling to match your design */
 .submit {
-  width: 100%;
-  height: 55px;
-  background: linear-gradient(135deg, #31D097 0%, #28AAE1 100%);
-  color: #fff;
-  font-family: Avenir;
-  font-size: 18px;
-  font-weight: 600;
+  background: linear-gradient(135deg, rgb(59 130 246) 0%, rgb(37 99 235) 100%);
+  color: white;
   border: none;
-  border-radius: 10px;
+  padding: 15px 40px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
+  width: 100%;
   transition: all 0.3s ease;
-  margin-bottom: 15px;
+  box-shadow: 0px 4px 15px rgba(59, 130, 246, 0.3);
 }
 
 .submit:hover {
+  background: linear-gradient(135deg, rgb(37 99 235) 0%, rgb(29 78 216) 100%);
   transform: translateY(-2px);
-  box-shadow: 0px 10px 25px rgba(49, 208, 151, 0.3);
+  box-shadow: 0px 8px 25px rgba(59, 130, 246, 0.4);
 }
 
 .submit:disabled {
-  opacity: 0.6;
+  background: linear-gradient(135deg, rgb(148 163 184) 0%, rgb(100 116 139) 100%);
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
-/* Loading spinner styling */
 .submit .fa-spinner {
-  font-size: 18px !important;
+  animation: spin 1s linear infinite;
 }
 
-/* Security text styling */
 .card-footer span {
+  color: rgb(100 116 139);
+  font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #80959E;
-  font-family: Avenir;
-  font-size: 14px;
-  margin-bottom: 20px;
+  gap: 5px;
+  margin-top: 15px;
 }
 
 .card-footer span .fa-lock {
-  margin-right: 8px;
-  color: #28AAE1;
+  color: rgb(34 197 94);
 }
 
-/* Installment button styling */
 .whiteBtn {
-  background: #fff;
-  border: 2px solid #28AAE1;
-  color: #28AAE1;
-  padding: 12px 24px;
-  border-radius: 10px;
-  font-family: Avenir;
+  background: rgba(255, 255, 255, 0.9);
+  color: rgb(59 130 246);
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  padding: 12px 30px;
+  border-radius: 12px;
+  font-size: 14px;
   font-weight: 600;
-  text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
 }
 
 .whiteBtn:hover {
-  background: #28AAE1;
-  color: #fff;
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgb(59 130 246);
+  transform: translateY(-1px);
 }
 
-/* Installments section styling */
 .installmentsDiv {
-  margin-top: 40px;
-  border-top: 1px solid #e1ecf1;
-  padding-top: 30px;
+  margin-top: 20px;
+  padding: 20px;
+  background: rgba(219, 234, 254, 0.3);
+  border-radius: 12px;
 }
 
 .installmentsHead {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .installmentsHead img {
-  height: 30px;
-  margin-right: 15px;
+  margin-left: 10px;
 }
 
 .installmentsHead p {
-  font-family: Avenir;
-  font-size: 18px;
+  color: rgb(30 64 175);
   font-weight: 600;
-  color: #0a384b;
+  font-size: 16px;
   margin: 0;
 }
 
-/* Footer styling */
 footer {
   margin-top: 40px;
-  padding-top: 30px;
-  border-top: 1px solid #e1ecf1;
+  text-align: center;
+  padding-top: 20px;
+  border-top: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .copyWrite {
   display: flex;
+  justify-content: center;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 20px;
+  gap: 15px;
+  margin-bottom: 20px;
 }
 
 .copyWrite img:first-child {
-  height: 25px;
+  height: 30px;
 }
 
 .logos {
   display: flex;
-  gap: 15px;
-  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .logos img {
-  height: 30px;
-  opacity: 0.7;
-  transition: opacity 0.3s ease;
+  height: 40px;
+  filter: grayscale(100%);
+  transition: all 0.3s ease;
 }
 
 .logos img:hover {
-  opacity: 1;
+  filter: grayscale(0%);
+  transform: scale(1.1);
 }
 
-/* Arrow decorations styling */
 .arrow1, .arrow2 {
-  opacity: 0.05 !important;
-  z-index: -1;
-  pointer-events: none;
+  position: absolute;
+  width: 0;
+  height: 0;
 }
 
 .arrow1 {
-  top: 20px;
-  left: 20px;
+  border-left: 15px solid rgb(59 130 246);
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
 }
 
 .arrow2 {
-  bottom: 20px;
-  right: 20px;
+  border-right: 15px solid rgb(37 99 235);
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .containers {
-      padding: 20px;
-      margin: 10px;
+    margin: 10px;
+    padding: 20px;
   }
   
   .card-wrapper {
-      max-width: 100%;
+    padding: 20px;
   }
   
   .copyWrite {
-      flex-direction: column;
-      text-align: center;
+    flex-direction: column;
+    gap: 10px;
   }
   
   .logos {
-      justify-content: center;
+    gap: 15px;
   }
 }
 
-/* Additional styling for better integration */
 #paymob_checkout {
-  width: 100%;
+  font-family: Avenir !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.98) 100%) !important;
 }
 
-/* Discount message styling */
 #discountMessgae {
-  background: #e8f5e8 !important;
-  border: 1px solid #31D097 !important;
-  border-radius: 8px;
-  padding: 10px;
-  margin-bottom: 15px;
-  color: #0a384b;
-  font-family: Avenir;
-  font-size: 14px;
+  background: linear-gradient(135deg, rgb(34 197 94) 0%, rgb(22 163 74) 100%);
+  color: white;
+  padding: 15px;
+  border-radius: 12px;
   text-align: center;
-  display: none;
+  font-weight: 600;
+  margin-bottom: 20px;
+  transform: translateY(-10px);
+  opacity: 0;
+  transition: all 0.5s ease;
 }
 
 #discountMessgae.show {
-  display: block;
+  transform: translateY(0);
+  opacity: 1;
 }
 
-/* Custom scrollbar for better integration */
 .containers::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 .containers::-webkit-scrollbar-track {
-  background: #f1f1f1 !important;
-  border-radius: 3px;
+  background: rgba(241, 245, 249, 0.5);
+  border-radius: 10px;
 }
 
 .containers::-webkit-scrollbar-thumb {
-  background: #28AAE1 !important;
-  border-radius: 3px;
+  background: linear-gradient(135deg, rgb(59 130 246) 0%, rgb(37 99 235) 100%);
+  border-radius: 10px;
 }
 
 .containers::-webkit-scrollbar-thumb:hover {
-  background: #31D097 !important;
+  background: linear-gradient(135deg, rgb(37 99 235) 0%, rgb(29 78 216) 100%);
 }
 
-/* RTL Support */
 html[dir="rtl"] {
-  text-align: right;
+  font-family: 'Cairo', 'Noto Kufi Arabic', sans-serif;
 }
 
 html[dir="rtl"] body {
-  direction: rtl;
+  font-family: 'Cairo', 'Noto Kufi Arabic', sans-serif;
 }
 
-/* Arabic-specific font improvements */
 html[dir="rtl"] * {
-  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  font-family: 'Cairo', 'Noto Kufi Arabic', sans-serif;
 }
 
-/* Custom RTL utilities */
 .rtl\:space-x-reverse > :not([hidden]) ~ :not([hidden]) {
   --tw-space-x-reverse: 1;
 }
@@ -470,7 +593,6 @@ html[dir="rtl"] * {
   --tw-divide-x-reverse: 1;
 }
 
-/* Custom animations */
 @keyframes fade-in-up {
   from {
     opacity: 0;
@@ -483,35 +605,31 @@ html[dir="rtl"] * {
 }
 
 .animate-fade-in-up {
-  animation: fade-in-up 1s ease-out;
+  animation: fade-in-up 0.6s ease-out;
 }
 
-/* Floating animation for background icons */
 @keyframes float {
-  0%,
-  100% {
+  0%, 100% {
     transform: translateY(0px);
   }
   50% {
-    transform: translateY(-20px);
+    transform: translateY(-10px);
   }
 }
 
 .animate-float {
-  animation: float 6s ease-in-out infinite;
+  animation: float 3s ease-in-out infinite;
 }
 
-/* Hover effects */
 .hover-lift {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .hover-lift:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);
 }
 
-/* RTL-specific text alignment utilities */
 .text-start {
   text-align: start;
 }

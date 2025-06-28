@@ -231,13 +231,19 @@ export const QRCardPDF = ({
           <View 
             style={[
               styles.innerCardContainer,
-              options.showBorder && styles.cardWithBorder,
-              options.showBorder && { borderColor: options.borderColor }
+              ...(options.showBorder ? [styles.cardWithBorder, { borderColor: options.borderColor }] : [])
             ]}
           >
             {/* Top logo if enabled */}
             {(options.logoPosition === 'top' || options.logoPosition === 'both') && restaurant.logo_url && (
               <Image src={restaurant.logo_url} style={styles.topLogo} />
+            )}
+            {(options.logoPosition === 'top' || options.logoPosition === 'both') && !restaurant.logo_url && (
+              <View style={styles.topLogoText}>
+                <Text style={{...styles.topLogoText, lineHeight: undefined, paddingTop: 20}}>
+                  {restaurant.name.slice(0, 2)}
+                </Text>
+              </View>
             )}
             
             {/* QR Code section */}
@@ -245,9 +251,17 @@ export const QRCardPDF = ({
               <Image src={qrCodeDataUrl} style={styles.qrCode} />
               
               {/* Logo overlay on QR code (middle position) */}
-              {(options.logoPosition === 'middle' || options.logoPosition === 'both') && restaurant.logo_url && (
+              {(options.logoPosition === 'middle' || options.logoPosition === 'both') && (
                 <View style={styles.qrLogoOverlay}>
-                  <Image src={restaurant.logo_url} style={styles.qrLogoImage} />
+                  {restaurant.logo_url ? (
+                    <Image src={restaurant.logo_url} style={styles.qrLogoImage} />
+                  ) : (
+                    <View style={{...styles.qrLogoImage, backgroundColor: "#EF4444", justifyContent: "center", alignItems: "center"}}>
+                      <Text style={{color: "#FFFFFF", fontSize: 12, fontWeight: "bold", textAlign: "center"}}>
+                        {restaurant.name.slice(0, 2)}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               )}
             </View>

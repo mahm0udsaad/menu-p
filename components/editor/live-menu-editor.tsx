@@ -267,8 +267,8 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400 mx-auto mb-4"></div>
-          <p className="text-slate-300">Loading your menu...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">جاري تحميل قائمتك...</p>
         </div>
       </div>
     )
@@ -278,10 +278,10 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
     <>
       <div className="space-y-4 h-full flex flex-col">
         {/* Compact Header */}
-        <div className="flex items-center justify-between bg-slate-800/30 border border-slate-700 rounded-lg p-3">
+        <div className="flex items-center justify-between bg-white/70 backdrop-blur-sm border border-red-200 rounded-xl p-3 shadow-sm">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
-            <h2 className="text-base sm:text-lg font-bold text-white truncate">محرر القائمة المباشر</h2>
-            <div className="text-xs text-slate-400 hidden sm:flex items-center gap-3">
+            <h2 className="text-base sm:text-lg font-bold text-gray-900 truncate">محرر القائمة المباشر</h2>
+            <div className="text-xs text-gray-500 hidden sm:flex items-center gap-3">
               <span>💡 اضغط للتعديل</span>
               <span>⭐ اضغط النجمة للمميز</span>
             </div>
@@ -292,7 +292,7 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
               onClick={handleRefresh}
               disabled={refreshing}
               size="sm"
-              className="border-slate-600 px-2 sm:px-3"
+              className="border-red-200 text-gray-600 hover:text-red-600 hover:bg-red-50 px-2 sm:px-3 transition-colors"
               title="تحديث"
             >
               {refreshing ? <RefreshCw className="h-3 w-3 sm:mr-1 animate-spin" /> : <RefreshCw className="h-3 w-3 sm:mr-1" />}
@@ -303,7 +303,7 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
               onClick={() => setShowTranslationDrawer(true)}
               disabled={loading || categories.length === 0}
               size="sm"
-              className="hover:bg-gradient-to-r from-purple-600/20 to-purple-700/20 border-purple-500/30 hover:text-purple-300 bg-purple-600/30 text-purple-200 px-2 sm:px-3"
+              className="hover:bg-purple-50 border-purple-200 hover:text-purple-600 bg-purple-50 text-purple-600 px-2 sm:px-3 transition-colors"
               title="ترجمة القائمة بالذكاء الاصطناعي"
             >
               <Languages className="h-3 w-3 sm:mr-1" />
@@ -313,19 +313,19 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
               variant="outline"
               onClick={handlePdfPreview}
               size="sm"
-              className={`border-slate-600 px-2 sm:px-3 ${!hasPaidPlan && !paymentLoading ? 'opacity-75' : ''}`}
+              className={`border-red-200 text-gray-600 hover:text-red-600 hover:bg-red-50 px-2 sm:px-3 transition-colors ${!hasPaidPlan && !paymentLoading ? 'opacity-75' : ''}`}
               title={!hasPaidPlan && !paymentLoading ? 'يتطلب اشتراك مدفوع - معاينة PDF' : paymentLoading ? 'جاري التحقق من حالة الاشتراك...' : 'معاينة PDF'}
               disabled={paymentLoading}
             >
               {paymentLoading ? <Loader2 className="h-3 w-3 sm:mr-1 animate-spin" /> : <Eye className="h-3 w-3 sm:mr-1" />}
               <span className="hidden sm:inline">معاينة PDF</span>
-              {!hasPaidPlan && !paymentLoading && <span className="text-yellow-400 ml-1">👑</span>}
+              {!hasPaidPlan && !paymentLoading && <span className="text-yellow-500 ml-1">👑</span>}
             </Button>
             <Button
               onClick={handlePublishMenu}
               disabled={isPublishing || categories.length === 0 || paymentLoading}
               size="sm"
-              className={`bg-emerald-600 hover:bg-emerald-700 px-2 sm:px-3 ${!hasPaidPlan && !paymentLoading ? 'opacity-75' : ''}`}
+              className={`bg-red-500 hover:bg-red-600 text-white px-2 sm:px-3 transition-colors shadow-sm ${!hasPaidPlan && !paymentLoading ? 'opacity-75' : ''}`}
               title={!hasPaidPlan && !paymentLoading ? 'يتطلب اشتراك مدفوع - نشر القائمة' : paymentLoading ? 'جاري التحقق من حالة الاشتراك...' : 'نشر القائمة'}
             >
               {isPublishing ? <Loader2 className="h-3 w-3 sm:mr-1 animate-spin" /> : paymentLoading ? <Loader2 className="h-3 w-3 sm:mr-1 animate-spin" /> : <FileText className="h-3 w-3 sm:mr-1" />}
@@ -338,9 +338,9 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
         </div>
 
         {/* Interactive Preview - Full Height */}
-        <div className="bg-slate-800/30 border border-slate-700 rounded-lg flex-1 min-h-0">
+        <div className="bg-white/70 backdrop-blur-sm border border-red-200 rounded-xl flex-1 min-h-0 shadow-sm">
           <div className="h-full overflow-auto p-4">
-            <div className="bg-white rounded-lg shadow-lg h-full">
+            <div className="bg-white rounded-lg shadow-lg h-full border border-red-100">
               <ProfessionalCafeMenuPreview restaurant={restaurant} categories={categories} onRefresh={handleRefresh} />
             </div>
           </div>
@@ -356,15 +356,15 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
 
         {/* Success Dialog */}
         <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-          <DialogContent className="sm:max-w-md bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200">
+          <DialogContent className="sm:max-w-md bg-gradient-to-br from-red-50 to-rose-50 border-red-200">
             <DialogHeader className="text-center space-y-4">
-              <div className="mx-auto w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-8 h-8 text-emerald-600" />
+              <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-8 h-8 text-red-600" />
               </div>
-              <DialogTitle className="text-2xl font-bold text-emerald-800 text-center">
+              <DialogTitle className="text-2xl font-bold text-red-800 text-center">
                 تم نشر القائمة بنجاح! 🎉
               </DialogTitle>
-              <p className="text-emerald-700 text-center">
+              <p className="text-red-700 text-center">
                 تم إنشاء قائمة PDF جديدة وحفظها بنجاح. يمكنك الآن إنشاء بطاقة QR لقائمتك.
               </p>
             </DialogHeader>
@@ -372,7 +372,7 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
             <div className="space-y-3 mt-6">
               <Button
                 onClick={handleDesignQRCard}
-                className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white py-6 text-lg font-medium rounded-xl shadow-lg hover:shadow-emerald-500/25 transform hover:scale-105 transition-all duration-200"
+                className="w-full bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white py-6 text-lg font-medium rounded-xl shadow-lg hover:shadow-red-500/25 transform hover:scale-105 transition-all duration-200"
               >
                 <QrCode className="mr-2 h-5 w-5" />
                 تصميم الQR كارت
@@ -381,7 +381,7 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
               <Button
                 onClick={handleViewPublishedMenus}
                 variant="outline"
-                className="w-full border-emerald-600 text-emerald-700 hover:bg-emerald-50 py-4 rounded-xl"
+                className="w-full border-red-500 text-red-600 hover:bg-red-50 py-4 rounded-xl transition-colors"
               >
                 <ExternalLink className="mr-2 h-4 w-4" />
                 عرض القوائم المنشورة
@@ -391,7 +391,7 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
                 <Button
                   asChild
                   variant="ghost"
-                  className="w-full text-emerald-600 hover:bg-emerald-50 py-4 rounded-xl"
+                  className="w-full text-red-600 hover:bg-red-50 py-4 rounded-xl transition-colors"
                 >
                   <a href={publishResult.pdfUrl} target="_blank" rel="noopener noreferrer">
                     <FileText className="mr-2 h-4 w-4" />

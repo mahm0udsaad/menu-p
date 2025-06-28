@@ -9,18 +9,26 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Upload, Loader2, Coffee, UtensilsCrossed, Building2, QrCode, ArrowRight, Palette, MapPin, Phone } from "lucide-react"
+import { Upload, Loader2, Coffee, UtensilsCrossed, Building2, QrCode, ArrowRight, Palette, MapPin, Phone, Crown, Sparkles } from "lucide-react"
 import { onboardRestaurant } from "@/lib/actions"
 
-// Color palette options
+// Color palette options with enhanced premium red/rose theme
 const colorPalettes = [
   {
-    id: "emerald",
-    name: "زمردي كلاسيكي",
-    primary: "#10b981",
-    secondary: "#059669",
-    accent: "#34d399",
-    preview: ["#10b981", "#059669", "#34d399", "#a7f3d0"]
+    id: "rose",
+    name: "وردي أنيق مميز",
+    primary: "#e11d48",
+    secondary: "#be185d",
+    accent: "#f43f5e",
+    preview: ["#e11d48", "#be185d", "#f43f5e", "#fda4af"]
+  },
+  {
+    id: "red",
+    name: "أحمر ملكي",
+    primary: "#dc2626",
+    secondary: "#b91c1c",
+    accent: "#ef4444",
+    preview: ["#dc2626", "#b91c1c", "#ef4444", "#fca5a5"]
   },
   {
     id: "amber",
@@ -31,12 +39,12 @@ const colorPalettes = [
     preview: ["#f59e0b", "#d97706", "#fbbf24", "#fde68a"]
   },
   {
-    id: "rose",
-    name: "وردي أنيق",
-    primary: "#e11d48",
-    secondary: "#be185d",
-    accent: "#f43f5e",
-    preview: ["#e11d48", "#be185d", "#f43f5e", "#fda4af"]
+    id: "emerald",
+    name: "زمردي كلاسيكي",
+    primary: "#10b981",
+    secondary: "#059669",
+    accent: "#34d399",
+    preview: ["#10b981", "#059669", "#34d399", "#a7f3d0"]
   },
   {
     id: "blue",
@@ -71,7 +79,7 @@ function SubmitButton() {
     <Button
       type="submit"
       disabled={pending}
-      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-6 text-lg rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
+      className="w-full bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:via-rose-500 hover:to-red-500 text-white font-bold py-6 text-lg rounded-xl transition-all duration-300 shadow-2xl hover:shadow-red-500/30 disabled:opacity-50 border border-red-400/50 group"
     >
       {pending ? (
         <>
@@ -80,8 +88,9 @@ function SubmitButton() {
         </>
       ) : (
         <>
-          <ArrowRight className="mr-2 h-5 w-5" />
+          <ArrowRight className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" />
           بدء إنشاء القائمة
+          <Sparkles className="ml-2 h-5 w-5 group-hover:animate-pulse" />
         </>
       )}
     </Button>
@@ -90,35 +99,59 @@ function SubmitButton() {
 
 export default function OnboardingForm() {
   const [selectedCategory, setSelectedCategory] = useState("restaurant")
-  const [selectedPalette, setSelectedPalette] = useState("emerald")
+  const [selectedPalette, setSelectedPalette] = useState("rose")
   const [state, formAction] = useActionState(onboardRestaurant, { error: "" })
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
-      <Card className="w-full max-w-4xl bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-red-50 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Enhanced Animated Background */}
+      <div className="fixed inset-0 z-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-red-50/60 via-white to-rose-50/40"></div>
+        
+        {/* Animated gradient orbs */}
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-gradient-to-r from-red-200/50 to-rose-200/50 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-gradient-to-r from-rose-200/40 to-pink-200/40 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-red-100/30 to-rose-100/30 rounded-full blur-3xl animate-pulse delay-500"></div>
+
+        {/* Floating Particles */}
+        <div className="absolute top-20 right-20 w-3 h-3 bg-red-500 rounded-full animate-bounce delay-300 shadow-lg shadow-red-500/50"></div>
+        <div className="absolute top-40 left-32 w-2 h-2 bg-rose-500 rounded-full animate-bounce delay-700 shadow-lg shadow-rose-500/50"></div>
+        <div className="absolute bottom-32 right-1/3 w-2.5 h-2.5 bg-pink-500 rounded-full animate-bounce delay-1000 shadow-lg shadow-pink-500/50"></div>
+        <div className="absolute top-1/3 left-20 w-2 h-2 bg-red-600 rounded-full animate-bounce delay-500 shadow-lg shadow-red-600/50"></div>
+      </div>
+
+      <Card className="relative z-10 w-full max-w-4xl bg-white/90 backdrop-blur-2xl supports-[backdrop-filter]:bg-white/70 border-0 shadow-2xl hover:shadow-red-500/20 transition-all duration-500">
         <CardHeader className="text-center pb-8">
-          <div className="mx-auto mb-6 w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl flex items-center justify-center">
-            <QrCode className="h-8 w-8 text-white" />
+          <div className="mx-auto mb-6 relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-rose-500 rounded-2xl blur-lg opacity-75 animate-pulse"></div>
+            <div className="relative w-16 h-16 bg-gradient-to-br from-red-600 to-rose-600 rounded-2xl flex items-center justify-center shadow-2xl">
+              <QrCode className="h-8 w-8 text-white animate-pulse" />
+            </div>
           </div>
-          <CardTitle className="text-3xl font-bold text-white mb-2">
-            مرحباً بك في Menu-P
+          <CardTitle className="text-3xl font-bold mb-2 flex items-center justify-center gap-2">
+            <Crown className="w-8 h-8 text-red-600" />
+            <span className="bg-gradient-to-r from-red-600 via-rose-600 to-red-600 bg-clip-text text-transparent">
+              مرحباً بك في Menu-P
+            </span>
+            <Sparkles className="w-8 h-8 text-red-600" />
           </CardTitle>
-          <p className="text-slate-400 text-lg">
-            لنبدأ بإعداد مطعمك وإنشاء قائمة طعامك الرقمية
+          <p className="text-gray-600 text-lg font-medium">
+            لنبدأ بإعداد مطعمك وإنشاء قائمة طعامك الرقمية المميزة
           </p>
         </CardHeader>
         
         <CardContent className="space-y-8">
           {state?.error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
-              <p className="text-red-400 text-center">{state.error}</p>
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 backdrop-blur-sm">
+              <p className="text-red-600 text-center font-medium">{state.error}</p>
             </div>
           )}
           
           <form action={formAction} className="space-y-8">
             {/* Restaurant Name */}
             <div className="space-y-3">
-              <Label htmlFor="name" className="text-white text-lg font-medium">
+              <Label htmlFor="name" className="text-gray-800 text-lg font-bold flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-red-600" />
                 اسم المطعم *
               </Label>
               <Input
@@ -127,15 +160,15 @@ export default function OnboardingForm() {
                 type="text"
                 placeholder="أدخل اسم مطعمك"
                 required
-                className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 text-lg py-6 rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 transition-all duration-200"
+                className="bg-white/70 border-red-200 text-gray-800 placeholder:text-gray-500 text-lg py-6 rounded-xl focus:border-red-500 focus:ring-red-500/20 transition-all duration-300 shadow-lg backdrop-blur-sm hover:shadow-red-500/10"
               />
             </div>
 
             {/* Contact Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
-                <Label htmlFor="address" className="text-white text-lg font-medium">
-                  <MapPin className="inline h-5 w-5 ml-2" />
+                <Label htmlFor="address" className="text-gray-800 text-lg font-bold flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-red-600" />
                   العنوان
                 </Label>
                 <Input
@@ -143,13 +176,13 @@ export default function OnboardingForm() {
                   name="address"
                   type="text"
                   placeholder="عنوان المطعم"
-                  className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 text-lg py-6 rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 transition-all duration-200"
+                  className="bg-white/70 border-red-200 text-gray-800 placeholder:text-gray-500 text-lg py-6 rounded-xl focus:border-red-500 focus:ring-red-500/20 transition-all duration-300 shadow-lg backdrop-blur-sm hover:shadow-red-500/10"
                 />
               </div>
               
               <div className="space-y-3">
-                <Label htmlFor="phone" className="text-white text-lg font-medium">
-                  <Phone className="inline h-5 w-5 ml-2" />
+                <Label htmlFor="phone" className="text-gray-800 text-lg font-bold flex items-center gap-2">
+                  <Phone className="w-5 h-5 text-red-600" />
                   رقم الهاتف
                 </Label>
                 <Input
@@ -157,14 +190,17 @@ export default function OnboardingForm() {
                   name="phone"
                   type="tel"
                   placeholder="+966 5X XXX XXXX"
-                  className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 text-lg py-6 rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 transition-all duration-200"
+                  className="bg-white/70 border-red-200 text-gray-800 placeholder:text-gray-500 text-lg py-6 rounded-xl focus:border-red-500 focus:ring-red-500/20 transition-all duration-300 shadow-lg backdrop-blur-sm hover:shadow-red-500/10"
                 />
               </div>
             </div>
 
             {/* Category Selection */}
             <div className="space-y-4">
-              <Label className="text-white text-lg font-medium">نوع النشاط التجاري *</Label>
+              <Label className="text-gray-800 text-lg font-bold flex items-center gap-2">
+                <UtensilsCrossed className="w-5 h-5 text-red-600" />
+                نوع النشاط التجاري *
+              </Label>
               <RadioGroup
                 name="category"
                 value={selectedCategory}
@@ -172,43 +208,43 @@ export default function OnboardingForm() {
                 className="grid grid-cols-1 md:grid-cols-3 gap-4"
               >
                 <div className="flex items-center space-x-2 space-x-reverse">
-                  <RadioGroupItem value="cafe" id="cafe" className="border-slate-600 text-emerald-400" />
+                  <RadioGroupItem value="cafe" id="cafe" className="border-red-300 text-red-600" />
                   <Label
                     htmlFor="cafe"
-                    className="flex items-center space-x-3 space-x-reverse cursor-pointer p-4 rounded-xl border border-slate-600 hover:border-emerald-400 transition-all duration-300 flex-1 bg-slate-700/30 hover:bg-slate-700/50"
+                    className="flex items-center space-x-3 space-x-reverse cursor-pointer p-4 rounded-xl border border-red-200 hover:border-red-400 transition-all duration-300 flex-1 bg-white/70 hover:bg-red-50/70 backdrop-blur-sm shadow-lg hover:shadow-red-500/20"
                   >
-                    <Coffee className="h-6 w-6 text-emerald-400" />
+                    <Coffee className="h-6 w-6 text-red-600" />
                     <div>
-                      <div className="text-white font-medium">مقهى</div>
-                      <div className="text-sm text-slate-400">قهوة، معجنات، ووجبات خفيفة</div>
+                      <div className="text-gray-800 font-bold">مقهى</div>
+                      <div className="text-sm text-gray-600">قهوة، معجنات، ووجبات خفيفة</div>
                     </div>
                   </Label>
                 </div>
 
                 <div className="flex items-center space-x-2 space-x-reverse">
-                  <RadioGroupItem value="restaurant" id="restaurant" className="border-slate-600 text-emerald-400" />
+                  <RadioGroupItem value="restaurant" id="restaurant" className="border-red-300 text-red-600" />
                   <Label
                     htmlFor="restaurant"
-                    className="flex items-center space-x-3 space-x-reverse cursor-pointer p-4 rounded-xl border border-slate-600 hover:border-emerald-400 transition-all duration-300 flex-1 bg-slate-700/30 hover:bg-slate-700/50"
+                    className="flex items-center space-x-3 space-x-reverse cursor-pointer p-4 rounded-xl border border-red-200 hover:border-red-400 transition-all duration-300 flex-1 bg-white/70 hover:bg-red-50/70 backdrop-blur-sm shadow-lg hover:shadow-red-500/20"
                   >
-                    <UtensilsCrossed className="h-6 w-6 text-emerald-400" />
+                    <UtensilsCrossed className="h-6 w-6 text-red-600" />
                     <div>
-                      <div className="text-white font-medium">مطعم</div>
-                      <div className="text-sm text-slate-400">تجربة طعام كاملة</div>
+                      <div className="text-gray-800 font-bold">مطعم</div>
+                      <div className="text-sm text-gray-600">تجربة طعام كاملة</div>
                     </div>
                   </Label>
                 </div>
 
                 <div className="flex items-center space-x-2 space-x-reverse">
-                  <RadioGroupItem value="both" id="both" className="border-slate-600 text-emerald-400" />
+                  <RadioGroupItem value="bakery" id="bakery" className="border-red-300 text-red-600" />
                   <Label
-                    htmlFor="both"
-                    className="flex items-center space-x-3 space-x-reverse cursor-pointer p-4 rounded-xl border border-slate-600 hover:border-emerald-400 transition-all duration-300 flex-1 bg-slate-700/30 hover:bg-slate-700/50"
+                    htmlFor="bakery"
+                    className="flex items-center space-x-3 space-x-reverse cursor-pointer p-4 rounded-xl border border-red-200 hover:border-red-400 transition-all duration-300 flex-1 bg-white/70 hover:bg-red-50/70 backdrop-blur-sm shadow-lg hover:shadow-red-500/20"
                   >
-                    <Building2 className="h-6 w-6 text-emerald-400" />
+                    <Building2 className="h-6 w-6 text-red-600" />
                     <div>
-                      <div className="text-white font-medium">كلاهما</div>
-                      <div className="text-sm text-slate-400">مقهى ومطعم</div>
+                      <div className="text-gray-800 font-bold">مخبز</div>
+                      <div className="text-sm text-gray-600">خبز ومعجنات طازجة</div>
                     </div>
                   </Label>
                 </div>
@@ -217,50 +253,59 @@ export default function OnboardingForm() {
 
             {/* Color Palette Selection */}
             <div className="space-y-4">
-              <Label className="text-white text-lg font-medium">
-                <Palette className="inline h-5 w-5 ml-2" />
+              <Label className="text-gray-800 text-lg font-bold flex items-center gap-2">
+                <Palette className="w-5 h-5 text-red-600" />
                 اختر لوحة الألوان لقائمتك
               </Label>
-              <p className="text-slate-400 text-sm">ستظهر هذه الألوان في قائمة طعامك وملف PDF</p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <RadioGroup
+                name="color_palette"
+                value={selectedPalette}
+                onValueChange={setSelectedPalette}
+                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+              >
                 {colorPalettes.map((palette) => (
                   <div key={palette.id} className="flex items-center space-x-2 space-x-reverse">
-                    <input
-                      type="radio"
-                      name="colorPalette"
-                      value={JSON.stringify(palette)}
-                      id={palette.id}
-                      checked={selectedPalette === palette.id}
-                      onChange={() => setSelectedPalette(palette.id)}
-                      className="sr-only"
-                    />
+                    <RadioGroupItem value={palette.id} id={palette.id} className="border-red-300 text-red-600" />
                     <Label
                       htmlFor={palette.id}
-                      className={`cursor-pointer p-4 rounded-xl border transition-all duration-300 flex-1 ${
-                        selectedPalette === palette.id
-                          ? 'border-emerald-400 bg-slate-700/50'
-                          : 'border-slate-600 bg-slate-700/30 hover:bg-slate-700/40'
-                      }`}
+                      className="cursor-pointer p-3 rounded-xl border border-red-200 hover:border-red-400 transition-all duration-300 flex-1 bg-white/70 hover:bg-red-50/70 backdrop-blur-sm shadow-lg hover:shadow-red-500/20"
                     >
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-white font-medium">{palette.name}</span>
+                      <div className="space-y-2">
+                        <div className="text-sm font-bold text-gray-800">{palette.name}</div>
                         <div className="flex space-x-1 space-x-reverse">
                           {palette.preview.map((color, index) => (
                             <div
                               key={index}
-                              className="w-4 h-4 rounded-full"
+                              className="w-4 h-4 rounded-full shadow-sm"
                               style={{ backgroundColor: color }}
                             />
                           ))}
                         </div>
                       </div>
-                      <div className="text-xs text-slate-400">
-                        مناسبة للمطاعم العصرية والتقليدية
-                      </div>
                     </Label>
                   </div>
                 ))}
+              </RadioGroup>
+            </div>
+
+            {/* Enhanced Logo Upload Section */}
+            <div className="space-y-4">
+              <Label className="text-gray-800 text-lg font-bold flex items-center gap-2">
+                <Upload className="w-5 h-5 text-red-600" />
+                شعار المطعم (اختياري)
+              </Label>
+              <div className="border-2 border-dashed border-red-300 rounded-xl p-8 text-center bg-red-50/50 hover:bg-red-50/70 transition-all duration-300 backdrop-blur-sm">
+                <Upload className="mx-auto h-12 w-12 text-red-400 mb-4" />
+                <p className="text-gray-700 font-medium">
+                  <span className="font-bold text-red-600">انقر لتحميل</span> أو اسحب ملف الشعار هنا
+                </p>
+                <p className="text-sm text-gray-500 mt-2">PNG, JPG, SVG حتى 10MB</p>
+                <input
+                  type="file"
+                  name="logo"
+                  accept="image/*"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
               </div>
             </div>
 
