@@ -1,6 +1,6 @@
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.com',
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://menu-p.com',
   generateRobotsTxt: true,
   exclude: [
     '/admin*',
@@ -13,6 +13,30 @@ module.exports = {
     '/payment-status',
     '/onboarding'
   ],
+  additionalPaths: async (config) => {
+    const paths = []
+    
+    try {
+      paths.push({
+        loc: '/auth/login',
+        changefreq: 'monthly',
+        priority: 0.5,
+        lastmod: new Date().toISOString(),
+      })
+      
+      paths.push({
+        loc: '/auth/sign-up', 
+        changefreq: 'monthly',
+        priority: 0.5,
+        lastmod: new Date().toISOString(),
+      })
+      
+    } catch (error) {
+      console.error('Error generating additional sitemap paths:', error)
+    }
+    
+    return paths
+  },
   robotsTxtOptions: {
     policies: [
       {
@@ -22,7 +46,7 @@ module.exports = {
           '/admin',
           '/api',
           '/auth/callback',
-          '/auth/forgot-password',
+          '/auth/forgot-password', 
           '/auth/reset-password',
           '/dashboard',
           '/menu-editor',
