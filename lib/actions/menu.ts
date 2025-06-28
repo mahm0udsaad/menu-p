@@ -429,3 +429,220 @@ export async function uploadCategoryBackgroundImage(
     return { error: "Something went wrong. Please try again." }
   }
 }
+
+/**
+ * Check if user can publish more menus based on their plan
+ */
+export async function canPublishMenu(restaurantId: string) {
+  const supabase = createClient()
+  
+  try {
+    // Update restaurant plan first (in case payment status changed)
+    await supabase.rpc('update_restaurant_plan', { restaurant_uuid: restaurantId })
+    
+    // Get restaurant plan info
+    const { data: restaurant, error: restaurantError } = await supabase
+      .from('restaurants')
+      .select('plan_type, max_menus')
+      .eq('id', restaurantId)
+      .single()
+    
+    if (restaurantError) throw restaurantError
+    
+    // Count current primary menus
+    const { count: currentMenus, error: countError } = await supabase
+      .from('published_menus')
+      .select('*', { count: 'exact', head: true })
+      .eq('restaurant_id', restaurantId)
+      .eq('is_primary_version', true)
+    
+    if (countError) throw countError
+    
+    const canPublish = (currentMenus || 0) < (restaurant.max_menus || 0)
+    
+    return {
+      success: true,
+      canPublish,
+      currentMenus: currentMenus || 0,
+      maxMenus: restaurant.max_menus || 0,
+      planType: restaurant.plan_type || 'free'
+    }
+  } catch (error) {
+    console.error('Error checking menu limits:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to check menu limits',
+      canPublish: false,
+      currentMenus: 0,
+      maxMenus: 0,
+      planType: 'free'
+    }
+  }
+}
+
+/**
+ * Get user's plan information and limits
+ */
+export async function getUserPlanInfo(userId: string) {
+  const supabase = createClient()
+  
+  try {
+    // Get user's restaurant
+    const { data: restaurant, error: restaurantError } = await supabase
+      .from('restaurants')
+      .select('id, plan_type, max_menus')
+      .eq('user_id', userId)
+      .single()
+    
+    if (restaurantError) throw restaurantError
+    
+    // Update plan based on latest payments
+    await supabase.rpc('update_restaurant_plan', { restaurant_uuid: restaurant.id })
+    
+    // Get updated restaurant info
+    const { data: updatedRestaurant, error: updateError } = await supabase
+      .from('restaurants')
+      .select('plan_type, max_menus')
+      .eq('id', restaurant.id)
+      .single()
+    
+    if (updateError) throw updateError
+    
+    // Count current menus
+    const { count: currentMenus, error: countError } = await supabase
+      .from('published_menus')
+      .select('*', { count: 'exact', head: true })
+      .eq('restaurant_id', restaurant.id)
+      .eq('is_primary_version', true)
+    
+    if (countError) throw countError
+    
+    return {
+      success: true,
+      planType: updatedRestaurant.plan_type || 'free',
+      maxMenus: updatedRestaurant.max_menus || 0,
+      currentMenus: currentMenus || 0,
+      canPublish: (currentMenus || 0) < (updatedRestaurant.max_menus || 0)
+    }
+  } catch (error) {
+    console.error('Error getting plan info:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get plan info',
+      planType: 'free',
+      maxMenus: 0,
+      currentMenus: 0,
+      canPublish: false
+    }
+  }
+}
+
+/**
+ * Create menu version (for translations)
+ */
+export async function createMenuVersion(
+  parentMenuId: string,
+  languageCode: string,
+  versionName: string,
+  pdfUrl: string
+) {
+  const supabase = createClient()
+  
+  try {
+    // Get parent menu info
+    const { data: parentMenu, error: parentError } = await supabase
+      .from('published_menus')
+      .select('restaurant_id, menu_name')
+      .eq('id', parentMenuId)
+      .single()
+    
+    if (parentError) throw parentError
+    
+    // Create version
+    const { data: menuVersion, error: versionError } = await supabase
+      .from('published_menus')
+      .insert({
+        restaurant_id: parentMenu.restaurant_id,
+        menu_name: `${parentMenu.menu_name} - ${versionName}`,
+        pdf_url: pdfUrl,
+        language_code: languageCode,
+        version_name: versionName,
+        parent_menu_id: parentMenuId,
+        is_primary_version: false
+      })
+      .select()
+      .single()
+    
+    if (versionError) throw versionError
+    
+    return {
+      success: true,
+      menuVersion
+    }
+  } catch (error) {
+    console.error('Error creating menu version:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create menu version'
+    }
+  }
+}
+
+/**
+ * Get all versions of a menu
+ */
+export async function getMenuVersions(restaurantId: string) {
+  const supabase = createClient()
+  
+  try {
+    const { data: menus, error } = await supabase
+      .from('published_menus')
+      .select(`
+        id,
+        menu_name,
+        pdf_url,
+        language_code,
+        version_name,
+        parent_menu_id,
+        is_primary_version,
+        created_at
+      `)
+      .eq('restaurant_id', restaurantId)
+      .order('created_at', { ascending: false })
+    
+    if (error) throw error
+    
+    // Group by primary menu
+    const groupedMenus = menus?.reduce((acc, menu) => {
+      const primaryId = menu.is_primary_version ? menu.id : menu.parent_menu_id
+      if (!acc[primaryId!]) {
+        acc[primaryId!] = {
+          primary: null,
+          versions: []
+        }
+      }
+      
+      if (menu.is_primary_version) {
+        acc[primaryId!].primary = menu
+      } else {
+        acc[primaryId!].versions.push(menu)
+      }
+      
+      return acc
+    }, {} as Record<string, { primary: any, versions: any[] }>)
+    
+    return {
+      success: true,
+      groupedMenus: groupedMenus || {},
+      allMenus: menus || []
+    }
+  } catch (error) {
+    console.error('Error getting menu versions:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get menu versions',
+      groupedMenus: {},
+      allMenus: []
+    }
+  }
+}

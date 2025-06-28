@@ -132,19 +132,19 @@ export default async function ResetPasswordPage() {
                   <p className="font-bold text-white">مفاتيح آمنة</p>
                   <p className="text-sm text-red-200">8 أحرف كحد أدنى</p>
                 </div>
-              </div>
+        </div>
               
               <div className="flex items-center gap-4 p-4 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20">
                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
                   <Zap className="h-6 w-6 text-white" />
-                </div>
+        </div>
                 <div className="text-right">
                   <p className="font-bold text-white">إنجاز سريع</p>
                   <p className="text-sm text-red-200">دقيقة واحدة فقط</p>
-                </div>
-              </div>
-            </div>
-          </div>
+        </div>
+        </div>
+        </div>
+        </div>
         </div>
 
         {/* Form Column */}

@@ -265,38 +265,38 @@ function PaymentStatusContent() {
                     )}
 
                     {paymentDetails.order_id && (
-                      <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-600 font-medium">رقم الطلب:</span>
                         <span className="font-mono text-xs bg-red-100 px-2 py-1 rounded text-red-700">
                           #{paymentDetails.order_id}
-                        </span>
-                      </div>
+                      </span>
+                    </div>
                     )}
                   </div>
                 )}
-
+                
                 <div className="space-y-3">
                   <div className="flex items-center justify-center p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
                     <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
                     <span className="text-green-700 font-medium text-sm">تم تفعيل الباقة المميزة</span>
-                  </div>
+                </div>
 
                   {autoRedirect && (
                     <div className="text-center text-sm text-gray-600 bg-red-50 p-3 rounded-lg border border-red-100">
                       <p className="font-medium">سيتم التوجيه تلقائياً خلال <span className="font-bold text-red-600">{countdown}</span> ثانية</p>
-                      <button
-                        onClick={toggleAutoRedirect}
+                    <button
+                      onClick={toggleAutoRedirect}
                         className="text-xs text-red-500 hover:text-red-700 underline mt-1 transition-colors"
-                      >
-                        إلغاء التوجيه التلقائي
-                      </button>
-                    </div>
-                  )}
+                    >
+                      إلغاء التوجيه التلقائي
+                    </button>
+                  </div>
+                )}
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <Button
-                    onClick={handleContinue}
+                  <Button 
+                    onClick={handleContinue} 
                     className="flex-1 bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:via-rose-500 hover:to-red-500 text-white font-bold py-3 px-6 rounded-xl shadow-xl hover:shadow-red-500/30 transition-all duration-300 group"
                   >
                     <ArrowRight className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
@@ -323,15 +323,15 @@ function PaymentStatusContent() {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  <Button
-                    onClick={handleRetry}
+                  <Button 
+                    onClick={handleRetry} 
                     className="w-full bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:via-rose-500 hover:to-red-500 text-white font-bold py-3 px-6 rounded-xl shadow-xl hover:shadow-red-500/30 transition-all duration-300 group"
                   >
                     <ArrowRight className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
                     محاولة مرة أخرى
                   </Button>
                   
-                  <Button
+                  <Button 
                     variant="outline"
                     onClick={() => router.push('/dashboard')}
                     className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 font-medium py-3 px-6 rounded-xl transition-all duration-300"

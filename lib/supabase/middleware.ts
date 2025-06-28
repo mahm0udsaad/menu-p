@@ -50,10 +50,12 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     request.nextUrl.pathname.startsWith("/auth/reset-password") ||
     request.nextUrl.pathname === "/auth/callback"
 
-  // Allow home page for public access (no auth required)
+  // Allow home page and menu pages for public access (no auth required)
   const isHomePage = request.nextUrl.pathname === "/"
+  const isMenuPage = request.nextUrl.pathname.startsWith("/menus/")
+  const isApiMenuPdf = request.nextUrl.pathname.startsWith("/api/menu-pdf/")
 
-  if (!isAuthRoute && !isHomePage) {
+  if (!isAuthRoute && !isHomePage && !isMenuPage && !isApiMenuPdf) {
     const {
       data: { session },
     } = await supabase.auth.getSession()

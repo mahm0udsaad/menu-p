@@ -57,6 +57,8 @@ import NotificationModal from "@/components/ui/notification-modal"
 import ConfirmationModal from "@/components/ui/confirmation-modal"
 import { usePaymentStatus } from "@/lib/hooks/use-payment-status"
 import PdfPreviewModal from "@/components/pdf-preview-modal"
+import MenuTabWithPreviews from "./men-tab"
+import QrCardTab from "./qr-card-tab"
 
 interface Restaurant {
   id: string
@@ -335,9 +337,9 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
             
             <div className="flex items-center gap-3">
               <Button variant="outline" size="sm" className="gap-2">
-                <Settings className="h-4 w-4" />
-                الإعدادات
-              </Button>
+            <Settings className="h-4 w-4" />
+            الإعدادات
+          </Button>
               <Button variant="outline" size="sm" className="gap-2" onClick={() => signOut()}>
                 <LogOut className="h-4 w-4" />
                 تسجيل الخروج
@@ -374,14 +376,14 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            {/* Quick Actions */}
+              {/* Quick Actions */}
             <Card>
-              <CardHeader>
+                <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Plus className="h-5 w-5 text-red-600" />
                   إجراءات سريعة
                 </CardTitle>
-              </CardHeader>
+                </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <Link href="/menu-editor">
@@ -399,10 +401,10 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                     إضافة لغة
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            {/* Stats Cards */}
+              {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card>
                 <CardHeader className="pb-3">
@@ -453,219 +455,14 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
             </div>
           </TabsContent>
 
-          <TabsContent value="menus" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MenuIcon className="h-5 w-5 text-red-600" />
-                  القوائم المنشورة
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {publishedMenus.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {publishedMenus.map((menu) => (
-                        <div key={menu.id} className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
-                          {/* PDF Preview */}
-                          <div className="aspect-[4/3] bg-gray-100 border-b border-gray-200 relative group cursor-pointer">
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="w-16 h-16 bg-red-600 rounded-lg shadow-lg flex items-center justify-center">
-                                <FileText className="h-8 w-8 text-white" />
-                              </div>
-                            </div>
-                            <div className="absolute top-2 left-2">
-                              <Badge className="bg-red-600 text-white text-xs">PDF</Badge>
-                            </div>
-                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center">
-                              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 shadow-lg">
-                                  <Eye className="h-4 w-4 text-gray-600" />
-                                  <span className="text-sm text-gray-600">معاينة</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* Menu Info */}
-                          <div className="p-4">
-                            <div className="flex items-start justify-between gap-2 mb-2">
-                              <h3 className="font-semibold text-gray-900 text-sm line-clamp-1">{menu.menu_name}</h3>
-                              <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
-                                <CheckCircle className="ml-1 h-3 w-3" />
-                                نشط
-                              </Badge>
-                            </div>
-                            <p className="text-xs text-gray-500 mb-3">
-                              تم النشر في {new Date(menu.created_at).toLocaleDateString('ar-SA')}
-                            </p>
-                            
-                            {/* Actions */}
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="flex-1 text-xs"
-                                asChild
-                              >
-                                <a href={menu.pdf_url} target="_blank" rel="noopener noreferrer">
-                                  <Download className="h-3 w-3 ml-1" />
-                                  تحميل PDF
-                                </a>
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="flex-1 text-xs"
-                                asChild
-                              >
-                                <a href={getMenuPublicUrl(menu.id)} target="_blank" rel="noopener noreferrer">
-                                  <ExternalLink className="h-3 w-3 ml-1" />
-                                  عرض القائمة
-                                </a>
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-red-600 hover:bg-red-50"
-                                onClick={() => handleDeleteMenu(menu.id, menu.pdf_url)}
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                        <MenuIcon className="h-8 w-8 text-gray-400" />
-                      </div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">لا توجد قوائم منشورة</h3>
-                      <p className="text-gray-600 mb-4">ابدأ بإنشاء قائمتك الأولى</p>
-                      <Link href="/menu-editor">
-                        <Button className="bg-red-600 hover:bg-red-700 text-white gap-2">
-                          <Plus className="h-4 w-4" />
-                          إنشاء قائمة جديدة
-                        </Button>
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+         <MenuTabWithPreviews getMenuPublicUrl={getMenuPublicUrl} handleDeleteMenu={handleDeleteMenu} publishedMenus={publishedMenus} />
 
-          <TabsContent value="qr-cards" className="space-y-6">
-            {/* Existing QR Cards */}
-            {publishedQrCards.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <QrCode className="h-5 w-5 text-red-600" />
-                    بطاقات QR المنشورة
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {publishedQrCards.map((card) => (
-                      <div key={card.id} className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
-                        {/* PDF Preview */}
-                        <div className="aspect-[3/4] bg-gray-100 border-b border-gray-200 relative group cursor-pointer">
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-32 h-32 bg-white rounded-lg shadow-lg flex items-center justify-center">
-                              <QRCodeCanvas
-                                value={card.qr_code_url}
-                                size={120}
-                                level="H"
-                                includeMargin={true}
-                              />
-                            </div>
-                          </div>
-                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center">
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                              <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 shadow-lg">
-                                <Eye className="h-4 w-4 text-gray-600" />
-                                <span className="text-sm text-gray-600">معاينة</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Card Info */}
-                        <div className="p-4">
-                          <div className="flex items-start justify-between gap-2 mb-2">
-                            <h3 className="font-semibold text-gray-900 text-sm line-clamp-1">{card.card_name}</h3>
-                            <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
-                              <CheckCircle className="ml-1 h-3 w-3" />
-                              نشط
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-gray-600 mb-3 line-clamp-2">
-                            {card.custom_text || "بطاقة QR مخصصة"}
-                          </p>
-                          <p className="text-xs text-gray-500 mb-3">
-                            تم الإنشاء في {new Date(card.created_at).toLocaleDateString('ar-SA')}
-                          </p>
-                          
-                          {/* Actions */}
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1 text-xs"
-                              asChild
-                            >
-                              <a href={card.pdf_url} target="_blank" rel="noopener noreferrer">
-                                <Download className="h-3 w-3 ml-1" />
-                                تحميل
-                              </a>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1 text-xs"
-                              asChild
-                            >
-                              <a href={card.qr_code_url} target="_blank" rel="noopener noreferrer">
-                                <ExternalLink className="h-3 w-3 ml-1" />
-                                فتح الرابط
-                              </a>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-red-600 hover:bg-red-50"
-                              onClick={() => handleDeleteQrCard(card.id, card.pdf_url)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* QR Card Generator */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Plus className="h-5 w-5 text-red-600" />
-                  إنشاء بطاقة QR جديدة
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <QrCardGenerator 
-                  restaurant={restaurant}
-                  menuPublicUrl={getMenuPublicUrl(restaurant.id)}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
+          <QrCardTab 
+            publishedQrCards={publishedQrCards}
+            restaurant={restaurant}
+            handleDeleteQrCard={handleDeleteQrCard}
+            getMenuPublicUrl={getMenuPublicUrl}
+          />
 
           <TabsContent value="restaurant-info" className="space-y-6">
             <Card>
@@ -676,43 +473,43 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Logo Section */}
+                    {/* Logo Section */}
                 <div className="flex items-center gap-4">
                   <div className="relative">
-                    {restaurant.logo_url ? (
-                      <Image
-                        src={restaurant.logo_url}
-                        alt={`${restaurant.name} logo`}
-                        width={80}
-                        height={80}
+                        {restaurant.logo_url ? (
+                          <Image
+                            src={restaurant.logo_url}
+                            alt={`${restaurant.name} logo`}
+                            width={80}
+                            height={80}
                         className="rounded-lg object-cover border-2 border-gray-200"
-                      />
-                    ) : (
+                          />
+                        ) : (
                       <div className="w-20 h-20 bg-gray-100 border-2 border-gray-200 rounded-lg flex items-center justify-center">
                         <Building className="h-8 w-8 text-gray-400" />
-                      </div>
-                    )}
+                          </div>
+                        )}
                     <label htmlFor="logo-upload" className="absolute inset-0 bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center cursor-pointer">
                       <Upload className="h-6 w-6 text-white" />
-                      <input
-                        id="logo-upload"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleLogoUpload}
-                        className="hidden"
-                        disabled={isUploadingLogo}
-                      />
-                    </label>
-                  </div>
+                            <input
+                              id="logo-upload"
+                              type="file"
+                              accept="image/*"
+                              onChange={handleLogoUpload}
+                              className="hidden"
+                              disabled={isUploadingLogo}
+                            />
+                          </label>
+                        </div>
                   <div>
                     <h3 className="text-xl font-bold text-gray-900">{restaurant.name}</h3>
                     <p className="text-gray-600">
                       {restaurant.category === 'both' ? 'مطعم ومقهى' : restaurant.category}
                     </p>
-                  </div>
-                </div>
+                      </div>
+                    </div>
 
-                {/* Info Grid */}
+                    {/* Info Grid */}
                 <div className="grid gap-4">
                   <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
                     <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
@@ -721,8 +518,8 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                     <div>
                       <p className="text-sm text-gray-600">رقم الهاتف</p>
                       <p className="font-semibold text-gray-900">{restaurant.phone || "غير محدد"}</p>
-                    </div>
-                  </div>
+                        </div>
+                      </div>
                   
                   <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
                     <div className="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center">
@@ -731,8 +528,8 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                     <div>
                       <p className="text-sm text-gray-600">البريد الإلكتروني</p>
                       <p className="font-semibold text-gray-900">{restaurant.email || "غير محدد"}</p>
-                    </div>
-                  </div>
+                        </div>
+                      </div>
                   
                   <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
                     <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center mt-1">
@@ -741,9 +538,9 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                     <div>
                       <p className="text-sm text-gray-600">العنوان</p>
                       <p className="font-semibold text-gray-900">{restaurant.address || "غير محدد"}</p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
 
                 {/* Edit Button */}
                 <div className="flex justify-end">

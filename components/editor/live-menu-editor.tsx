@@ -72,8 +72,22 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
   const [showSuccessDialog, setShowSuccessDialog] = useState(false)
   const [publishResult, setPublishResult] = useState<{ pdfUrl?: string; menuId?: string } | null>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [showTranslationDrawer, setShowTranslationDrawer] = useState(false) // Changed to drawer
-  const [translatedVersions, setTranslatedVersions] = useState<{ [language: string]: MenuCategory[] }>({}) // Store translated versions
+  const [showTranslationDrawer, setShowTranslationDrawer] = useState(false)
+  const [translatedVersions, setTranslatedVersions] = useState<{ [language: string]: MenuCategory[] }>({})
+  
+  // New states for multi-version support
+  const [menuVersions, setMenuVersions] = useState<{ [language: string]: { categories: MenuCategory[], pdfUrl?: string } }>({
+    'ar': { categories: initialMenuData }
+  })
+  const [activeVersion, setActiveVersion] = useState<string>('ar')
+  const [planInfo, setPlanInfo] = useState<{
+    planType: string
+    maxMenus: number
+    currentMenus: number
+    canPublish: boolean
+  } | null>(null)
+  const [planLoading, setPlanLoading] = useState(false)
+  
   const router = useRouter()
 
   // Use optimized payment status hook
@@ -178,17 +192,66 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
     setRefreshing(false)
   }
 
-  // Updated translation handler to handle multiple languages
+  // Fetch plan information
+  const fetchPlanInfo = async () => {
+    setPlanLoading(true)
+    try {
+      const { canPublishMenu } = await import("@/lib/actions/menu")
+      const result = await canPublishMenu(restaurant.id)
+      
+      if (result.success) {
+        setPlanInfo({
+          planType: result.planType,
+          maxMenus: result.maxMenus,
+          currentMenus: result.currentMenus,
+          canPublish: result.canPublish
+        })
+      }
+    } catch (error) {
+      console.error("Error fetching plan info:", error)
+    } finally {
+      setPlanLoading(false)
+    }
+  }
+
+  // Fetch plan info on mount
+  useEffect(() => {
+    fetchPlanInfo()
+  }, [restaurant.id])
+
+  // Updated translation handler to handle multiple languages with versions
   const handleTranslationComplete = (translatedCategories: MenuCategory[], targetLanguage: string) => {
-    // Store translated version
+    const versionName = targetLanguage === 'en' ? 'English' : 
+                       targetLanguage === 'fr' ? 'Français' : 
+                       targetLanguage === 'es' ? 'Español' : 
+                       'العربية'
+    
+    // Add to menu versions
+    setMenuVersions(prev => ({
+      ...prev,
+      [targetLanguage]: {
+        categories: translatedCategories,
+        pdfUrl: undefined // Will be set when published
+      }
+    }))
+    
+    // Store in translated versions for backward compatibility
     setTranslatedVersions(prev => ({
       ...prev,
       [targetLanguage]: translatedCategories
     }))
     
-    // Update current categories with the first translation (or keep original if multiple)
-    if (Object.keys(translatedVersions).length === 0) {
+    // Switch to the new version
+    setActiveVersion(targetLanguage)
       setCategories(translatedCategories)
+  }
+
+  // Handle version tab switch
+  const handleVersionSwitch = (languageCode: string) => {
+    setActiveVersion(languageCode)
+    const version = menuVersions[languageCode]
+    if (version) {
+      setCategories(version.categories)
     }
   }
 
@@ -287,6 +350,18 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
             </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+            {/* Plan Info */}
+            {planInfo && (
+              <div className="hidden sm:flex items-center gap-2 px-2 py-1 bg-red-50 rounded-lg border border-red-200">
+                <span className="text-xs text-red-600 font-medium">
+                  {planInfo.currentMenus}/{planInfo.maxMenus} قائمة
+                </span>
+                <span className="text-xs text-red-500">
+                  ({planInfo.planType === 'basic' ? 'أساسي' : planInfo.planType === 'pro' ? 'احترافي' : 'مجاني'})
+                </span>
+              </div>
+            )}
+            
             <Button
               variant="outline"
               onClick={handleRefresh}
@@ -323,10 +398,15 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
             </Button>
             <Button
               onClick={handlePublishMenu}
-              disabled={isPublishing || categories.length === 0 || paymentLoading}
+              disabled={isPublishing || categories.length === 0 || paymentLoading || (planInfo && !planInfo.canPublish && hasPaidPlan)}
               size="sm"
-              className={`bg-red-500 hover:bg-red-600 text-white px-2 sm:px-3 transition-colors shadow-sm ${!hasPaidPlan && !paymentLoading ? 'opacity-75' : ''}`}
-              title={!hasPaidPlan && !paymentLoading ? 'يتطلب اشتراك مدفوع - نشر القائمة' : paymentLoading ? 'جاري التحقق من حالة الاشتراك...' : 'نشر القائمة'}
+              className={`bg-red-500 hover:bg-red-600 text-white px-2 sm:px-3 transition-colors shadow-sm ${!hasPaidPlan && !paymentLoading ? 'opacity-75' : ''} ${planInfo && !planInfo.canPublish && hasPaidPlan ? 'opacity-50 cursor-not-allowed' : ''}`}
+              title={
+                !hasPaidPlan && !paymentLoading ? 'يتطلب اشتراك مدفوع - نشر القائمة' : 
+                paymentLoading ? 'جاري التحقق من حالة الاشتراك...' :
+                planInfo && !planInfo.canPublish && hasPaidPlan ? `تم الوصول للحد الأقصى (${planInfo.currentMenus}/${planInfo.maxMenus})` :
+                'نشر القائمة'
+              }
             >
               {isPublishing ? <Loader2 className="h-3 w-3 sm:mr-1 animate-spin" /> : paymentLoading ? <Loader2 className="h-3 w-3 sm:mr-1 animate-spin" /> : <FileText className="h-3 w-3 sm:mr-1" />}
               <span>
@@ -336,6 +416,66 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
             </Button>
           </div>
         </div>
+
+        {/* Version Tabs */}
+        {Object.keys(menuVersions).length > 1 && (
+          <div className="bg-white/70 backdrop-blur-sm border border-red-200 rounded-xl p-1 shadow-sm">
+            <div className="flex gap-1 overflow-x-auto">
+              {Object.entries(menuVersions).map(([langCode, version]) => {
+                const isActive = activeVersion === langCode
+                const versionName = langCode === 'ar' ? 'العربية' :
+                                 langCode === 'en' ? 'English' :
+                                 langCode === 'fr' ? 'Français' :
+                                 langCode === 'es' ? 'Español' : langCode
+                
+                return (
+                  <Button
+                    key={langCode}
+                    onClick={() => handleVersionSwitch(langCode)}
+                    variant={isActive ? "default" : "outline"}
+                    size="sm"
+                    className={`whitespace-nowrap transition-all ${
+                      isActive 
+                        ? 'bg-red-500 text-white shadow-sm'
+                        : 'border-red-200 text-gray-600 hover:text-red-600 hover:bg-red-50'
+                    }`}
+                  >
+                    <span className="text-xs sm:text-sm">{versionName}</span>
+                    {version.pdfUrl && (
+                      <div className="w-2 h-2 bg-green-500 rounded-full ml-1" title="تم نشر PDF" />
+                    )}
+                  </Button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Plan Limit Warning */}
+        {planInfo && hasPaidPlan && !planInfo.canPublish && (
+          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="bg-yellow-500 p-2 rounded-lg flex-shrink-0">
+                <FileText className="h-5 w-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                  تم الوصول للحد الأقصى من القوائم
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  لقد استخدمت {planInfo.currentMenus} من {planInfo.maxMenus} قائمة مسموحة في خطة {planInfo.planType === 'basic' ? 'الأساسية' : 'الاحترافية'}.
+                  قم بترقية خطتك لإنشاء المزيد من القوائم.
+                </p>
+              </div>
+              <Button
+                onClick={() => setShowPaymentModal(true)}
+                className="bg-yellow-500 hover:bg-yellow-600 text-white"
+              >
+                ترقية الخطة
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Interactive Preview - Full Height */}
         <div className="bg-white/70 backdrop-blur-sm border border-red-200 rounded-xl flex-1 min-h-0 shadow-sm">

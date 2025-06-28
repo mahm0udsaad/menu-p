@@ -1,63 +1,37 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import MenuNotFound from "@/components/menu-not-found"
-import QrMenuSelectionModal from "@/components/ui/qr-menu-selection-modal"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import { useRouter, useSearchParams } from "next/navigation"
+import { createClient } from "@/lib/supabase/server"
+import { notFound } from "next/navigation"
+import MenuClient from "./menu-client"
 
 interface MenuPageProps {
   params: Promise<{ menuId: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-export default function MenuPage({ params }: MenuPageProps) {
-  const [menuId, setMenuId] = useState<string>("")
-  const [showLanguageSelection, setShowLanguageSelection] = useState(false)
-  const [selectedLanguage, setSelectedLanguage] = useState<string>("")
-  const [actualMenuId, setActualMenuId] = useState<string>("")
-  const [loading, setLoading] = useState(true)
-  const supabase = createClientComponentClient()
-  const router = useRouter()
-  const searchParams = useSearchParams()
-
-  useEffect(() => {
-    const initializeMenu = async () => {
+export default async function MenuPage({ params, searchParams }: MenuPageProps) {
       const resolvedParams = await params
-      const paramMenuId = resolvedParams.menuId
-      setMenuId(paramMenuId)
+  const resolvedSearchParams = await searchParams
+  const { menuId } = resolvedParams
+  const supabase = createClient()
       
-      // Check if there are multiple language versions
-      await checkForMultipleLanguages(paramMenuId)
-    }
-    
-    initializeMenu()
-  }, [params])
+        // Get the current menu info
+  const { data: currentMenu, error: currentError } = await supabase
+    .from("published_menus")
+    .select(`
+      id,
+      menu_name,
+      language_code,
+      pdf_url,
+      restaurants!inner (
+        id,
+        name
+      )
+    `)
+    .eq("id", menuId)
+    .single()
 
-  const checkForMultipleLanguages = async (menuId: string) => {
-    try {
-      setLoading(true)
-      
-      // Get the current menu info
-      const { data: currentMenu, error: currentError } = await supabase
-        .from("published_menus")
-        .select(`
-          id,
-          menu_name,
-          language,
-          restaurants!inner (
-            id,
-            name
-          )
-        `)
-        .eq("id", menuId)
-        .single()
-
-      if (currentError) {
+  if (currentError || !currentMenu) {
         console.error("Menu not found:", currentError)
-        setLoading(false)
-        return
+    notFound()
       }
 
       // Check for other language versions
@@ -72,64 +46,51 @@ export default function MenuPage({ params }: MenuPageProps) {
         console.error("Error checking language versions:", versionsError)
       }
 
-      // If multiple language versions exist and no language is pre-selected, show selection modal
       const hasMultipleLanguages = languageVersions && languageVersions.length > 0
-      const preSelectedLang = searchParams.get("lang")
-      
-      if (hasMultipleLanguages && !preSelectedLang) {
-        setShowLanguageSelection(true)
-      } else {
-        // Use current menu
-        setActualMenuId(menuId)
-        setSelectedLanguage(currentMenu.language || 'ar')
-      }
-    } catch (error) {
-      console.error("Error initializing menu:", error)
-    } finally {
-      setLoading(false)
+  const preSelectedLang = resolvedSearchParams.lang as string
+
+  return (
+    <MenuClient
+      menuId={menuId}
+      currentMenu={currentMenu}
+      languageVersions={languageVersions || []}
+      hasMultipleLanguages={hasMultipleLanguages}
+      preSelectedLang={preSelectedLang}
+    />
+  )
+}
+
+// Generate metadata for SEO
+export async function generateMetadata({ params }: { params: Promise<{ menuId: string }> }) {
+  const resolvedParams = await params
+  const { menuId } = resolvedParams
+  const supabase = createClient()
+
+  const { data: menu } = await supabase
+    .from("published_menus")
+    .select(`
+      menu_name,
+      restaurants!inner (
+        name
+      )
+    `)
+    .eq("id", menuId)
+    .single()
+
+  if (!menu) {
+    return {
+      title: "Menu Not Found",
+      description: "The requested menu could not be found."
     }
   }
 
-  const handleLanguageSelect = (selectedMenuId: string, language: string) => {
-    setActualMenuId(selectedMenuId)
-    setSelectedLanguage(language)
-    setShowLanguageSelection(false)
-    
-    // Update URL with language parameter
-    const newUrl = `/menus/${selectedMenuId}?lang=${language}`
-    router.replace(newUrl)
+  return {
+    title: `${menu.menu_name} - ${menu.restaurants.name}`,
+    description: `View the digital menu for ${menu.restaurants.name}`,
+    openGraph: {
+      title: `${menu.menu_name} - ${menu.restaurants.name}`,
+      description: `View the digital menu for ${menu.restaurants.name}`,
+      type: 'website',
+    },
   }
-
-  if (loading) {
-    return (
-      <div className="w-full h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">جاري تحميل القائمة... / Loading menu...</p>
-        </div>
-      </div>
-    )
-  }
-
-  const displayMenuId = actualMenuId || menuId
-
-  return (
-    <>
-      <div className="w-full h-screen relative">
-        <iframe 
-          src={`/api/menu-pdf/${displayMenuId}`}
-          className="w-full h-full border-none" 
-          title="Menu PDF" 
-        />
-        <MenuNotFound />
-      </div>
-
-      <QrMenuSelectionModal
-        isOpen={showLanguageSelection}
-        onClose={() => setShowLanguageSelection(false)}
-        menuId={menuId}
-        onLanguageSelect={handleLanguageSelect}
-      />
-    </>
-  )
 }
