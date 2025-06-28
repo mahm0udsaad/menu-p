@@ -1,0 +1,18 @@
+# *
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api
+Disallow: /auth/callback
+Disallow: /auth/forgot-password
+Disallow: /auth/reset-password
+Disallow: /dashboard
+Disallow: /menu-editor
+Disallow: /payment-status
+Disallow: /onboarding
+
+# Host
+Host: https://menu-p.com
+
+# Sitemaps
+Sitemap: https://menu-p.com/sitemap.xml

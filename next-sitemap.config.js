@@ -1,6 +1,6 @@
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://menu-p.com',
+  siteUrl: 'https://menu-p.com', // Using direct URL instead of env variable
   generateRobotsTxt: true,
   exclude: [
     '/admin*',
@@ -17,6 +17,14 @@ module.exports = {
     const paths = []
     
     try {
+      // Add home page explicitly with high priority
+      paths.push({
+        loc: '/',
+        changefreq: 'daily',
+        priority: 1.0,
+        lastmod: new Date().toISOString(),
+      })
+      
       paths.push({
         loc: '/auth/login',
         changefreq: 'monthly',
