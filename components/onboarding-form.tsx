@@ -9,8 +9,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Upload, Loader2, Coffee, UtensilsCrossed, Building2, QrCode, ArrowRight, Palette, MapPin, Phone, Crown, Sparkles } from "lucide-react"
+import { Upload, Loader2, Coffee, UtensilsCrossed, Building2, QrCode, ArrowRight, Palette, MapPin, Phone, Crown, Sparkles, DollarSign } from "lucide-react"
 import { onboardRestaurant } from "@/lib/actions"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 // Color palette options with enhanced premium red/rose theme
 const colorPalettes = [
@@ -72,6 +73,21 @@ const colorPalettes = [
   }
 ]
 
+// Currency options for Middle East region
+const currencies = [
+  { code: "EGP", name: "جنيه مصري", symbol: "ج.م" },
+  { code: "SAR", name: "ريال سعودي", symbol: "ر.س" },
+  { code: "AED", name: "درهم إماراتي", symbol: "د.إ" },
+  { code: "USD", name: "دولار أمريكي", symbol: "$" },
+  { code: "EUR", name: "يورو", symbol: "€" },
+  { code: "QAR", name: "ريال قطري", symbol: "ر.ق" },
+  { code: "KWD", name: "دينار كويتي", symbol: "د.ك" },
+  { code: "BHD", name: "دينار بحريني", symbol: "د.ب" },
+  { code: "OMR", name: "ريال عماني", symbol: "ر.ع" },
+  { code: "JOD", name: "دينار أردني", symbol: "د.أ" },
+  { code: "LBP", name: "ليرة لبنانية", symbol: "ل.ل" }
+]
+
 function SubmitButton() {
   const { pending } = useFormStatus()
   
@@ -100,6 +116,7 @@ function SubmitButton() {
 export default function OnboardingForm() {
   const [selectedCategory, setSelectedCategory] = useState("restaurant")
   const [selectedPalette, setSelectedPalette] = useState("rose")
+  const [selectedCurrency, setSelectedCurrency] = useState("EGP")
   const [state, formAction] = useActionState(onboardRestaurant, { error: "" })
 
   return (
@@ -195,6 +212,30 @@ export default function OnboardingForm() {
               </div>
             </div>
 
+            {/* Currency Selection */}
+            <div className="space-y-4">
+              <Label className="text-gray-800 text-lg font-bold flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-red-600" />
+                اختر العملة
+              </Label>
+              <Select
+                name="currency"
+                value={selectedCurrency}
+                onValueChange={setSelectedCurrency}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="اختر العملة" />
+                </SelectTrigger>
+                <SelectContent>
+                  {currencies.map((currency) => (
+                    <SelectItem key={currency.code} value={currency.code}>
+                      {currency.name} ({currency.symbol})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Category Selection */}
             <div className="space-y-4">
               <Label className="text-gray-800 text-lg font-bold flex items-center gap-2">
@@ -270,7 +311,7 @@ export default function OnboardingForm() {
                       htmlFor={palette.id}
                       className="cursor-pointer p-3 rounded-xl border border-red-200 hover:border-red-400 transition-all duration-300 flex-1 bg-white/70 hover:bg-red-50/70 backdrop-blur-sm shadow-lg hover:shadow-red-500/20"
                     >
-                      <div className="space-y-2">
+                      <div className="gap-2">
                         <div className="text-sm font-bold text-gray-800">{palette.name}</div>
                         <div className="flex space-x-1 space-x-reverse">
                           {palette.preview.map((color, index) => (

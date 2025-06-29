@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
-import { RefreshCw, FileText, Loader2, Eye, CheckCircle, QrCode, ExternalLink, Languages } from "lucide-react" // Added Languages icon
+import { RefreshCw, FileText, Loader2, Eye, CheckCircle, QrCode, ExternalLink, Languages, AlertTriangle } from "lucide-react" // Added Languages icon and AlertTriangle
 import { supabase } from "@/lib/supabase/client"
-import ProfessionalCafeMenuPreview from "./professional-cafe-menu-preview"
+import ProfessionalCafeMenuPreview from "./professional-cafe-menu-preview-refactored"
 import { generateAndSaveMenuPdf } from "@/lib/actions/pdf-actions"
 import { useRouter } from "next/navigation"
 import { pdf } from "@react-pdf/renderer"
@@ -20,6 +20,7 @@ import PaymentForPublishModal from '@/components/ui/payment-for-publish-modal'
 import { usePaymentStatus } from '@/lib/hooks/use-payment-status'
 import MenuTranslationDrawer from "@/components/menu-translation-drawer" // Added translation drawer import
 import { useToast } from "@/hooks/use-toast"
+import { getMenuData } from '@/lib/actions/menu'
 
 const PdfPreviewModal = dynamic(() => import("@/components/pdf-preview-modal"), {
   loading: () => <div className="h-96 bg-slate-800 rounded-lg animate-pulse"></div>,

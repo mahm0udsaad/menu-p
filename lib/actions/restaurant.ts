@@ -28,6 +28,9 @@ export async function createRestaurant(
   // Extract form data
   const name = formData.get("name") as string
   const category = formData.get("category") as string
+  const currency = formData.get("currency") as string
+  const address = formData.get("address") as string
+  const phone = formData.get("phone") as string
   const logoFile = formData.get("logo") as File
 
   // Validate required fields
@@ -89,6 +92,9 @@ export async function createRestaurant(
         .update({
           name,
           category,
+          currency: currency || 'EGP',
+          address: address || null,
+          phone: phone || null,
           logo_url: logoUrl,
           updated_at: new Date().toISOString(),
         })
@@ -104,6 +110,9 @@ export async function createRestaurant(
         user_id: user.id,
         name,
         category,
+        currency: currency || 'EGP',
+        address: address || null,
+        phone: phone || null,
         logo_url: logoUrl,
       })
 

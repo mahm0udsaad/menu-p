@@ -457,7 +457,7 @@ export default function MenuTranslationDrawer({
                   <SelectTrigger className="bg-white border-gray-300 text-gray-900 text-right h-12">
                     <SelectValue placeholder="اختر اللغة المصدر" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-300">
+                  <SelectContent className="bg-white border-gray-300 gap-2">
                     {SUPPORTED_LANGUAGES.map((lang: Language) => (
                       <SelectItem 
                         key={lang.code} 

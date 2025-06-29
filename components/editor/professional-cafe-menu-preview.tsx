@@ -16,7 +16,8 @@ import { supabase } from "@/lib/supabase/client"
 import NotificationModal from "@/components/ui/notification-modal"
 import ConfirmationModal from "@/components/ui/confirmation-modal"
 import ImageUploadModal from "@/components/ui/image-upload-modal"
-import FontSettings from "../font-settings"
+import SimplifiedFontSettings, { type SimplifiedFontSettings as SimplifiedFontSettingsType } from "../simplified-font-settings"
+import RowStylingModal from '@/components/row-styling-modal'
 import { useToast } from "@/hooks/use-toast"
 
 interface MenuItem {
@@ -114,6 +115,17 @@ const colorPalettes = [
   }
 ]
 
+// Add row styling settings interface and state
+interface RowStyleSettings {
+  backgroundColor: string
+  backgroundImage: string | null
+  backgroundType: 'solid' | 'image'
+  itemColor: string
+  descriptionColor: string
+  priceColor: string
+  textShadow: boolean
+}
+
 const MenuSectionPreview = ({
   title,
   sectionData,
@@ -125,6 +137,7 @@ const MenuSectionPreview = ({
   onDeleteCategory,
   onRefresh,
   colorPalette,
+  appliedRowStyles,
 }: {
   title: string
   sectionData: MenuCategory
@@ -136,6 +149,7 @@ const MenuSectionPreview = ({
   onDeleteCategory: (categoryId: string) => void
   onRefresh: () => void
   colorPalette: { primary: string; secondary: string; accent: string }
+  appliedRowStyles: RowStyleSettings
 }) => {
   const [showImageUpload, setShowImageUpload] = useState(false)
   const [isUploadingBg, setIsUploadingBg] = useState(false)
@@ -281,7 +295,27 @@ const MenuSectionPreview = ({
         {/* Menu Items - Single Column Layout */}
         <div className="space-y-6">
       {sectionData.menu_items.map((item, index) => (
-        <div key={item.id} className="border-b border-gray-200 pb-4 last:border-b-0">
+        <div 
+          key={item.id} 
+          className="border-b border-gray-200 pb-4 last:border-b-0 p-4 rounded-lg transition-all duration-300"
+          style={{
+            background: appliedRowStyles.backgroundType === 'solid' 
+              ? appliedRowStyles.backgroundColor
+              : appliedRowStyles.backgroundImage?.includes('|')
+                ? (() => {
+                    const [pattern, size] = appliedRowStyles.backgroundImage.split('|')
+                    return pattern
+                  })()
+                : appliedRowStyles.backgroundImage 
+                  ? `url(${appliedRowStyles.backgroundImage}) center/cover`
+                  : appliedRowStyles.backgroundColor,
+            backgroundSize: appliedRowStyles.backgroundImage?.includes('|')
+              ? appliedRowStyles.backgroundImage.split('|')[1]
+              : appliedRowStyles.backgroundType === 'image' && appliedRowStyles.backgroundImage 
+                ? 'cover'
+                : 'auto'
+          }}
+        >
           <EditableMenuItem
             item={item}
             index={index}
@@ -298,7 +332,11 @@ const MenuSectionPreview = ({
                 <InlineEditable
                   value={editableItemProps.item.name}
                   onSave={(value) => editableItemProps.onUpdate({ ...editableItemProps.item, name: value })}
-                  className="font-serif text-lg text-gray-800 flex-1 pr-4"
+                  className="font-serif text-lg flex-1 pr-4"
+                  style={{ 
+                    color: appliedRowStyles.itemColor,
+                    textShadow: appliedRowStyles.textShadow ? '1px 1px 2px rgba(0,0,0,0.3)' : 'none'
+                  }}
                                       placeholder="اسم الطبق"
                 />
                 <div className="flex items-center">
@@ -308,7 +346,11 @@ const MenuSectionPreview = ({
                     onSave={(value) =>
                       editableItemProps.onUpdate({ ...editableItemProps.item, price: Number.parseFloat(value) || null })
                     }
-                    className="font-serif text-lg price-color"
+                    className="font-serif text-lg"
+                    style={{ 
+                      color: appliedRowStyles.priceColor,
+                      textShadow: appliedRowStyles.textShadow ? '1px 1px 2px rgba(0,0,0,0.3)' : 'none'
+                    }}
                     placeholder="0.00"
                     type="number"
                   />
@@ -412,17 +454,24 @@ export default function ProfessionalCafeMenuPreview({
   const [showDesignModal, setShowDesignModal] = useState(false)
   const [selectedPalette, setSelectedPalette] = useState(restaurant.color_palette?.id || "emerald")
   const [isUpdatingPalette, setIsUpdatingPalette] = useState(false)
-  const [fontSettings, setFontSettings] = useState({
-    primaryFont: 'cairo',
-    secondaryFont: 'noto-kufi-arabic',
-    fontSize: 16,
-    lineHeight: 1.5,
-    fontWeight: '400',
-    textAlign: 'right' as const,
-    letterSpacing: 0,
-    enableCustomFonts: false
+  const [fontSettings, setFontSettings] = useState<SimplifiedFontSettingsType>({
+    arabic: { font: 'cairo', weight: '400' },
+    english: { font: 'open-sans', weight: '400' }
   })
   const [menuStyles, setMenuStyles] = useState({
+    backgroundColor: '#ffffff',
+    backgroundType: 'solid' as 'solid' | 'gradient',
+    gradientFrom: '#ffffff',
+    gradientTo: '#f8fafc',
+    gradientDirection: 'to-b' as 'to-b' | 'to-br' | 'to-r' | 'to-tr'
+  })
+
+  // Applied settings (what's actually shown in the preview)
+  const [appliedFontSettings, setAppliedFontSettings] = useState<SimplifiedFontSettingsType>({
+    arabic: { font: 'cairo', weight: '400' },
+    english: { font: 'open-sans', weight: '400' }
+  })
+  const [appliedMenuStyles, setAppliedMenuStyles] = useState({
     backgroundColor: '#ffffff',
     backgroundType: 'solid' as 'solid' | 'gradient',
     gradientFrom: '#ffffff',
@@ -460,6 +509,29 @@ export default function ProfessionalCafeMenuPreview({
     description: "",
     action: () => {},
     type: "warning"
+  })
+
+  // Add row styling state
+  const [showRowStylingModal, setShowRowStylingModal] = useState(false)
+  const [rowStyleSettings, setRowStyleSettings] = useState<RowStyleSettings>({
+    backgroundColor: '#ffffff',
+    backgroundImage: null,
+    backgroundType: 'solid',
+    itemColor: '#000000',
+    descriptionColor: '#6b7280',
+    priceColor: '#dc2626',
+    textShadow: false
+  })
+
+  // Applied row styles (what's actually shown in the preview)
+  const [appliedRowStyles, setAppliedRowStyles] = useState<RowStyleSettings>({
+    backgroundColor: '#ffffff',
+    backgroundImage: null,
+    backgroundType: 'solid',
+    itemColor: '#000000',
+    descriptionColor: '#6b7280',
+    priceColor: '#dc2626',
+    textShadow: false
   })
 
   const { toast } = useToast()
@@ -760,14 +832,68 @@ export default function ProfessionalCafeMenuPreview({
     )
   }
 
+  const handleSaveDesignChanges = () => {
+    // Apply the current settings to the preview
+    setAppliedFontSettings(fontSettings)
+    setAppliedMenuStyles(menuStyles)
+    setShowDesignModal(false)
+    showNotification("success", "تم تطبيق التغييرات", "تم تطبيق إعدادات الخط والخلفية بنجاح")
+  }
+
+  const handleSaveRowStyles = (newSettings: RowStyleSettings) => {
+    setAppliedRowStyles(newSettings)
+    showNotification("success", "تم تطبيق إعدادات العناصر", "تم تطبيق إعدادات تخصيص عناصر القائمة بنجاح")
+  }
+
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="min-h-screen bg-gray-50 font-sans">
-        {/* Dynamic CSS for color palette */}
+        {/* Dynamic CSS for color palette and fonts */}
         <style dangerouslySetInnerHTML={{
           __html: `
             .price-color {
               color: ${currentPalette.secondary} !important;
+            }
+            
+            /* Arabic font styles */
+            .arabic-text {
+              font-family: ${appliedFontSettings.arabic.font === 'cairo' ? 'Cairo, sans-serif' : 
+                           appliedFontSettings.arabic.font === 'noto-kufi-arabic' ? 'Noto Kufi Arabic, sans-serif' : 
+                           appliedFontSettings.arabic.font === 'open-sans' ? 'Open Sans, sans-serif' : 
+                           'Roboto, sans-serif'} !important;
+              font-weight: ${appliedFontSettings.arabic.weight} !important;
+            }
+            
+            /* English font styles */
+            .english-text {
+              font-family: ${appliedFontSettings.english.font === 'cairo' ? 'Cairo, sans-serif' : 
+                           appliedFontSettings.english.font === 'noto-kufi-arabic' ? 'Noto Kufi Arabic, sans-serif' : 
+                           appliedFontSettings.english.font === 'open-sans' ? 'Open Sans, sans-serif' : 
+                           'Roboto, sans-serif'} !important;
+              font-weight: ${appliedFontSettings.english.weight} !important;
+            }
+            
+            /* Apply fonts to menu elements */
+            .menu-container h1,
+            .menu-container h2,
+            .menu-container h3,
+            .menu-container .category-title,
+            .menu-container .item-name[dir="rtl"],
+            .menu-container .item-description[dir="rtl"] {
+              font-family: ${appliedFontSettings.arabic.font === 'cairo' ? 'Cairo, sans-serif' : 
+                           appliedFontSettings.arabic.font === 'noto-kufi-arabic' ? 'Noto Kufi Arabic, sans-serif' : 
+                           appliedFontSettings.arabic.font === 'open-sans' ? 'Open Sans, sans-serif' : 
+                           'Roboto, sans-serif'} !important;
+              font-weight: ${appliedFontSettings.arabic.weight} !important;
+            }
+            
+            .menu-container .item-name[dir="ltr"],
+            .menu-container .item-description[dir="ltr"] {
+              font-family: ${appliedFontSettings.english.font === 'cairo' ? 'Cairo, sans-serif' : 
+                           appliedFontSettings.english.font === 'noto-kufi-arabic' ? 'Noto Kufi Arabic, sans-serif' : 
+                           appliedFontSettings.english.font === 'open-sans' ? 'Open Sans, sans-serif' : 
+                           'Roboto, sans-serif'} !important;
+              font-weight: ${appliedFontSettings.english.weight} !important;
             }
           `
         }} />
@@ -1012,7 +1138,7 @@ export default function ProfessionalCafeMenuPreview({
                           إعدادات الخط
                         </h3>
                         
-                        <FontSettings
+                        <SimplifiedFontSettings
                           settings={fontSettings}
                           onSettingsChange={setFontSettings}
                           language="ar"
@@ -1030,11 +1156,7 @@ export default function ProfessionalCafeMenuPreview({
                         إغلاق
                       </Button>
                       <Button
-                        onClick={() => {
-                          // Apply changes and close modal
-                          setShowDesignModal(false)
-                          // Here you would typically save the settings to the database
-                        }}
+                        onClick={handleSaveDesignChanges}
                         className="bg-emerald-600 hover:bg-emerald-700 text-white"
                       >
                         تطبيق التغييرات
@@ -1042,6 +1164,18 @@ export default function ProfessionalCafeMenuPreview({
                     </div>
                   </DialogContent>
                 </Dialog>
+                
+                {/* Row Styling Button */}
+                <Button
+                  onClick={() => setShowRowStylingModal(true)}
+                  variant="outline"
+                  size="sm"
+                  className="border-purple-600 text-purple-600 hover:bg-purple-50 flex items-center gap-2"
+                >
+                  <Palette className="h-3 w-3" />
+                  <span className="hidden sm:inline">تخصيص العناصر</span>
+                  <span className="sm:hidden">عناصر</span>
+                </Button>
                 
                 <Button
                   onClick={handleLoadDummyData}
@@ -1061,7 +1195,15 @@ export default function ProfessionalCafeMenuPreview({
             </div>
 
           {/* Menu Content */}
-          <div className="bg-white shadow-xl rounded-lg" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.1)" }}>
+          <div 
+            className="menu-container shadow-xl rounded-lg"
+            style={{ 
+              boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+              background: appliedMenuStyles.backgroundType === 'solid' 
+                ? appliedMenuStyles.backgroundColor
+                : `linear-gradient(${appliedMenuStyles.gradientDirection}, ${appliedMenuStyles.gradientFrom}, ${appliedMenuStyles.gradientTo})`
+            }}
+          >
             <div className="p-12">
               {categories.length === 0 ? (
                 <div className="text-center py-20 text-slate-400">
@@ -1115,6 +1257,7 @@ export default function ProfessionalCafeMenuPreview({
                         onDeleteCategory={handleDeleteCategory}
                           onRefresh={onRefresh}
                         colorPalette={currentPalette}
+                        appliedRowStyles={appliedRowStyles}
                       />
                     </div>
                       </div>
@@ -1244,6 +1387,14 @@ export default function ProfessionalCafeMenuPreview({
         title={notification.title}
         description={notification.description}
         type={notification.type}
+      />
+
+      {/* Row Styling Modal */}
+      <RowStylingModal
+        isOpen={showRowStylingModal}
+        onClose={() => setShowRowStylingModal(false)}
+        onSave={handleSaveRowStyles}
+        currentSettings={rowStyleSettings}
       />
     </DndProvider>
   )

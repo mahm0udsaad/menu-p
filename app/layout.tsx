@@ -1,8 +1,22 @@
 import type React from "react"
 import type { Metadata, Viewport } from "next"
+import { IBM_Plex_Sans_Arabic, Rubik } from 'next/font/google'
+import Script from "next/script"
 import "./globals.css"
 import { Toaster } from "sonner"
 import { ThemeProvider } from "@/components/theme-provider"
+import { cn } from "@/lib/utils"
+
+const ibmPlexSansArabic = IBM_Plex_Sans_Arabic({
+  subsets: ['arabic', 'latin'],
+  weight: ['100', '200', '300', '400', '500', '600', '700'],
+  variable: '--font-ibm-plex-sans-arabic',
+})
+
+const rubik = Rubik({
+  subsets: ['latin', 'arabic'],
+  variable: '--font-rubik',
+})
 
 // Advanced SEO Metadata for PDF Menu Generator
 export const metadata: Metadata = {
@@ -17,7 +31,7 @@ export const metadata: Metadata = {
   keywords: [
     "مولد قوائم PDF",
     "قوائم طعام PDF", 
-    "أكواد QR للمطاعم",
+    "أكواد QR للمطاعam",
     "تصميم قوائم مطاعم PDF",
     "إنشاء قائمة طعام PDF",
     "محرر قوائم المطاعم",
@@ -164,9 +178,49 @@ export default function RootLayout({
         <meta name="rating" content="general" />
         <meta name="referrer" content="origin-when-cross-origin" />
         
-        {/* Business Schema for PDF Menu Generator */}
-        <script
+        {/* Favicon and App Icons */}
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="apple-touch-icon" href="/fav 3.png" />
+        
+        {/* Sitemap */}
+        <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+        
+        {/* Canonical URL */}
+        <link rel="canonical" href="https://menu-p.com" />
+        
+        {/* Hreflang for internationalization */}
+        <link rel="alternate" hrefLang="ar" href="https://menu-p.com" />
+        <link rel="alternate" hrefLang="en" href="https://menu-p.com/en" />
+        <link rel="alternate" hrefLang="x-default" href="https://menu-p.com" />
+      </head>
+      
+      <body className={cn("min-h-screen bg-background font-sans antialiased", ibmPlexSansArabic.variable, rubik.variable)}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          forcedTheme="light"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
+          <div className="relative flex min-h-screen flex-col">
+            <div className="flex-1">
+              {children}
+            </div>
+          </div>
+          <Toaster 
+            position="top-center"
+            toastOptions={{
+              style: {
+                direction: 'rtl',
+                fontFamily: "'IBM Plex Sans Arabic', 'Rubik', sans-serif",
+              },
+            }}
+          />
+        </ThemeProvider>
+        <Script
+          id="json-ld-business"
           type="application/ld+json"
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
@@ -206,10 +260,10 @@ export default function RootLayout({
             })
           }}
         />
-        
-        {/* FAQ Schema for PDF Menu Service */}
-        <script
+        <Script
+          id="json-ld-faq"
           type="application/ld+json"
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
@@ -251,10 +305,10 @@ export default function RootLayout({
             })
           }}
         />
-        
-        {/* WebSite Schema */}
-        <script
+        <Script
+          id="json-ld-website"
           type="application/ld+json"
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
@@ -281,60 +335,6 @@ export default function RootLayout({
             })
           }}
         />
-        
-        {/* Preconnect to external domains */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        
-        {/* DNS Prefetch */}
-        <link rel="dns-prefetch" href="//fonts.googleapis.com" />
-        <link rel="dns-prefetch" href="//fonts.gstatic.com" />
-        
-        {/* Favicon and App Icons */}
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="apple-touch-icon" href="/fav 3.png" />
-        
-        {/* Sitemap */}
-        <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
-        
-        {/* Canonical URL */}
-        <link rel="canonical" href="https://menu-p.com" />
-        
-        {/* Hreflang for internationalization */}
-        <link rel="alternate" hrefLang="ar" href="https://menu-p.com" />
-        <link rel="alternate" hrefLang="en" href="https://menu-p.com/en" />
-        <link rel="alternate" hrefLang="x-default" href="https://menu-p.com" />
-        
-        {/* Font loading */}
-        <link 
-          href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@100;200;300;400;500;600;700&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" 
-          rel="stylesheet" 
-        />
-      </head>
-      
-      <body style={{ fontFamily: "'IBM Plex Sans Arabic', 'Rubik', sans-serif" }} className="min-h-screen bg-background font-sans antialiased">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          forcedTheme="light"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
-          <div className="relative flex min-h-screen flex-col">
-            <div className="flex-1">
-              {children}
-            </div>
-          </div>
-          <Toaster 
-            position="top-center"
-            toastOptions={{
-              style: {
-                direction: 'rtl',
-                fontFamily: "'IBM Plex Sans Arabic', 'Rubik', sans-serif",
-              },
-            }}
-          />
-        </ThemeProvider>
       </body>
     </html>
   )

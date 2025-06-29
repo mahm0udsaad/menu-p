@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import {
   MenuIcon,
   BarChart3,
@@ -45,7 +46,8 @@ import {
   XCircle,
   AlertCircle,
   Info,
-  TrendingUp
+  TrendingUp,
+  DollarSign
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -60,6 +62,21 @@ import PdfPreviewModal from "@/components/pdf-preview-modal"
 import MenuTabWithPreviews from "./men-tab"
 import QrCardTab from "./qr-card-tab"
 
+// Currency options for Middle East region
+const currencies = [
+  { code: "EGP", name: "جنيه مصري", symbol: "ج.م" },
+  { code: "SAR", name: "ريال سعودي", symbol: "ر.س" },
+  { code: "AED", name: "درهم إماراتي", symbol: "د.إ" },
+  { code: "USD", name: "دولار أمريكي", symbol: "$" },
+  { code: "EUR", name: "يورو", symbol: "€" },
+  { code: "QAR", name: "ريال قطري", symbol: "ر.ق" },
+  { code: "KWD", name: "دينار كويتي", symbol: "د.ك" },
+  { code: "BHD", name: "دينار بحريني", symbol: "د.ب" },
+  { code: "OMR", name: "ريال عماني", symbol: "ر.ع" },
+  { code: "JOD", name: "دينار أردني", symbol: "د.أ" },
+  { code: "LBP", name: "ليرة لبنانية", symbol: "ل.ل" }
+]
+
 interface Restaurant {
   id: string
   name: string
@@ -68,6 +85,7 @@ interface Restaurant {
   address?: string | null
   phone?: string | null
   email?: string | null
+  currency?: string | null
   available_menus?: number
 }
 
@@ -117,7 +135,8 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
     category: restaurant.category,
     address: restaurant.address || "",
     phone: restaurant.phone || "",
-    email: restaurant.email || ""
+    email: restaurant.email || "",
+    currency: restaurant.currency || "EGP"
   })
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   
@@ -298,6 +317,7 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
           address: editRestaurantData.address || null,
           phone: editRestaurantData.phone || null,
           email: editRestaurantData.email || null,
+          currency: editRestaurantData.currency || null,
         })
         .eq('id', restaurant.id)
 
@@ -586,6 +606,19 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
                       <p className="font-semibold text-gray-900">{restaurant.address || "غير محدد"}</p>
                         </div>
                       </div>
+                  
+                  <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <DollarSign className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">العملة المستخدمة</p>
+                      <p className="font-semibold text-gray-900">
+                        {currencies.find(c => c.code === restaurant.currency)?.name || "جنيه مصري"} 
+                        ({currencies.find(c => c.code === restaurant.currency)?.symbol || "ج.م"})
+                      </p>
+                    </div>
+                  </div>
                     </div>
 
                 {/* Edit Button */}
@@ -646,6 +679,118 @@ function DashboardContent({ restaurant: initialRestaurant, publishedMenus: initi
         description={notification.description}
         type={notification.type}
       />
+
+      {/* Edit Restaurant Modal */}
+      <Dialog open={isEditingRestaurant} onOpenChange={setIsEditingRestaurant}>
+        <DialogContent className="max-w-md mx-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5 text-red-600" />
+              تحديث معلومات المطعم
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">اسم المطعم</Label>
+              <Input
+                id="edit-name"
+                value={editRestaurantData.name}
+                onChange={(e) => setEditRestaurantData(prev => ({ ...prev, name: e.target.value }))}
+                className="w-full"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-category">نوع النشاط</Label>
+              <Select
+                value={editRestaurantData.category}
+                onValueChange={(value) => setEditRestaurantData(prev => ({ ...prev, category: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر نوع النشاط" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cafe">مقهى</SelectItem>
+                  <SelectItem value="restaurant">مطعم</SelectItem>
+                  <SelectItem value="both">مطعم ومقهى</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-currency">العملة</Label>
+              <Select
+                value={editRestaurantData.currency}
+                onValueChange={(value) => setEditRestaurantData(prev => ({ ...prev, currency: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر العملة" />
+                </SelectTrigger>
+                <SelectContent>
+                  {currencies.map((currency) => (
+                    <SelectItem key={currency.code} value={currency.code}>
+                      {currency.name} ({currency.symbol})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-phone">رقم الهاتف</Label>
+              <Input
+                id="edit-phone"
+                value={editRestaurantData.phone}
+                onChange={(e) => setEditRestaurantData(prev => ({ ...prev, phone: e.target.value }))}
+                className="w-full"
+                placeholder="رقم الهاتف"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">البريد الإلكتروني</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={editRestaurantData.email}
+                onChange={(e) => setEditRestaurantData(prev => ({ ...prev, email: e.target.value }))}
+                className="w-full"
+                placeholder="البريد الإلكتروني"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-address">العنوان</Label>
+              <Textarea
+                id="edit-address"
+                value={editRestaurantData.address}
+                onChange={(e) => setEditRestaurantData(prev => ({ ...prev, address: e.target.value }))}
+                className="w-full"
+                placeholder="عنوان المطعم"
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsEditingRestaurant(false)}
+              className="flex-1"
+            >
+              إلغاء
+            </Button>
+            <Button
+              onClick={handleUpdateRestaurant}
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              حفظ التغييرات
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

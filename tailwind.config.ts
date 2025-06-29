@@ -21,11 +21,7 @@ const config = {
     },
     extend: {
       fontFamily: {
-        'ibm-plex-arabic': ['IBM Plex Sans Arabic', 'Rubik', 'Segoe UI', 'system-ui', 'sans-serif'],
-        'rubik': ['Rubik', 'IBM Plex Sans Arabic', 'Segoe UI', 'system-ui', 'sans-serif'],  
-        'arabic': ['IBM Plex Sans Arabic', 'Rubik', 'Segoe UI', 'system-ui', 'sans-serif'],
-        'english': ['Rubik', 'IBM Plex Sans Arabic', 'Segoe UI', 'system-ui', 'sans-serif'],
-        'sans': ['IBM Plex Sans Arabic', 'Rubik', 'Segoe UI', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-ibm-plex-sans-arabic)', 'var(--font-rubik)'],
       },
       colors: {
         border: "rgb(226 232 240)",

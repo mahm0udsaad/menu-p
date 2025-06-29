@@ -162,9 +162,10 @@ export async function signOut() {
 export async function onboardRestaurant(state: { error?: string; success?: boolean } | null, formData: FormData) {
   const name = formData.get("name") as string
   const category = formData.get("category") as string
-  const colorPalette = formData.get("colorPalette") as string
+  const colorPalette = formData.get("color_palette") as string
   const address = formData.get("address") as string
   const phone = formData.get("phone") as string
+  const currency = formData.get("currency") as string
 
   if (!name || !category) {
     return { error: "اسم المطعم ونوع النشاط مطلوبان" }
@@ -177,23 +178,15 @@ export async function onboardRestaurant(state: { error?: string; success?: boole
     return { error: "يجب تسجيل الدخول أولاً" }
   }
 
-  // Parse color palette
-  let parsedColorPalette = null
-  if (colorPalette) {
-    try {
-      parsedColorPalette = JSON.parse(colorPalette)
-    } catch (e) {
-      console.error("Invalid color palette JSON:", e)
-    }
-  }
-
+  // Store color palette (it comes as a string ID, no need to parse)
   const { data, error } = await supabase
     .from("restaurants")
     .insert({
       user_id: user.id,
       name,
       category,
-      color_palette: parsedColorPalette,
+      currency: currency || 'EGP',
+      color_palette: colorPalette ? { id: colorPalette } : null,
       address: address || null,
       phone: phone || null,
       created_at: new Date().toISOString(),
