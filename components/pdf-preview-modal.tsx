@@ -44,9 +44,38 @@ interface PdfPreviewModalProps {
   onClose: () => void
   restaurant: Restaurant
   categories: MenuCategory[]
+  appliedFontSettings?: {
+    arabic: { font: string; weight: string }
+    english: { font: string; weight: string }
+  }
+  appliedPageBackgroundSettings?: {
+    backgroundColor: string
+    backgroundImage: string | null
+    backgroundType: 'solid' | 'image' | 'gradient'
+    gradientFrom: string
+    gradientTo: string
+    gradientDirection: 'to-b' | 'to-br' | 'to-r' | 'to-tr'
+  }
+  appliedRowStyles?: {
+    backgroundColor: string
+    backgroundImage: string | null
+    backgroundType: 'solid' | 'image'
+    itemColor: string
+    descriptionColor: string
+    priceColor: string
+    textShadow: boolean
+  }
 }
 
-export default function PdfPreviewModal({ isOpen, onClose, restaurant, categories }: PdfPreviewModalProps) {
+export default function PdfPreviewModal({ 
+  isOpen, 
+  onClose, 
+  restaurant, 
+  categories, 
+  appliedFontSettings, 
+  appliedPageBackgroundSettings, 
+  appliedRowStyles 
+}: PdfPreviewModalProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -112,7 +141,10 @@ export default function PdfPreviewModal({ isOpen, onClose, restaurant, categorie
       const blob = await pdf(
         <CafeMenuPDF 
           restaurant={restaurantForPdf} 
-          categories={categoriesForPdf} 
+          categories={categoriesForPdf}
+          appliedFontSettings={appliedFontSettings}
+          appliedPageBackgroundSettings={appliedPageBackgroundSettings}
+          appliedRowStyles={appliedRowStyles}
         />
       ).toBlob()
       

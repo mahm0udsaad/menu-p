@@ -60,11 +60,43 @@ interface Restaurant {
   }
 }
 
+// Helper functions - defined before they're used
+const getFontFamily = (isRTL: boolean, appliedFontSettings?: {
+  arabic: { font: string; weight: string }
+  english: { font: string; weight: string }
+}) => {
+  if (!appliedFontSettings) return "Cairo"
+  
+  const fontSettings = isRTL ? appliedFontSettings.arabic : appliedFontSettings.english
+  switch (fontSettings.font) {
+    case 'cairo': return 'Cairo'
+    case 'noto-kufi-arabic': return 'NotoKufiArabic'
+    default: return 'Cairo'
+  }
+}
+
+const getPageBackgroundStyle = (appliedPageBackgroundSettings?: {
+  backgroundColor: string
+  backgroundImage: string | null
+  backgroundType: 'solid' | 'image' | 'gradient'
+  gradientFrom: string
+  gradientTo: string
+  gradientDirection: 'to-b' | 'to-br' | 'to-r' | 'to-tr'
+}) => {
+  if (appliedPageBackgroundSettings) {
+    if (appliedPageBackgroundSettings.backgroundType === 'gradient') {
+      return { backgroundColor: appliedPageBackgroundSettings.gradientFrom }
+    }
+    return { backgroundColor: appliedPageBackgroundSettings.backgroundColor }
+  }
+  return { backgroundColor: "#ffffff" }
+}
+
 // Improved styles with better proportions and spacing
-const styles = StyleSheet.create({
+const createStyles = (appliedFontSettings?: any, appliedPageBackgroundSettings?: any) => StyleSheet.create({
   page: {
-    fontFamily: "Cairo",
-    backgroundColor: "#ffffff",
+    fontFamily: getFontFamily(true, appliedFontSettings),
+    ...getPageBackgroundStyle(appliedPageBackgroundSettings),
     padding: 20,
     fontSize: 12,
   },
@@ -386,10 +418,14 @@ const MenuSectionPDF = ({
   title,
   sectionData,
   colorPalette,
+  appliedFontSettings,
+  styles,
 }: {
   title: string
   sectionData: MenuCategory
   colorPalette?: Restaurant['color_palette']
+  appliedFontSettings?: any
+  styles: any
 }) => {
   // Safety checks
   if (!sectionData || !sectionData.menu_items || !Array.isArray(sectionData.menu_items)) {
@@ -438,7 +474,7 @@ const MenuSectionPDF = ({
           <View style={styles.categoryOverlay}>
             <Text style={[
               styles.categoryTitle, 
-              titleIsRTL ? { fontFamily: 'NotoKufiArabic' } : { fontFamily: 'Cairo' }
+              titleIsRTL ? { fontFamily: getFontFamily(true, appliedFontSettings) } : { fontFamily: getFontFamily(false, appliedFontSettings) }
             ]}>
               {title}
             </Text>
@@ -456,7 +492,7 @@ const MenuSectionPDF = ({
           <View style={styles.categoryGradientOverlay}>
             <Text style={[
               styles.categoryTitleNoImage, 
-              titleIsRTL ? { fontFamily: 'NotoKufiArabic' } : { fontFamily: 'Cairo' }
+              titleIsRTL ? { fontFamily: getFontFamily(true, appliedFontSettings) } : { fontFamily: getFontFamily(false, appliedFontSettings) }
             ]}>
               {title}
             </Text>
@@ -509,14 +545,41 @@ export const CafeMenuPDF = ({
   categories, 
   qrCodeUrl, 
   showQrCode = false,
-  pageBreaks = [] as number[]
+  pageBreaks = [] as number[],
+  appliedFontSettings,
+  appliedPageBackgroundSettings,
+  appliedRowStyles
 }: { 
   restaurant: Restaurant; 
   categories: MenuCategory[];
   qrCodeUrl?: string;
   showQrCode?: boolean;
   pageBreaks?: number[];
+  appliedFontSettings?: {
+    arabic: { font: string; weight: string }
+    english: { font: string; weight: string }
+  };
+  appliedPageBackgroundSettings?: {
+    backgroundColor: string
+    backgroundImage: string | null
+    backgroundType: 'solid' | 'image' | 'gradient'
+    gradientFrom: string
+    gradientTo: string
+    gradientDirection: 'to-b' | 'to-br' | 'to-r' | 'to-tr'
+  };
+  appliedRowStyles?: {
+    backgroundColor: string
+    backgroundImage: string | null
+    backgroundType: 'solid' | 'image'
+    itemColor: string
+    descriptionColor: string
+    priceColor: string
+    textShadow: boolean
+  };
 }) => {
+  // Create styles with the applied settings
+  const styles = createStyles(appliedFontSettings, appliedPageBackgroundSettings)
+
   // Safety checks
   if (!restaurant || !restaurant.name) {
     return (
@@ -579,7 +642,7 @@ export const CafeMenuPDF = ({
 
   return (
     <Document>
-      <Page size="A4" style={styles.page} wrap>
+      <Page size="A4" style={[styles.page, getPageBackgroundStyle(appliedPageBackgroundSettings), { fontFamily: getFontFamily(true, appliedFontSettings) }]} wrap>
         <View style={styles.documentContainer}>
           {/* Header */}
           <View style={[styles.header, { borderBottomColor: safeColorPalette.primary }]}>
@@ -606,6 +669,8 @@ export const CafeMenuPDF = ({
               title={category.name}
               sectionData={category}
               colorPalette={safeColorPalette}
+              appliedFontSettings={appliedFontSettings}
+              styles={styles}
             />
           ))}
 

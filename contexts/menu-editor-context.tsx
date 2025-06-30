@@ -5,6 +5,13 @@ import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabase/client"
 import { quickAddItem, quickDeleteItem, reorderMenuItems } from "@/lib/actions/editor/quick-menu-actions"
 import { quickUpdateCategory, quickDeleteCategory, quickAddCategory } from "@/lib/actions/editor/quick-category-actions"
+import { 
+  getMenuCustomizations, 
+  savePageBackgroundSettings, 
+  saveFontSettings, 
+  saveRowStyles,
+  saveAllCustomizations 
+} from "@/lib/actions/menu-customizations"
 
 // Types
 export interface MenuItem {
@@ -365,6 +372,41 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     }
   }, [restaurant.color_palette])
 
+  // Load saved customization settings from database
+  useEffect(() => {
+    const loadCustomizations = async () => {
+      try {
+        const result = await getMenuCustomizations(restaurant.id)
+        if (result.success && result.data) {
+          const customizations = result.data
+          
+          // Load font settings if available
+          if (customizations.font_settings) {
+            setFontSettings(customizations.font_settings)
+            setAppliedFontSettings(customizations.font_settings)
+          }
+          
+          // Load page background settings if available
+          if (customizations.page_background_settings && Object.keys(customizations.page_background_settings).length > 0) {
+            setPageBackgroundSettings(customizations.page_background_settings)
+            setAppliedPageBackgroundSettings(customizations.page_background_settings)
+          }
+          
+          // Load row styles if available
+          if (customizations.row_styles) {
+            setRowStyleSettings(customizations.row_styles)
+            setAppliedRowStyles(customizations.row_styles)
+          }
+        }
+      } catch (error) {
+        console.error('Error loading customizations:', error)
+        // Silently use defaults on error
+      }
+    }
+
+    loadCustomizations()
+  }, [restaurant.id])
+
   // Menu item functions
   const handleAddItem = useCallback(async (categoryId: string) => {
     const result = await quickAddItem(categoryId, restaurant.id)
@@ -595,7 +637,7 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
           }
 
           // Import dummy data
-          const dummyMenu = await import('../../data/dummy-menu.js')
+          const dummyMenu = await import('@/data/dummy-menu.js')
           const dummyData = (dummyMenu as any).default || dummyMenu
           
           // Create categories with items in database
@@ -655,22 +697,49 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
   }, [restaurant.id, categories.length, onRefresh, showNotification, showConfirmation])
 
   // Design changes function
-  const handleSaveDesignChanges = useCallback(() => {
-    setAppliedFontSettings(fontSettings)
-    setAppliedMenuStyles(menuStyles)
-    setShowDesignModal(false)
-    showNotification("success", "تم تطبيق التغييرات", "تم تطبيق إعدادات الخط والخلفية بنجاح")
-  }, [fontSettings, menuStyles, showNotification])
+  const handleSaveDesignChanges = useCallback(async () => {
+    try {
+      // Save font settings to database
+      await saveFontSettings(restaurant.id, fontSettings)
+      
+      // Apply changes to local state
+      setAppliedFontSettings(fontSettings)
+      setAppliedMenuStyles(menuStyles)
+      setShowDesignModal(false)
+      showNotification("success", "تم تطبيق التغييرات", "تم حفظ إعدادات الخط والخلفية بنجاح في قاعدة البيانات")
+    } catch (error: any) {
+      console.error('Error saving design changes:', error)
+      showNotification("error", "فشل في حفظ التغييرات", "حدث خطأ أثناء حفظ الإعدادات في قاعدة البيانات")
+    }
+  }, [fontSettings, menuStyles, restaurant.id, showNotification])
 
-  const handleSaveRowStyles = useCallback((newSettings: RowStyleSettings) => {
-    setAppliedRowStyles(newSettings)
-    showNotification("success", "تم تطبيق إعدادات العناصر", "تم تطبيق إعدادات تخصيص عناصر القائمة بنجاح")
-  }, [showNotification])
+  const handleSaveRowStyles = useCallback(async (newSettings: RowStyleSettings) => {
+    try {
+      // Save row styles to database
+      await saveRowStyles(restaurant.id, newSettings)
+      
+      // Apply changes to local state
+      setAppliedRowStyles(newSettings)
+      showNotification("success", "تم تطبيق إعدادات العناصر", "تم حفظ إعدادات تخصيص عناصر القائمة بنجاح في قاعدة البيانات")
+    } catch (error: any) {
+      console.error('Error saving row styles:', error)
+      showNotification("error", "فشل في حفظ إعدادات العناصر", "حدث خطأ أثناء حفظ إعدادات العناصر في قاعدة البيانات")
+    }
+  }, [restaurant.id, showNotification])
 
-  const handleSavePageBackground = useCallback((newSettings: PageBackgroundSettings) => {
-    setAppliedPageBackgroundSettings(newSettings)
-    showNotification("success", "تم تطبيق إعدادات الخلفية", "تم تطبيق إعدادات الخلفية بنجاح")
-  }, [showNotification])
+  const handleSavePageBackground = useCallback(async (newSettings: PageBackgroundSettings) => {
+    try {
+      // Save page background settings to database
+      await savePageBackgroundSettings(restaurant.id, newSettings)
+      
+      // Apply changes to local state
+      setAppliedPageBackgroundSettings(newSettings)
+      showNotification("success", "تم تطبيق إعدادات الخلفية", "تم حفظ إعدادات الخلفية بنجاح في قاعدة البيانات")
+    } catch (error: any) {
+      console.error('Error saving page background:', error)
+      showNotification("error", "فشل في حفظ إعدادات الخلفية", "حدث خطأ أثناء حفظ إعدادات الخلفية في قاعدة البيانات")
+    }
+  }, [restaurant.id, showNotification])
 
   const handlePageBgImageUpload = useCallback(async (file: File) => {
     try {
