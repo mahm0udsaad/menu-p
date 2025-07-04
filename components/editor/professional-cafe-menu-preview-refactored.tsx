@@ -5,7 +5,7 @@ import { DndProvider } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import { MenuEditorProvider, useMenuEditor, type Restaurant, type MenuCategory } from "@/contexts/menu-editor-context"
+import { useMenuEditor, type Restaurant, type MenuCategory } from "@/contexts/menu-editor-context"
 import { MenuHeader } from "./menu-header"
 import { MenuSection } from "./menu-section"
 import { ColorPaletteModal } from "./color-palette-modal"
@@ -128,13 +128,5 @@ export default function ProfessionalCafeMenuPreview({
   categories: initialCategories,
   onRefresh,
 }: ProfessionalCafeMenuPreviewProps) {
-  return (
-    <MenuEditorProvider
-      restaurant={restaurant}
-      initialCategories={initialCategories}
-      onRefresh={onRefresh}
-    >
-      <MenuContent />
-    </MenuEditorProvider>
-  )
+  return <MenuContent />
 } 

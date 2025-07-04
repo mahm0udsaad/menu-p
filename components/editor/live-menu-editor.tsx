@@ -20,6 +20,7 @@ import { usePaymentStatus } from '@/lib/hooks/use-payment-status'
 import MenuTranslationDrawer from "@/components/menu-translation-drawer"
 import { useToast } from "@/hooks/use-toast"
 import { SUPPORTED_LANGUAGES } from "@/lib/utils/translation-constants"
+import { useMenuEditor } from "@/contexts/menu-editor-context"
 
 const PdfPreviewModal = dynamic(() => import("@/components/pdf-preview-modal"), {
   loading: () => <div className="h-96 bg-slate-800 rounded-lg animate-pulse"></div>,
@@ -35,13 +36,17 @@ interface MenuItem {
   is_available: boolean
   is_featured: boolean
   dietary_info: string[]
+  display_order?: number
+  category_id?: string
+  created_at?: string
+  updated_at?: string
 }
 
 interface MenuCategory {
   id: string
   name: string
   description: string | null
-  background_image_url: string | null
+  background_image_url?: string | null
   menu_items: MenuItem[]
 }
 
@@ -56,7 +61,7 @@ interface Restaurant {
     primary: string
     secondary: string
     accent: string
-  }
+  } | null
 }
 
 interface LiveMenuEditorProps {
@@ -90,6 +95,7 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
   const router = useRouter()
   const { hasPaidPlan, loading: paymentLoading, refetch: refetchPaymentStatus } = usePaymentStatus()
   const { toast } = useToast()
+  const { appliedFontSettings, appliedPageBackgroundSettings, appliedRowStyles } = useMenuEditor()
   
   const showNotification = (type: "success" | "error" | "warning" | "info", title: string, description: string) => {
     toast({
@@ -229,6 +235,7 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
           // Convert categories to match PDF component types - filter out items without price
           const categoriesForPdf = langCategories.map(cat => ({
             ...cat,
+            background_image_url: cat.background_image_url || undefined,
             menu_items: cat.menu_items
               .filter(item => item.price !== null && item.is_available)
               .map(item => ({
@@ -242,6 +249,9 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
             <CafeMenuPDF 
               restaurant={restaurantForPdf} 
               categories={categoriesForPdf}
+              appliedFontSettings={appliedFontSettings}
+              appliedPageBackgroundSettings={appliedPageBackgroundSettings}
+              appliedRowStyles={appliedRowStyles}
             />
           ).toBlob()
 
@@ -460,6 +470,7 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
           <ProfessionalCafeMenuPreview
             restaurant={restaurant}
             categories={categories}
+            onRefresh={() => {}}
           />
         </div>
       </div>
@@ -514,6 +525,9 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
           onClose={() => setShowPdfPreviewModal(false)}
           restaurant={restaurant}
           categories={categories}
+          appliedFontSettings={appliedFontSettings}
+          appliedPageBackgroundSettings={appliedPageBackgroundSettings}
+          appliedRowStyles={appliedRowStyles}
         />
       )}
 
@@ -522,13 +536,17 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
         restaurantId={restaurant.id}
+        currentPath="/menu-editor"
       />
 
       {/* Translation Drawer */}
       <MenuTranslationDrawer
         isOpen={showTranslationDrawer}
         onClose={() => setShowTranslationDrawer(false)}
-        categories={categories}
+        categories={categories.map(cat => ({
+          ...cat,
+          background_image_url: cat.background_image_url || null
+        }))}
         onTranslationComplete={handleTranslationComplete}
       />
     </>

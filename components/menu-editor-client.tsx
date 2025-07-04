@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -8,28 +9,13 @@ import {
   ArrowLeft,
   FileText,
   Settings,
-  Download,
-  ChevronLeft,
-  ChevronRight,
-  QrCode,
-  Coffee,
-  UtensilsCrossed,
-  Star,
-  Heart,
-  BarChart3,
   Package,
-  Plus,
-  Languages,
-  Type,
-  Palette
 } from "lucide-react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import TemplateSelector from "./template-selector"
+import TemplateSelector from "@/components/template-selector"
 import Link from "next/link"
-import LiveMenuEditor from "./editor/live-menu-editor"
-import MenuImportModal from "./ui/menu-import-modal"
-import LanguageSelector from "./language-selector"
-import FontSettings from "./font-settings"
+import LiveMenuEditor from "@/components/editor/live-menu-editor"
+import MenuImportModal from "@/components/ui/menu-import-modal"
+import { MenuEditorProvider } from "@/contexts/menu-editor-context"
 
 interface Restaurant {
   id: string
@@ -51,7 +37,7 @@ interface MenuCategory {
   id: string
   name: string
   description: string | null
-  background_image_url: string | null
+  background_image_url?: string | null
   menu_items: MenuItem[]
 }
 
@@ -64,6 +50,10 @@ interface MenuItem {
   is_available: boolean
   is_featured: boolean
   dietary_info: string[]
+  display_order?: number
+  category_id?: string
+  created_at?: string
+  updated_at?: string
 }
 
 interface MenuEditorClientProps {
@@ -77,10 +67,23 @@ export default function MenuEditorClient({
   initialMenuData, 
   initialTemplates 
 }: MenuEditorClientProps) {
-  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null)
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  
+  // Get initial values from URL
+  const templateFromUrl = searchParams.get("template")
+  const tabFromUrl = searchParams.get("tab")
+  
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(() => {
+    return templateFromUrl ? initialTemplates.find(t => t.id === templateFromUrl) || null : null
+  })
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [activeTab, setActiveTab] = useState("template")
+  const [activeTab, setActiveTab] = useState(() => {
+    if (templateFromUrl && selectedTemplate) return "editor"
+    if (tabFromUrl) return tabFromUrl
+    return "template"
+  })
   const [draftData, setDraftData] = useState<any>({})
   const [showImportModal, setShowImportModal] = useState(false)
   const [menuData, setMenuData] = useState<MenuCategory[]>(initialMenuData)
@@ -88,9 +91,26 @@ export default function MenuEditorClient({
   useEffect(() => {
     if (selectedTemplate) {
       setTotalPages(selectedTemplate.layout_config.pages || 1)
-      setActiveTab("editor")
+      // Update URL when template is selected
+      const params = new URLSearchParams(searchParams)
+      params.set("tab", "editor")
+      params.set("template", selectedTemplate.id)
+      router.push(`/menu-editor?${params.toString()}`)
     }
-  }, [selectedTemplate])
+  }, [selectedTemplate, router, searchParams])
+
+  // Update URL when tab changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams)
+    if (activeTab === "template") {
+      params.set("tab", "template")
+      params.delete("template")
+    } else if (activeTab === "editor" && selectedTemplate) {
+      params.set("tab", "editor")
+      params.set("template", selectedTemplate.id)
+    }
+    router.push(`/menu-editor?${params.toString()}`)
+  }, [activeTab, selectedTemplate, router, searchParams])
 
   // Check if this is a new menu (no items) to show import option
   const isNewMenu = menuData.every(category => 
@@ -112,6 +132,14 @@ export default function MenuEditorClient({
   const handleTemplateSelect = (template: Template) => {
     setSelectedTemplate(template)
     setCurrentPage(1)
+    setActiveTab("editor")
+  }
+
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab)
+    if (newTab === "template") {
+      setSelectedTemplate(null)
+    }
   }
 
   const handleSaveDraft = (data: any) => {
@@ -184,55 +212,55 @@ export default function MenuEditorClient({
 
       {/* Header */}
       <header className="border-b border-red-200/50 bg-white/95 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
-  <div className="px-3 sm:px-4 py-2 sm:py-2.5">
-    <div className="flex items-center justify-between gap-2">
-      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-        <Button 
-          variant="ghost" 
-          asChild 
-          className="text-gray-600 hover:text-red-600 hover:bg-red-50 p-1.5 sm:p-2 transition-colors h-8 w-8 sm:h-auto sm:w-auto sm:px-3"
-        >
-          <Link href="/dashboard">
-            <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline sm:mr-2">العودة</span>
-          </Link>
-        </Button>
-        
-        <div className="w-px h-4 bg-red-200 hidden sm:block"></div>
-        
-        <div className="bg-gradient-to-r from-red-500 to-rose-500 p-1.5 rounded-lg shadow-md flex-shrink-0">
-          <FileText className="h-4 w-4 text-white" />
+        <div className="px-3 sm:px-4 py-2 sm:py-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+              <Button 
+                variant="ghost" 
+                asChild 
+                className="text-gray-600 hover:text-red-600 hover:bg-red-50 p-1.5 sm:p-2 transition-colors h-8 w-8 sm:h-auto sm:w-auto sm:px-3"
+              >
+                <Link href="/dashboard">
+                  <ArrowLeft className="h-4 w-4" />
+                  <span className="hidden sm:inline sm:mr-2">العودة</span>
+                </Link>
+              </Button>
+              
+              <div className="w-px h-4 bg-red-200 hidden sm:block"></div>
+              
+              <div className="bg-gradient-to-r from-red-500 to-rose-500 p-1.5 rounded-lg shadow-md flex-shrink-0">
+                <FileText className="h-4 w-4 text-white" />
+              </div>
+              
+              <div className="min-w-0 flex-1">
+                <h1 className="text-base sm:text-lg font-bold text-gray-900 truncate leading-tight">
+                  محرر القائمة
+                </h1>
+                <p className="text-xs text-gray-600 truncate leading-tight">
+                  {restaurant.name}
+                </p>
+              </div>
+            </div>
+            
+            <Badge 
+              variant="secondary" 
+              className="bg-red-50 text-red-700 border-red-200 text-xs px-2 py-1 font-medium flex-shrink-0"
+            >
+              <span className="hidden sm:inline">
+                {restaurant.category === "both" ? "مطعم ومقهى" : restaurant.category}
+              </span>
+              <span className="sm:hidden">
+                {restaurant.category === "both" ? "مختلط" : 
+                 restaurant.category === "restaurant" ? "مطعم" : "مقهى"}
+              </span>
+            </Badge>
+          </div>
         </div>
-        
-        <div className="min-w-0 flex-1">
-          <h1 className="text-base sm:text-lg font-bold text-gray-900 truncate leading-tight">
-            محرر القائمة
-          </h1>
-          <p className="text-xs text-gray-600 truncate leading-tight">
-            {restaurant.name}
-          </p>
-        </div>
-      </div>
-      
-      <Badge 
-        variant="secondary" 
-        className="bg-red-50 text-red-700 border-red-200 text-xs px-2 py-1 font-medium flex-shrink-0"
-      >
-        <span className="hidden sm:inline">
-          {restaurant.category === "both" ? "مطعم ومقهى" : restaurant.category}
-        </span>
-        <span className="sm:hidden">
-          {restaurant.category === "both" ? "مختلط" : 
-           restaurant.category === "restaurant" ? "مطعم" : "مقهى"}
-        </span>
-      </Badge>
-    </div>
-  </div>
-</header>
+      </header>
 
       {/* Main Content */}
       <main className="px-3 sm:px-4 py-4 sm:py-8 relative z-10">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4 sm:space-y-6">
           <TabsList className="bg-white/70 backdrop-blur-sm border border-red-200 rounded-xl p-1 w-full flex h-auto sm:h-10 gap-1 shadow-sm">
             <TabsTrigger
               value="template"
@@ -294,10 +322,16 @@ export default function MenuEditorClient({
                 )}
 
                 {/* Live Editor */}
+                <MenuEditorProvider
+                  restaurant={restaurant}
+                  initialCategories={menuData}
+                  onRefresh={() => {}}
+                >
                 <LiveMenuEditor
                   restaurant={restaurant}
                   initialMenuData={menuData}
                 />
+                </MenuEditorProvider>
               </div>
             )}
           </TabsContent>
@@ -313,4 +347,4 @@ export default function MenuEditorClient({
       />
     </div>
   )
-}
+} 

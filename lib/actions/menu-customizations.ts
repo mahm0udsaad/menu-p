@@ -1,6 +1,6 @@
 "use server"
 
-import { supabase } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
 export interface MenuCustomizations {
@@ -36,6 +36,8 @@ export interface MenuCustomizations {
 // Get menu customizations for a restaurant
 export async function getMenuCustomizations(restaurantId: string) {
   try {
+    const supabase = createClient()
+    
     // First try to get existing customizations
     const { data: existing, error: fetchError } = await supabase
       .from('menu_customizations')
@@ -47,12 +49,42 @@ export async function getMenuCustomizations(restaurantId: string) {
       return { success: true, data: existing }
     }
 
-    // If not found, create with defaults using our helper function
+    // If not found, create with defaults
+    const defaultCustomizations = {
+      restaurant_id: restaurantId,
+      page_background_settings: {
+        backgroundColor: '#ffffff',
+        backgroundImage: null,
+        backgroundType: 'solid',
+        gradientFrom: '#ffffff',
+        gradientTo: '#f3f4f6',
+        gradientDirection: 'to-b'
+      },
+      font_settings: {
+        arabic: { font: 'cairo', weight: 'normal' },
+        english: { font: 'roboto', weight: 'normal' }
+      },
+      row_styles: {
+        backgroundColor: 'transparent',
+        backgroundImage: null,
+        backgroundType: 'solid',
+        itemColor: '#1f2937',
+        descriptionColor: '#6b7280',
+        priceColor: '#dc2626',
+        textShadow: false
+      },
+      element_styles: {},
+      theme_settings: {}
+    }
+
     const { data, error } = await supabase
-      .rpc('get_or_create_menu_customizations', { restaurant_uuid: restaurantId })
+      .from('menu_customizations')
+      .insert(defaultCustomizations)
+      .select()
+      .single()
 
     if (error) {
-      console.error('Error getting/creating menu customizations:', error)
+      console.error('Error creating menu customizations:', error)
       return { success: false, error: error.message }
     }
 
@@ -76,22 +108,41 @@ export async function savePageBackgroundSettings(
   }
 ) {
   try {
-    const { data, error } = await supabase
-      .rpc('update_page_background_settings', {
-        restaurant_uuid: restaurantId,
-        background_settings: settings
-      })
+    const supabase = createClient()
+    
+    // First check if customizations exist
+    const { data: existing } = await supabase
+      .from('menu_customizations')
+      .select('id')
+      .eq('restaurant_id', restaurantId)
+      .single()
 
-    if (error) {
-      console.error('Error saving page background settings:', error)
-      return { success: false, error: error.message }
+    if (existing) {
+      // Update existing record
+      const { data, error } = await supabase
+        .from('menu_customizations')
+        .update({ page_background_settings: settings })
+        .eq('restaurant_id', restaurantId)
+        .select()
+
+      if (error) {
+        console.error('Error saving page background settings:', error)
+        return { success: false, error: error.message }
+      }
+
+      // Revalidate relevant pages
+      revalidatePath('/menu-editor')
+      revalidatePath('/dashboard')
+
+      return { success: true, data }
+    } else {
+      // Create new record with defaults
+      const result = await getMenuCustomizations(restaurantId)
+      if (result.success) {
+        return await savePageBackgroundSettings(restaurantId, settings)
+      }
+      return result
     }
-
-    // Revalidate relevant pages
-    revalidatePath('/menu-editor')
-    revalidatePath('/dashboard')
-
-    return { success: true, data }
   } catch (error: any) {
     console.error('Error in savePageBackgroundSettings:', error)
     return { success: false, error: error.message }
@@ -107,21 +158,40 @@ export async function saveFontSettings(
   }
 ) {
   try {
-    const { data, error } = await supabase
-      .rpc('update_font_settings', {
-        restaurant_uuid: restaurantId,
-        font_settings_data: settings
-      })
+    const supabase = createClient()
+    
+    // First check if customizations exist
+    const { data: existing } = await supabase
+      .from('menu_customizations')
+      .select('id')
+      .eq('restaurant_id', restaurantId)
+      .single()
 
-    if (error) {
-      console.error('Error saving font settings:', error)
-      return { success: false, error: error.message }
+    if (existing) {
+      // Update existing record
+      const { data, error } = await supabase
+        .from('menu_customizations')
+        .update({ font_settings: settings })
+        .eq('restaurant_id', restaurantId)
+        .select()
+
+      if (error) {
+        console.error('Error saving font settings:', error)
+        return { success: false, error: error.message }
+      }
+
+      revalidatePath('/menu-editor')
+      revalidatePath('/dashboard')
+
+      return { success: true, data }
+    } else {
+      // Create new record with defaults
+      const result = await getMenuCustomizations(restaurantId)
+      if (result.success) {
+        return await saveFontSettings(restaurantId, settings)
+      }
+      return result
     }
-
-    revalidatePath('/menu-editor')
-    revalidatePath('/dashboard')
-
-    return { success: true, data }
   } catch (error: any) {
     console.error('Error in saveFontSettings:', error)
     return { success: false, error: error.message }
@@ -142,21 +212,40 @@ export async function saveRowStyles(
   }
 ) {
   try {
-    const { data, error } = await supabase
-      .rpc('update_row_styles', {
-        restaurant_uuid: restaurantId,
-        row_styles_data: settings
-      })
+    const supabase = createClient()
+    
+    // First check if customizations exist
+    const { data: existing } = await supabase
+      .from('menu_customizations')
+      .select('id')
+      .eq('restaurant_id', restaurantId)
+      .single()
 
-    if (error) {
-      console.error('Error saving row styles:', error)
-      return { success: false, error: error.message }
+    if (existing) {
+      // Update existing record
+      const { data, error } = await supabase
+        .from('menu_customizations')
+        .update({ row_styles: settings })
+        .eq('restaurant_id', restaurantId)
+        .select()
+
+      if (error) {
+        console.error('Error saving row styles:', error)
+        return { success: false, error: error.message }
+      }
+
+      revalidatePath('/menu-editor')
+      revalidatePath('/dashboard')
+
+      return { success: true, data }
+    } else {
+      // Create new record with defaults
+      const result = await getMenuCustomizations(restaurantId)
+      if (result.success) {
+        return await saveRowStyles(restaurantId, settings)
+      }
+      return result
     }
-
-    revalidatePath('/menu-editor')
-    revalidatePath('/dashboard')
-
-    return { success: true, data }
   } catch (error: any) {
     console.error('Error in saveRowStyles:', error)
     return { success: false, error: error.message }
@@ -193,25 +282,47 @@ export async function saveAllCustomizations(
   }
 ) {
   try {
-    const { data, error } = await supabase
-      .rpc('update_all_customizations', {
-        restaurant_uuid: restaurantId,
-        page_bg_settings: settings.page_background_settings || null,
-        font_settings_data: settings.font_settings || null,
-        row_styles_data: settings.row_styles || null,
-        element_styles_data: settings.element_styles || null,
-        theme_settings_data: settings.theme_settings || null
-      })
+    const supabase = createClient()
+    
+    // First check if customizations exist
+    const { data: existing } = await supabase
+      .from('menu_customizations')
+      .select('id')
+      .eq('restaurant_id', restaurantId)
+      .single()
 
-    if (error) {
-      console.error('Error saving all customizations:', error)
-      return { success: false, error: error.message }
+    const updateData: any = {}
+    if (settings.page_background_settings) updateData.page_background_settings = settings.page_background_settings
+    if (settings.font_settings) updateData.font_settings = settings.font_settings
+    if (settings.row_styles) updateData.row_styles = settings.row_styles
+    if (settings.element_styles) updateData.element_styles = settings.element_styles
+    if (settings.theme_settings) updateData.theme_settings = settings.theme_settings
+
+    if (existing) {
+      // Update existing record
+      const { data, error } = await supabase
+        .from('menu_customizations')
+        .update(updateData)
+        .eq('restaurant_id', restaurantId)
+        .select()
+
+      if (error) {
+        console.error('Error saving all customizations:', error)
+        return { success: false, error: error.message }
+      }
+
+      revalidatePath('/menu-editor')
+      revalidatePath('/dashboard')
+
+      return { success: true, data }
+    } else {
+      // Create new record with defaults
+      const result = await getMenuCustomizations(restaurantId)
+      if (result.success) {
+        return await saveAllCustomizations(restaurantId, settings)
+      }
+      return result
     }
-
-    revalidatePath('/menu-editor')
-    revalidatePath('/dashboard')
-
-    return { success: true, data }
   } catch (error: any) {
     console.error('Error in saveAllCustomizations:', error)
     return { success: false, error: error.message }

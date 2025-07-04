@@ -36,7 +36,7 @@ interface Restaurant {
     primary: string
     secondary: string
     accent: string
-  }
+  } | null
 }
 
 interface PdfPreviewModalProps {

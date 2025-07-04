@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Upload, Palette, Layers, Image, Save, RotateCcw } from "lucide-react"
 import { PageBackgroundSettings, useMenuEditor } from '@/contexts/menu-editor-context'
+import { toast } from "sonner"
 
 interface PageBackgroundModalProps {
   isOpen: boolean
@@ -44,26 +46,33 @@ export default function PageBackgroundModal({ isOpen, onClose }: PageBackgroundM
   } = useMenuEditor()
 
   const [settings, setSettings] = useState<PageBackgroundSettings>(pageBackgroundSettings)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
 
     try {
+      setIsUploadingImage(true)
       const imageUrl = await handlePageBgImageUpload(file)
       setSettings(prev => ({
         ...prev,
         backgroundImage: imageUrl,
         backgroundType: 'image'
       }))
+      toast.success("تم رفع صورة الخلفية بنجاح")
     } catch (error) {
       console.error('Failed to upload background image:', error)
+      toast.error("فشل في رفع صورة الخلفية")
+    } finally {
+      setIsUploadingImage(false)
     }
   }
 
   const handleSave = () => {
     setPageBackgroundSettings(settings)
     handleSavePageBackground(settings)
+    toast.success("تم حفظ إعدادات الخلفية بنجاح")
     onClose()
   }
 
@@ -271,17 +280,26 @@ export default function PageBackgroundModal({ isOpen, onClose }: PageBackgroundM
                     onChange={handleImageUpload}
                     className="hidden"
                     id="page-bg-upload"
+                    disabled={isUploadingImage}
                   />
                   <label
                     htmlFor="page-bg-upload"
-                    className="flex items-center gap-2 px-4 py-2 border border-purple-300 rounded-lg cursor-pointer hover:bg-purple-50 transition-colors"
+                    className={`flex items-center gap-2 px-4 py-2 border border-purple-300 rounded-lg transition-colors ${
+                      isUploadingImage 
+                        ? 'cursor-not-allowed opacity-50' 
+                        : 'cursor-pointer hover:bg-purple-50'
+                    }`}
                   >
                     <Upload className="h-4 w-4" />
-                    اختر صورة
+                    {isUploadingImage ? "جاري الرفع..." : "اختر صورة"}
                   </label>
                 </div>
                 
-                {settings.backgroundImage && (
+                {isUploadingImage ? (
+                  <div className="mt-2">
+                    <Skeleton className="w-full h-24 rounded-lg" />
+                  </div>
+                ) : settings.backgroundImage && (
                   <div className="mt-2">
                     <img 
                       src={settings.backgroundImage} 
