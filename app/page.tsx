@@ -47,8 +47,8 @@ export default async function LandingPage({ searchParams }: PageProps) {
     redirect(callbackUrl)
   }
   
-  // Get cookies (no await needed in App Router)
-  const cookieStore = cookies()
+  // Get cookies (ensure we await the cookieStore)
+  const cookieStore = await cookies()
   const supabase = createServerComponentClient({ cookies: () => cookieStore })
 
   const {
@@ -56,7 +56,6 @@ export default async function LandingPage({ searchParams }: PageProps) {
   } = await supabase.auth.getSession()
 
   const user = session?.user
-  let restaurantData = null
 
   // Only fetch restaurant data if user exists to prevent UUID errors
   if (user?.id) {
@@ -78,7 +77,7 @@ export default async function LandingPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-rose-50 via-white to-red-50 text-gray-900 overflow-hidden" dir="rtl">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50/90  to-red-50/90 text-gray-900 overflow-hidden backdrop-blur-sm" dir="rtl">
       <AnimatedBackground />
       <HeaderSection user={user} />
 

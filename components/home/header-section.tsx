@@ -47,8 +47,8 @@ export default function HeaderSection({ user }: HeaderSectionProps) {
       </nav>
 
       <Button asChild className="mx-2 md:mx-8 bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:via-rose-500 hover:to-red-500 shadow-2xl hover:shadow-red-500/30 transition-all duration-500 hover:scale-110 border border-red-400/50 text-lg px-4 md:px-6 py-2 md:py-3 text-white">
-        <Link href={user ? "/dashboard" : "/auth/sign-up"}>
-          {user ? "لوحة التحكم" : "ابدأ الآن"}
+        <Link href={user?.email ? "/dashboard" : "/auth/sign-up"}>
+          {user?.email ? "لوحة التحكم" : "ابدأ الآن"}
         </Link>
       </Button>
     </header>

@@ -1,24 +1,16 @@
 "use client"
 
-import React, { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import React, { useState, useCallback, useMemo, useEffect } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Upload, Palette, Type, Image, Save, RotateCcw } from "lucide-react"
-import { useMenuEditor, colorPalettes } from "@/contexts/menu-editor-context"
-
-interface RowStyleSettings {
-  backgroundColor: string
-  backgroundImage: string | null
-  backgroundType: 'solid' | 'image'
-  itemColor: string
-  descriptionColor: string
-  priceColor: string
-  textShadow: boolean
-}
+import { Upload, Palette, Type, Image, Save, RotateCcw, Eye, Smartphone, Monitor, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from "lucide-react"
+import { useMenuEditor, colorPalettes, type RowStyleSettings, type BorderSetting } from "@/contexts/menu-editor-context"
+import { Switch } from '@/components/ui/switch'
+import { Slider } from '@/components/ui/slider'
+import { ColorPicker } from '@/components/ui/color-picker'
 
 interface RowStylingModalProps {
   isOpen: boolean
@@ -27,7 +19,9 @@ interface RowStylingModalProps {
   currentSettings: RowStyleSettings
 }
 
-// Pre-defined background colors
+type BorderSide = 'borderTop' | 'borderBottom' | 'borderLeft' | 'borderRight'
+
+// Pre-defined background colors - optimized for mobile
 const backgroundColors = [
   { name: 'أبيض', value: '#ffffff' },
   { name: 'رمادي فاتح', value: '#f8fafc' },
@@ -62,9 +56,21 @@ const backgroundPatterns = [
 export default function RowStylingModal({ isOpen, onClose, onSave, currentSettings }: RowStylingModalProps) {
   const [settings, setSettings] = useState<RowStyleSettings>(currentSettings)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [previewMode, setPreviewMode] = useState<'mobile' | 'desktop'>('mobile')
   const { handleUpdateColorPalette, selectedPalette, setSelectedPalette, isUpdatingPalette } = useMenuEditor()
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    setSettings(currentSettings)
+  }, [currentSettings])
+
+  const sampleMenuItem = useMemo(() => ({
+    name: "برجر اللحم المشوي",
+    description: "برجر لحم مشوي طازج مع الخضار والصوص الخاص",
+    price: "45",
+    currency: "ج.م"
+  }), [])
+
+  const handleImageUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
       setSelectedFile(file)
@@ -79,14 +85,14 @@ export default function RowStylingModal({ isOpen, onClose, onSave, currentSettin
       }
       reader.readAsDataURL(file)
     }
-  }
+  }, [])
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     onSave(settings)
     onClose()
-  }
+  }, [settings, onSave, onClose])
 
-  const resetToDefault = () => {
+  const resetToDefault = useCallback(() => {
     setSettings({
       backgroundColor: '#ffffff',
       backgroundImage: null,
@@ -94,394 +100,444 @@ export default function RowStylingModal({ isOpen, onClose, onSave, currentSettin
       itemColor: '#000000',
       descriptionColor: '#6b7280',
       priceColor: '#dc2626',
-      textShadow: false
+      textShadow: false,
+      borderTop: { enabled: false, color: '#e5e7eb', width: 1 },
+      borderBottom: { enabled: false, color: '#e5e7eb', width: 1 },
+      borderLeft: { enabled: false, color: '#e5e7eb', width: 1 },
+      borderRight: { enabled: false, color: '#e5e7eb', width: 1 },
+      borderRadius: 8
     })
-  }
+  }, [])
 
-  const sampleMenuItem = {
-    name: "برجر اللحم المشوي",
-    description: "برجر لحم مشوي طازج مع الخضار والصوص الخاص",
-    price: "45",
-    currency: "ج.م"
-  }
-
-  const getItemBackgroundStyle = () => {
+  const getItemBackgroundStyle = useCallback(() => {
+    const style: React.CSSProperties = {}
     if (settings.backgroundType === 'image' && settings.backgroundImage) {
       if (settings.backgroundImage.includes('|')) {
         const [pattern, size] = settings.backgroundImage.split('|')
-        return {
-          background: pattern,
-          backgroundSize: size
-        }
+        style.background = pattern
+        style.backgroundSize = size
+      } else {
+        style.backgroundImage = `url(${settings.backgroundImage})`
+        style.backgroundSize = 'cover'
+        style.backgroundPosition = 'center'
       }
-      return {
-        backgroundImage: `url(${settings.backgroundImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
-      }
+    } else {
+      style.backgroundColor = settings.backgroundColor
     }
-    return { backgroundColor: settings.backgroundColor }
+    
+    const { borderTop, borderBottom, borderLeft, borderRight, borderRadius } = settings
+    if (borderTop.enabled) style.borderTop = `${borderTop.width}px solid ${borderTop.color}`
+    if (borderBottom.enabled) style.borderBottom = `${borderBottom.width}px solid ${borderBottom.color}`
+    if (borderLeft.enabled) style.borderLeft = `${borderLeft.width}px solid ${borderLeft.color}`
+    if (borderRight.enabled) style.borderRight = `${borderRight.width}px solid ${borderRight.color}`
+    
+    style.borderRadius = `${borderRadius}px`
+
+    return style
+  }, [settings])
+  
+  const handleBorderChange = (side: BorderSide, newValues: Partial<BorderSetting>) => {
+    setSettings(prev => ({
+      ...prev,
+      [side]: {
+        ...prev[side],
+        ...newValues
+      }
+    }))
   }
+  
+  const borderControls: { side: BorderSide; label: string; icon: React.ReactNode }[] = [
+    { side: 'borderTop', label: 'الإطار العلوي', icon: <ArrowUp className="w-4 h-4" /> },
+    { side: 'borderBottom', label: 'الإطار السفلي', icon: <ArrowDown className="w-4 h-4" /> },
+    { side: 'borderLeft', label: 'الإطار الأيسر', icon: <ArrowLeft className="w-4 h-4" /> },
+    { side: 'borderRight', label: 'الإطار الأيمن', icon: <ArrowRight className="w-4 h-4" /> },
+  ]
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <Palette className="h-6 w-6 text-purple-600" />
+      <DialogContent className="max-w-4xl w-full h-[90vh] max-h-[800px] p-0 overflow-hidden">
+        <DialogHeader className="p-4 pb-2 border-b">
+          <DialogTitle className="text-lg font-semibold flex items-center gap-2">
+            <Palette className="w-5 h-5" />
             تخصيص مظهر عناصر القائمة
           </DialogTitle>
+          <DialogDescription>
+            قم بتعديل تصميم صفوف عناصر القائمة.
+          </DialogDescription>
         </DialogHeader>
 
-        {/* Preview Section - First Thing in Modal */}
-        <div className="border-b border-gray-200 pb-6">
-          <h3 className="text-lg font-semibold mb-4">معاينة العنصر</h3>
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <div 
-              className="p-4 rounded-lg border border-gray-200 transition-all"
-              style={getItemBackgroundStyle()}
-            >
-              <div className="flex justify-between items-start">
-                <div className="flex-1 min-w-0">
-                  <h4 
-                    className="text-lg font-semibold mb-1 transition-colors"
-                    style={{ 
-                      color: settings.itemColor,
-                      textShadow: settings.textShadow ? '1px 1px 2px rgba(0,0,0,0.3)' : 'none'
-                    }}
+        <div className="flex flex-col lg:flex-row h-full overflow-auto">
+          {/* Preview Section - Sticky on mobile */}
+          <div className="lg:w-1/3 border-b lg:border-b-0 lg:border-r bg-gray-50 p-4">
+            <div className="sticky top-0">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-medium flex items-center gap-2">
+                  <Eye className="w-4 h-4" />
+                  معاينة العنصر
+                </h3>
+                <div className="flex gap-1 bg-white rounded-lg p-1">
+                  <button
+                    onClick={() => setPreviewMode('mobile')}
+                    className={`p-1.5 rounded ${previewMode === 'mobile' ? 'bg-blue-500 text-white' : 'text-gray-600'}`}
                   >
-                    {sampleMenuItem.name}
-                  </h4>
-                  <p 
-                    className="text-sm mb-2 transition-colors"
-                    style={{ 
-                      color: settings.descriptionColor,
-                      textShadow: settings.textShadow ? '1px 1px 2px rgba(0,0,0,0.2)' : 'none'
-                    }}
+                    <Smartphone className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => setPreviewMode('desktop')}
+                    className={`p-1.5 rounded ${previewMode === 'desktop' ? 'bg-blue-500 text-white' : 'text-gray-600'}`}
                   >
-                    {sampleMenuItem.description}
-                  </p>
+                    <Monitor className="w-3 h-3" />
+                  </button>
                 </div>
+              </div>
+              
+              <div className={`bg-white rounded-lg border shadow-sm ${previewMode === 'mobile' ? 'max-w-sm' : 'w-full'}`}>
                 <div 
-                  className="text-xl font-bold transition-colors ml-4"
-                  style={{ 
-                    color: settings.priceColor,
-                    textShadow: settings.textShadow ? '1px 1px 2px rgba(0,0,0,0.3)' : 'none'
-                  }}
+                  className="p-4 rounded-lg transition-all duration-200"
+                  style={getItemBackgroundStyle()}
                 >
-                  {sampleMenuItem.price} {sampleMenuItem.currency}
+                  <div className="flex justify-between items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h4 
+                        className="font-semibold text-base mb-1 truncate"
+                        style={{ 
+                          color: settings.itemColor,
+                          textShadow: settings.textShadow ? '1px 1px 2px rgba(0,0,0,0.3)' : 'none'
+                        }}
+                      >
+                        {sampleMenuItem.name}
+                      </h4>
+                      <p 
+                        className="text-sm opacity-90 line-clamp-2"
+                        style={{ 
+                          color: settings.descriptionColor,
+                          textShadow: settings.textShadow ? '1px 1px 2px rgba(0,0,0,0.2)' : 'none'
+                        }}
+                      >
+                        {sampleMenuItem.description}
+                      </p>
+                    </div>
+                    <div 
+                      className="font-bold text-lg whitespace-nowrap"
+                      style={{ 
+                        color: settings.priceColor,
+                        textShadow: settings.textShadow ? '1px 1px 2px rgba(0,0,0,0.3)' : 'none'
+                      }}
+                    >
+                      {sampleMenuItem.price} {sampleMenuItem.currency}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <Tabs defaultValue="styling" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="styling">تصميم العناصر</TabsTrigger>
-            <TabsTrigger value="templates">قوالب جاهزة</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="styling" className="space-y-6 mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Background Settings */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Image className="h-5 w-5" />
-                  إعدادات الخلفية
-                </h3>
+          {/* Settings Section */}
+          <div className="flex-1 flex flex-col">
+            <div className="flex-1 overflow-y-auto">
+              <Tabs defaultValue="design" className="h-full flex flex-col">
+                <TabsList className="grid w-full grid-cols-2 sticky top-0 bg-white z-10 border-b rounded-none">
+                  <TabsTrigger value="design" className="flex items-center gap-2">
+                    <Type className="w-4 h-4" />
+                    <span className="hidden sm:inline">تصميم العناصر</span>
+                    <span className="sm:hidden">التصميم</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="palettes" className="flex items-center gap-2">
+                    <Palette className="w-4 h-4" />
+                    <span className="hidden sm:inline">قوالب جاهزة</span>
+                    <span className="sm:hidden">القوالب</span>
+                  </TabsTrigger>
+                </TabsList>
                 
-                {/* Background Type */}
-                <div className="space-y-2">
-                  <Label>نوع الخلفية</Label>
-                  <Select value={settings.backgroundType} onValueChange={(value: 'solid' | 'image') => 
-                    setSettings(prev => ({ ...prev, backgroundType: value }))
-                  }>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="solid">لون صلب</SelectItem>
-                      <SelectItem value="image">صورة خلفية</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Background Color */}
-                {settings.backgroundType === 'solid' && (
-                  <div className="space-y-3">
-                    <Label>لون الخلفية</Label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {backgroundColors.map((color) => (
+                <TabsContent value="design" className="flex-1 p-4 space-y-6 overflow-y-auto pb-20">
+                  {/* Background Settings */}
+                  <div className="space-y-4">
+                    <h3 className="font-medium text-lg border-b pb-2">إعدادات الخلفية</h3>
+                    
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">نوع الخلفية</Label>
+                      <div className="flex gap-2">
                         <button
-                          key={color.value}
-                          className={`w-full h-12 rounded-lg border-2 transition-all ${
-                            settings.backgroundColor === color.value 
-                              ? 'border-purple-500 ring-2 ring-purple-200' 
-                              : 'border-gray-200'
+                          onClick={() => setSettings(prev => ({ ...prev, backgroundType: 'solid' }))}
+                          className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                            settings.backgroundType === 'solid' 
+                              ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                              : 'border-gray-200 hover:border-gray-300'
                           }`}
-                          style={{ backgroundColor: color.value }}
-                          onClick={() => setSettings(prev => ({ ...prev, backgroundColor: color.value }))}
-                          title={color.name}
+                        >
+                          <div className="text-center">
+                            <div className="w-6 h-6 rounded bg-gray-300 mx-auto mb-2"></div>
+                            <span className="text-sm font-medium">لون صلب</span>
+                          </div>
+                        </button>
+                        <button
+                          onClick={() => setSettings(prev => ({ ...prev, backgroundType: 'image' }))}
+                          className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                            settings.backgroundType === 'image' 
+                              ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="text-center">
+                            <Image className="w-6 h-6 mx-auto mb-2" />
+                            <span className="text-sm font-medium">صورة خلفية</span>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+
+                    {settings.backgroundType === 'solid' && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">لون الخلفية</Label>
+                        <ColorPicker
+                          color={settings.backgroundColor}
+                          onChange={(color) => setSettings(prev => ({ ...prev, backgroundColor: color }))}
                         />
+                      </div>
+                    )}
+
+                    {settings.backgroundType === 'image' && (
+                      <div className="space-y-4">
+                        <div>
+                          <Label className="text-sm font-medium">نماذج جاهزة</Label>
+                          <div className="grid grid-cols-2 gap-2 mt-2">
+                            {backgroundPatterns.map((pattern, index) => (
+                              <button
+                                key={index}
+                                className="h-12 border rounded-lg transition-all hover:border-blue-500"
+                                style={{ 
+                                  background: pattern.value,
+                                  backgroundSize: pattern.size
+                                }}
+                                onClick={() => setSettings(prev => ({ 
+                                  ...prev, 
+                                  backgroundImage: `${pattern.value}|${pattern.size}`,
+                                  backgroundType: 'image'
+                                }))}
+                                title={pattern.name}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label className="text-sm font-medium">رفع صورة مخصصة</Label>
+                          <div className="mt-2">
+                            <Label className="flex items-center gap-2 p-3 border-2 border-dashed rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
+                              <Upload className="w-4 h-4" />
+                              <span className="text-sm">اختر صورة</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                className="hidden"
+                              />
+                            </Label>
+                            {selectedFile && (
+                              <p className="text-xs text-gray-600 mt-1">{selectedFile.name}</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Border Settings */}
+                  <div className="space-y-4">
+                    <h3 className="font-medium text-lg border-b pb-2">إعدادات الإطار</h3>
+                    <div className="space-y-2">
+                      <Label htmlFor="border-radius" className="text-sm font-medium">حواف دائرية (Radius)</Label>
+                      <div className="flex items-center gap-4">
+                        <Slider
+                          id="border-radius"
+                          min={0}
+                          max={32}
+                          step={2}
+                          value={[settings.borderRadius]}
+                          onValueChange={(value) => setSettings({ ...settings, borderRadius: value[0] })}
+                          className="flex-1"
+                        />
+                        <span className="text-sm w-12 text-center">{settings.borderRadius}px</span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {borderControls.map(({ side, label, icon }) => (
+                        <div key={side} className="p-3 border rounded-lg space-y-3">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor={`${side}-toggle`} className="flex items-center gap-2 font-medium text-sm">
+                              {icon}
+                              {label}
+                            </Label>
+                            <Switch
+                              id={`${side}-toggle`}
+                              checked={settings[side].enabled}
+                              onCheckedChange={(checked) => handleBorderChange(side, { enabled: checked })}
+                            />
+                          </div>
+
+                          {settings[side].enabled && (
+                            <div className="space-y-4 pt-3 border-t">
+                              <div className="space-y-2">
+                                <Label className="text-xs">لون الإطار</Label>
+                                <ColorPicker
+                                  color={settings[side].color}
+                                  onChange={(color) => handleBorderChange(side, { color })}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs">سماكة الإطار (px)</Label>
+                                <div className="flex items-center gap-2">
+                                   <Slider
+                                      min={1} max={10} step={1}
+                                      value={[settings[side].width]}
+                                      onValueChange={(value) => handleBorderChange(side, { width: value[0] })}
+                                    />
+                                    <span className="text-xs w-10 text-center">{settings[side].width}px</span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="color"
-                        value={settings.backgroundColor}
-                        onChange={(e) => setSettings(prev => ({ ...prev, backgroundColor: e.target.value }))}
-                        className="w-12 h-10 p-1 border rounded"
-                      />
-                      <Input
-                        type="text"
-                        value={settings.backgroundColor}
-                        onChange={(e) => setSettings(prev => ({ ...prev, backgroundColor: e.target.value }))}
-                        placeholder="#ffffff"
-                        className="flex-1"
-                      />
-                    </div>
                   </div>
-                )}
 
-                {/* Background Image */}
-                {settings.backgroundType === 'image' && (
-                  <div className="space-y-3">
-                    <Label>صورة الخلفية</Label>
+                  {/* Text Settings */}
+                  <div className="space-y-4">
+                    <h3 className="font-medium text-lg border-b pb-2">إعدادات النص</h3>
                     
-                    {/* Pattern Options */}
                     <div className="space-y-2">
-                      <Label className="text-sm">نماذج جاهزة:</Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {backgroundPatterns.map((pattern, index) => (
-                          <button
-                            key={index}
-                            className="h-16 rounded-lg border border-gray-200 hover:border-purple-300 transition-colors"
-                            style={{ 
-                              background: pattern.value,
-                              backgroundSize: pattern.size 
-                            }}
-                            onClick={() => setSettings(prev => ({ 
-                              ...prev, 
-                              backgroundImage: `${pattern.value}|${pattern.size}`,
-                              backgroundType: 'image'
-                            }))}
-                            title={pattern.name}
-                          />
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Custom Image Upload */}
-                    <div className="space-y-2">
-                      <Label className="text-sm">رفع صورة مخصصة:</Label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageUpload}
-                          className="hidden"
-                          id="background-upload"
-                        />
-                        <label
-                          htmlFor="background-upload"
-                          className="flex items-center gap-2 px-4 py-2 border border-purple-300 rounded-lg cursor-pointer hover:bg-purple-50 transition-colors"
-                        >
-                          <Upload className="h-4 w-4" />
-                          اختر صورة
-                        </label>
-                        {selectedFile && (
-                          <span className="text-sm text-gray-600">{selectedFile.name}</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Text Style Settings */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Type className="h-5 w-5" />
-                  إعدادات النص
-                </h3>
-
-                {/* Item Name Color */}
-                <div className="space-y-3">
-                  <Label>لون اسم العنصر</Label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {textColors.map((color) => (
-                      <button
-                        key={color.value}
-                        className={`w-full h-10 rounded-lg border-2 transition-all ${
-                          settings.itemColor === color.value 
-                            ? 'border-purple-500 ring-2 ring-purple-200' 
-                            : 'border-gray-200'
-                        }`}
-                        style={{ backgroundColor: color.value }}
-                        onClick={() => setSettings(prev => ({ ...prev, itemColor: color.value }))}
-                        title={color.name}
+                      <Label className="text-sm font-medium">لون اسم العنصر</Label>
+                      <ColorPicker
+                        color={settings.itemColor}
+                        onChange={(color) => setSettings(prev => ({ ...prev, itemColor: color }))}
                       />
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="color"
-                      value={settings.itemColor}
-                      onChange={(e) => setSettings(prev => ({ ...prev, itemColor: e.target.value }))}
-                      className="w-12 h-10 p-1 border rounded"
-                    />
-                    <Input
-                      type="text"
-                      value={settings.itemColor}
-                      onChange={(e) => setSettings(prev => ({ ...prev, itemColor: e.target.value }))}
-                      placeholder="#000000"
-                      className="flex-1"
-                    />
-                  </div>
-                </div>
-
-                {/* Description Color */}
-                <div className="space-y-3">
-                  <Label>لون الوصف</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="color"
-                      value={settings.descriptionColor}
-                      onChange={(e) => setSettings(prev => ({ ...prev, descriptionColor: e.target.value }))}
-                      className="w-12 h-10 p-1 border rounded"
-                    />
-                    <Input
-                      type="text"
-                      value={settings.descriptionColor}
-                      onChange={(e) => setSettings(prev => ({ ...prev, descriptionColor: e.target.value }))}
-                      placeholder="#6b7280"
-                      className="flex-1"
-                    />
-                  </div>
-                </div>
-
-                {/* Price Color */}
-                <div className="space-y-3">
-                  <Label>لون السعر</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="color"
-                      value={settings.priceColor}
-                      onChange={(e) => setSettings(prev => ({ ...prev, priceColor: e.target.value }))}
-                      className="w-12 h-10 p-1 border rounded"
-                    />
-                    <Input
-                      type="text"
-                      value={settings.priceColor}
-                      onChange={(e) => setSettings(prev => ({ ...prev, priceColor: e.target.value }))}
-                      placeholder="#dc2626"
-                      className="flex-1"
-                    />
-                  </div>
-                </div>
-
-                {/* Text Shadow */}
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="textShadow"
-                    checked={settings.textShadow}
-                    onChange={(e) => setSettings(prev => ({ ...prev, textShadow: e.target.checked }))}
-                    className="rounded"
-                  />
-                  <Label htmlFor="textShadow">إضافة ظل للنص</Label>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="templates" className="space-y-6 mt-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Palette className="h-5 w-5" />
-                قوالب الألوان الجاهزة
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {colorPalettes.map((palette) => (
-                  <div
-                    key={palette.id}
-                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                      selectedPalette === palette.id 
-                        ? 'border-purple-500 bg-purple-50' 
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                    onClick={() => {
-                      setSelectedPalette(palette.id)
-                      handleUpdateColorPalette(palette.id)
-                    }}
-                  >
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="flex gap-1">
-                        {palette.preview.map((color, index) => (
-                          <div
-                            key={index}
-                            className="w-4 h-4 rounded-full border border-gray-200"
-                            style={{ backgroundColor: color }}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-sm font-medium">{palette.name}</span>
                     </div>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded"
-                          style={{ backgroundColor: palette.primary }}
-                        />
-                        <span className="text-xs text-gray-600">رئيسي</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded"
-                          style={{ backgroundColor: palette.secondary }}
-                        />
-                        <span className="text-xs text-gray-600">ثانوي</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded"
-                          style={{ backgroundColor: palette.accent }}
-                        />
-                        <span className="text-xs text-gray-600">تمييز</span>
-                      </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">لون الوصف</Label>
+                      <ColorPicker
+                        color={settings.descriptionColor}
+                        onChange={(color) => setSettings(prev => ({ ...prev, descriptionColor: color }))}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">لون السعر</Label>
+                      <ColorPicker
+                        color={settings.priceColor}
+                        onChange={(color) => setSettings(prev => ({ ...prev, priceColor: color }))}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="text-shadow-toggle">تفعيل ظل للنص</Label>
+                      <Switch
+                        id="text-shadow-toggle"
+                        checked={settings.textShadow}
+                        onCheckedChange={(checked) => setSettings({ ...settings, textShadow: checked })}
+                      />
                     </div>
                   </div>
-                ))}
-              </div>
-              
-              {isUpdatingPalette && (
-                <div className="text-center py-4">
-                  <div className="inline-flex items-center gap-2 text-purple-600">
-                    <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-                    جاري تطبيق لوحة الألوان...
-                  </div>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
+                </TabsContent>
 
-        <DialogFooter className="flex gap-2 pt-4 border-t border-gray-200">
-          <Button variant="outline" onClick={resetToDefault}>
-            <RotateCcw className="h-4 w-4 mr-2" />
-            إعادة تعيين
-          </Button>
-          <Button variant="outline" onClick={onClose}>
-            إغلاق
-          </Button>
-          <Button onClick={handleSave} className="bg-purple-600 hover:bg-purple-700 text-white">
-            <Save className="h-4 w-4 mr-2" />
-            حفظ التغييرات
-          </Button>
-        </DialogFooter>
+                <TabsContent value="palettes" className="flex-1 p-4 overflow-y-auto pb-20">
+                  <div className="space-y-4">
+                    <h3 className="font-medium text-lg border-b pb-2">قوالب الألوان الجاهزة</h3>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {colorPalettes.map((palette) => (
+                        <div
+                          key={palette.id}
+                          className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                            selectedPalette === palette.id ? 'border-blue-500 bg-blue-50' : 'hover:border-gray-300'
+                          }`}
+                          onClick={() => {
+                            setSelectedPalette(palette.id)
+                            handleUpdateColorPalette(palette.id)
+                            // Apply palette colors to the current settings
+                            setSettings(prev => ({
+                              ...prev,
+                              itemColor: palette.primary,
+                              descriptionColor: palette.secondary,
+                              priceColor: palette.accent
+                            }))
+                          }}
+                        >
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="flex gap-1">
+                              {palette.preview.map((color, index) => (
+                                <div
+                                  key={index}
+                                  className="w-4 h-4 rounded-full"
+                                  style={{ backgroundColor: color }}
+                                />
+                              ))}
+                            </div>
+                            <span className="font-medium text-sm">{palette.name}</span>
+                          </div>
+                          
+                          <div className="space-y-2 text-xs">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded" style={{ backgroundColor: palette.primary }} />
+                              <span>رئيسي</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded" style={{ backgroundColor: palette.secondary }} />
+                              <span>ثانوي</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded" style={{ backgroundColor: palette.accent }} />
+                              <span>تمييز</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {isUpdatingPalette && (
+                      <div className="flex items-center justify-center p-4">
+                        <div className="flex items-center gap-2 text-blue-600">
+                          <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                          <span className="text-sm">جاري تطبيق لوحة الألوان...</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+            
+            {/* Sticky Footer */}
+            <div className="sticky bottom-0 p-4 border-t bg-white">
+              <div className="flex flex-col sm:flex-row gap-2 w-full">
+                <Button
+                  variant="outline"
+                  onClick={resetToDefault}
+                  className="flex items-center gap-2 order-3 sm:order-1"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  إعادة تعيين
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={onClose}
+                  className="flex-1 order-2 sm:order-2"
+                >
+                  إغلاق
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  className="flex items-center gap-2 flex-1 order-1 sm:order-3"
+                >
+                  <Save className="w-4 h-4" />
+                  حفظ التغييرات
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   )
-} 
+}

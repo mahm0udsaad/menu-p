@@ -3,16 +3,12 @@
 import React from "react"
 import { DndProvider } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
 import { useMenuEditor, type Restaurant, type MenuCategory } from "@/contexts/menu-editor-context"
 import { MenuHeader } from "./menu-header"
 import { MenuSection } from "./menu-section"
-import { ColorPaletteModal } from "./color-palette-modal"
 import { FontSettingsModal } from "./font-settings-modal"
 import { MenuFooter } from "./menu-footer"
 import RowStylingModal from '@/components/row-styling-modal'
-
 import PageBackgroundModal from '@/components/editor/page-background-modal'
 import { StickyControlBar } from './floating-controls'
 
@@ -26,23 +22,15 @@ interface ProfessionalCafeMenuPreviewProps {
 const MenuContent: React.FC = () => {
   const {
     categories,
-    currentPalette,
-    appliedMenuStyles,
     appliedFontSettings,
-    handleAddCategory,
     showRowStylingModal,
     setShowRowStylingModal,
     rowStyleSettings,
     handleSaveRowStyles,
-
     appliedPageBackgroundSettings,
-    showColorModal,
     showDesignModal,
     showPageBackgroundModal,
-    setShowColorModal,
-    setShowDesignModal,
     setShowPageBackgroundModal,
-    appliedRowStyles,
   } = useMenuEditor()
 
   const isEmpty = categories.length === 0
@@ -89,7 +77,7 @@ const MenuContent: React.FC = () => {
                 <p className="text-gray-500 mb-6">ابدأ بإضافة أقسام وعناصر لقائمتك</p>
               </div>
             ) : (
-              categories.map((category, index) => (
+              categories.map((category: MenuCategory) => (
                 <MenuSection
                   key={category.id}
                   category={category}
@@ -103,7 +91,6 @@ const MenuContent: React.FC = () => {
         </div>
 
         {/* Modals */}
-        {showColorModal && <ColorPaletteModal />}
         {showDesignModal && <FontSettingsModal />}
         <RowStylingModal
           isOpen={showRowStylingModal}
@@ -115,8 +102,6 @@ const MenuContent: React.FC = () => {
           isOpen={showPageBackgroundModal}
           onClose={() => setShowPageBackgroundModal(false)}
         />
-
-
       </div>
     </DndProvider>
   )

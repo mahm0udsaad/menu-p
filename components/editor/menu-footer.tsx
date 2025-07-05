@@ -1,81 +1,106 @@
 "use client"
 
-import React from 'react'
-import InlineEditable from "../inline-editable"
+import React, { useState, useEffect } from 'react'
+import { useMenuEditor } from '@/contexts/menu-editor-context'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { Edit, Save, X } from 'lucide-react'
 
-export const MenuFooter: React.FC = () => {
+export const MenuFooter = () => {
+  const { 
+    restaurant, 
+    handleUpdateRestaurantDetails, // Assuming this will be implemented to save the data
+    isEditingFooter,
+    setIsEditingFooter
+  } = useMenuEditor()
+
+  const [localRestaurant, setLocalRestaurant] = useState(restaurant)
+
+  useEffect(() => {
+    setLocalRestaurant(restaurant)
+  }, [restaurant])
+
+  const handleInputChange = (field: keyof typeof localRestaurant, value: string) => {
+    setLocalRestaurant(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleSave = () => {
+    handleUpdateRestaurantDetails(localRestaurant)
+    setIsEditingFooter(false)
+  }
+
+  const handleCancel = () => {
+    setLocalRestaurant(restaurant) // Revert changes
+    setIsEditingFooter(false)
+  }
+
+  // Placeholder content if details are missing
+  const footerContent = {
+    address: localRestaurant?.address || '123 Foodie Lane, Flavor Town',
+    phone: localRestaurant?.phone || '+1 (234) 567-890',
+    website: localRestaurant?.website || 'www.your-restaurant.com'
+  }
+
   return (
-    <div className="mt-8 text-center space-y-4">
-      <div className="bg-white p-6 rounded-lg shadow-sm">
-        <div className="grid md:grid-cols-3 gap-6 text-sm text-gray-600">
-          <div>
-            <InlineEditable
-              value="ساعات العمل"
-              onSave={(value) => console.log("Hours title update:", value)}
-              className="font-serif text-gray-800 mb-2 block text-center"
-              placeholder="عنوان الساعات"
-            />
-            <InlineEditable
-              value="الاثنين - الخميس: 7:00 ص - 9:00 م"
-              onSave={(value) => console.log("Hours 1 update:", value)}
-              className="block text-center"
-              placeholder="ساعات العمل"
-            />
-            <InlineEditable
-              value="الجمعة - السبت: 7:00 ص - 10:00 م"
-              onSave={(value) => console.log("Hours 2 update:", value)}
-              className="block text-center"
-              placeholder="ساعات نهاية الأسبوع"
-            />
-            <InlineEditable
-              value="الأحد: 8:00 ص - 8:00 م"
-              onSave={(value) => console.log("Hours 3 update:", value)}
-              className="block text-center"
-              placeholder="ساعات الأحد"
-            />
+    <footer className="mt-12 p-6 bg-gray-50 text-center text-gray-600 text-sm relative">
+      {isEditingFooter ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-1">
+              <Label htmlFor="footer-address">العنوان</Label>
+              <Input 
+                id="footer-address"
+                value={footerContent.address} 
+                onChange={(e) => handleInputChange('address', e.target.value)}
+                className="text-center bg-white"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="footer-phone">الهاتف</Label>
+              <Input 
+                id="footer-phone"
+                value={footerContent.phone} 
+                onChange={(e) => handleInputChange('phone', e.target.value)}
+                className="text-center bg-white"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="footer-website">الموقع الإلكتروني</Label>
+              <Input 
+                id="footer-website"
+                value={footerContent.website} 
+                onChange={(e) => handleInputChange('website', e.target.value)}
+                className="text-center bg-white"
+              />
+            </div>
           </div>
-          <div>
-            <InlineEditable
-              value="العنوان"
-              onSave={(value) => console.log("Address title update:", value)}
-              className="font-serif text-gray-800 mb-2 block text-center"
-              placeholder="عنوان القسم"
-            />
-            <InlineEditable
-              value="123 شارع الطعام"
-              onSave={(value) => console.log("Address update:", value)}
-              className="block text-center"
-              placeholder="العنوان"
-            />
-            <InlineEditable
-              value="المدينة، المنطقة 12345"
-              onSave={(value) => console.log("City update:", value)}
-              className="block text-center"
-              placeholder="المدينة والرمز البريدي"
-            />
-          </div>
-          <div>
-            <InlineEditable
-              value="التواصل"
-              onSave={(value) => console.log("Contact title update:", value)}
-              className="font-serif text-gray-800 mb-2 block text-center"
-              placeholder="عنوان التواصل"
-            />
-            <InlineEditable
-              value="(555) 123-4567"
-              onSave={(value) => console.log("Phone update:", value)}
-              className="block text-center"
-              placeholder="رقم الهاتف"
-            />
-            <InlineEditable
-              value="info@restaurant.com"
-              onSave={(value) => console.log("Email update:", value)}
-              className="block text-center"
-              placeholder="البريد الإلكتروني"
-            />
+          <div className="flex justify-center gap-2 mt-4">
+            <Button onClick={handleSave} size="sm">
+              <Save className="w-4 h-4 ml-2" />
+              حفظ
+            </Button>
+            <Button onClick={handleCancel} variant="outline" size="sm">
+              <X className="w-4 h-4 ml-2" />
+              إلغاء
+            </Button>
           </div>
         </div>
-      </div>
-    </div>
+      ) : (
+        <div className="flex flex-col md:flex-row justify-around items-center gap-4">
+          <p>{footerContent.address}</p>
+          <p>{footerContent.phone}</p>
+          <p>{footerContent.website}</p>
+          <Button 
+            onClick={() => setIsEditingFooter(true)} 
+            variant="ghost" 
+            size="icon" 
+            className="absolute top-2 right-2"
+          >
+            <Edit className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
+    </footer>
   )
 } 

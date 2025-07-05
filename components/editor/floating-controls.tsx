@@ -7,7 +7,6 @@ import { useMenuEditor } from '@/contexts/menu-editor-context'
 
 export const StickyControlBar: React.FC = () => {
   const {
-    setShowColorModal,
     setShowDesignModal,
     setShowRowStylingModal,
     setShowPageBackgroundModal,
@@ -19,17 +18,6 @@ export const StickyControlBar: React.FC = () => {
     <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
       <div className="max-w-4xl mx-auto px-4 py-3">
         <div className="flex items-center justify-center gap-3">
-          {/* Color Templates Button */}
-          <Button
-            onClick={() => setShowColorModal(true)}
-            variant="outline"
-            className="flex items-center gap-2 text-purple-600 hover:text-purple-700 border-purple-600 hover:border-purple-700 shadow-sm hover:shadow-md transition-all px-4 py-2 h-10"
-            title="ألوان"
-          >
-            <Palette className="h-4 w-4" />
-            <span className="text-sm font-medium">ألوان</span>
-          </Button>
-
           {/* Font Settings Button */}
           <Button
             onClick={() => setShowDesignModal(true)}

@@ -48,6 +48,7 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     request.nextUrl.pathname.startsWith("/auth/sign-up") ||
     request.nextUrl.pathname.startsWith("/auth/forgot-password") ||
     request.nextUrl.pathname.startsWith("/auth/reset-password") ||
+    request.nextUrl.pathname.startsWith("/saas-support") ||
     request.nextUrl.pathname === "/auth/callback"
 
   // Allow home page and menu pages for public access (no auth required)

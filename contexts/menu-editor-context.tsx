@@ -12,6 +12,7 @@ import {
   saveRowStyles,
   saveAllCustomizations 
 } from "@/lib/actions/menu-customizations"
+import { updateRestaurantDetails } from '@/lib/actions/restaurant'
 
 // Types
 export interface MenuItem {
@@ -27,6 +28,7 @@ export interface MenuItem {
   category_id?: string
   created_at?: string
   updated_at?: string
+  isTemporary?: boolean
 }
 
 export interface MenuCategory {
@@ -49,6 +51,9 @@ export interface Restaurant {
     secondary: string
     accent: string
   } | null
+  address?: string
+  phone?: string
+  website?: string
 }
 
 export interface SimplifiedFontSettings {
@@ -64,6 +69,11 @@ export interface RowStyleSettings {
   descriptionColor: string
   priceColor: string
   textShadow: boolean
+  borderTop: BorderSetting
+  borderBottom: BorderSetting
+  borderLeft: BorderSetting
+  borderRight: BorderSetting
+  borderRadius: number
 }
 
 export interface PageBackgroundSettings {
@@ -75,64 +85,20 @@ export interface PageBackgroundSettings {
   gradientDirection: 'to-b' | 'to-br' | 'to-r' | 'to-tr'
 }
 
-export interface MenuStyles {
-  backgroundColor: string
-  backgroundType: 'solid' | 'gradient'
-  gradientFrom: string
-  gradientTo: string
-  gradientDirection: 'to-b' | 'to-br' | 'to-r' | 'to-tr'
+export interface BorderSetting {
+  enabled: boolean
+  color: string
+  width: number
 }
 
 // Color palettes
 export const colorPalettes = [
-  {
-    id: "emerald",
-    name: "زمردي كلاسيكي",
-    primary: "#10b981",
-    secondary: "#059669",
-    accent: "#34d399",
-    preview: ["#10b981", "#059669", "#34d399", "#a7f3d0"]
-  },
-  {
-    id: "amber",
-    name: "عنبري دافئ",
-    primary: "#f59e0b",
-    secondary: "#d97706",
-    accent: "#fbbf24",
-    preview: ["#f59e0b", "#d97706", "#fbbf24", "#fde68a"]
-  },
-  {
-    id: "rose",
-    name: "وردي أنيق",
-    primary: "#e11d48",
-    secondary: "#be185d",
-    accent: "#f43f5e",
-    preview: ["#e11d48", "#be185d", "#f43f5e", "#fda4af"]
-  },
-  {
-    id: "blue",
-    name: "أزرق احترافي",
-    primary: "#3b82f6",
-    secondary: "#2563eb",
-    accent: "#60a5fa",
-    preview: ["#3b82f6", "#2563eb", "#60a5fa", "#93c5fd"]
-  },
-  {
-    id: "purple",
-    name: "بنفسجي ملكي",
-    primary: "#8b5cf6",
-    secondary: "#7c3aed",
-    accent: "#a78bfa",
-    preview: ["#8b5cf6", "#7c3aed", "#a78bfa", "#c4b5fd"]
-  },
-  {
-    id: "teal",
-    name: "تيل عصري",
-    primary: "#14b8a6",
-    secondary: "#0d9488",
-    accent: "#2dd4bf",
-    preview: ["#14b8a6", "#0d9488", "#2dd4bf", "#7dd3fc"]
-  }
+  { id: "emerald", name: "زمردي كلاسيكي", primary: "#10b981", secondary: "#059669", accent: "#34d399", preview: ["#10b981", "#059669", "#34d399", "#a7f3d0"] },
+  { id: "amber", name: "عنبري دافئ", primary: "#f59e0b", secondary: "#d97706", accent: "#fbbf24", preview: ["#f59e0b", "#d97706", "#fbbf24", "#fde68a"] },
+  { id: "rose", name: "وردي أنيق", primary: "#e11d48", secondary: "#be185d", accent: "#f43f5e", preview: ["#e11d48", "#be185d", "#f43f5e", "#fda4af"] },
+  { id: "blue", name: "أزرق احترافي", primary: "#3b82f6", secondary: "#2563eb", accent: "#60a5fa", preview: ["#3b82f6", "#2563eb", "#60a5fa", "#93c5fd"] },
+  { id: "purple", name: "بنفسجي ملكي", primary: "#8b5cf6", secondary: "#7c3aed", accent: "#a78bfa", preview: ["#8b5cf6", "#7c3aed", "#a78bfa", "#c4b5fd"] },
+  { id: "teal", name: "تيل عصري", primary: "#14b8a6", secondary: "#0d9488", accent: "#2dd4bf", preview: ["#14b8a6", "#0d9488", "#2dd4bf", "#7dd3fc"] }
 ]
 
 // Context interface
@@ -143,8 +109,6 @@ interface MenuEditorContextType {
   currentPalette: any
   fontSettings: SimplifiedFontSettings
   appliedFontSettings: SimplifiedFontSettings
-  menuStyles: MenuStyles
-  appliedMenuStyles: MenuStyles
   rowStyleSettings: RowStyleSettings
   appliedRowStyles: RowStyleSettings
   pageBackgroundSettings: PageBackgroundSettings
@@ -153,6 +117,7 @@ interface MenuEditorContextType {
   isUpdatingPalette: boolean
   isUploadingLogo: boolean
   isLoadingDummy: boolean
+  isEditingFooter: boolean
   
   // Modal states
   showColorModal: boolean
@@ -177,7 +142,6 @@ interface MenuEditorContextType {
   setCategories: React.Dispatch<React.SetStateAction<MenuCategory[]>>
   setCurrentPalette: React.Dispatch<React.SetStateAction<any>>
   setFontSettings: React.Dispatch<React.SetStateAction<SimplifiedFontSettings>>
-  setMenuStyles: React.Dispatch<React.SetStateAction<MenuStyles>>
   setRowStyleSettings: React.Dispatch<React.SetStateAction<RowStyleSettings>>
   setPageBackgroundSettings: React.Dispatch<React.SetStateAction<PageBackgroundSettings>>
   setSelectedPalette: React.Dispatch<React.SetStateAction<string>>
@@ -185,11 +149,13 @@ interface MenuEditorContextType {
   setShowDesignModal: React.Dispatch<React.SetStateAction<boolean>>
   setShowRowStylingModal: React.Dispatch<React.SetStateAction<boolean>>
   setShowPageBackgroundModal: React.Dispatch<React.SetStateAction<boolean>>
+  setIsEditingFooter: React.Dispatch<React.SetStateAction<boolean>>
   
   // Functions
-  handleAddItem: (categoryId: string) => Promise<void>
+  handleAddItem: (categoryId: string) => void
   handleUpdateItem: (updatedItem: MenuItem) => void
   handleDeleteItem: (itemId: string) => Promise<void>
+  handleSaveNewItem: (item: MenuItem) => Promise<void>
   handleUpdateCategory: (categoryId: string, field: string, value: string | null) => Promise<void>
   handleDeleteCategory: (categoryId: string) => Promise<void>
   handleAddCategory: () => Promise<void>
@@ -201,6 +167,7 @@ interface MenuEditorContextType {
   handleSaveDesignChanges: () => void
   handleSaveRowStyles: (newSettings: RowStyleSettings) => void
   handleSavePageBackground: (newSettings: PageBackgroundSettings) => void
+  handleUpdateRestaurantDetails: (details: Partial<Restaurant>) => Promise<void>
   handleBgImageUpload: (file: File, categoryId: string) => Promise<void>
   handlePageBgImageUpload: (file: File) => Promise<string>
   
@@ -242,70 +209,52 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
   const [isUpdatingPalette, setIsUpdatingPalette] = useState(false)
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const [isLoadingDummy, setIsLoadingDummy] = useState(false)
+  const [isEditingFooter, setIsEditingFooter] = useState(false)
 
-  // Font and style settings
-  const [fontSettings, setFontSettings] = useState<SimplifiedFontSettings>({
+  // Default settings
+  const defaultFontSettings: SimplifiedFontSettings = {
     arabic: { font: 'cairo', weight: '400' },
     english: { font: 'open-sans', weight: '400' }
-  })
-  const [appliedFontSettings, setAppliedFontSettings] = useState<SimplifiedFontSettings>({
-    arabic: { font: 'cairo', weight: '400' },
-    english: { font: 'open-sans', weight: '400' }
-  })
-  const [menuStyles, setMenuStyles] = useState<MenuStyles>({
-    backgroundColor: '#ffffff',
-    backgroundType: 'solid',
-    gradientFrom: '#ffffff',
-    gradientTo: '#f8fafc',
-    gradientDirection: 'to-b'
-  })
-  const [appliedMenuStyles, setAppliedMenuStyles] = useState<MenuStyles>({
-    backgroundColor: '#ffffff',
-    backgroundType: 'solid',
-    gradientFrom: '#ffffff',
-    gradientTo: '#f8fafc',
-    gradientDirection: 'to-b'
-  })
-  const [rowStyleSettings, setRowStyleSettings] = useState<RowStyleSettings>({
+  }
+  const defaultRowStyles: RowStyleSettings = {
     backgroundColor: '#ffffff',
     backgroundImage: null,
     backgroundType: 'solid',
     itemColor: '#000000',
     descriptionColor: '#6b7280',
     priceColor: '#dc2626',
-    textShadow: false
-  })
-  const [appliedRowStyles, setAppliedRowStyles] = useState<RowStyleSettings>({
-    backgroundColor: '#ffffff',
-    backgroundImage: null,
-    backgroundType: 'solid',
-    itemColor: '#000000',
-    descriptionColor: '#6b7280',
-    priceColor: '#dc2626',
-    textShadow: false
-  })
-  const [pageBackgroundSettings, setPageBackgroundSettings] = useState<PageBackgroundSettings>({
+    textShadow: false,
+    borderTop: { enabled: false, color: '#e5e7eb', width: 1 },
+    borderBottom: { enabled: false, color: '#e5e7eb', width: 1 },
+    borderLeft: { enabled: false, color: '#e5e7eb', width: 1 },
+    borderRight: { enabled: false, color: '#e5e7eb', width: 1 },
+    borderRadius: 8,
+  }
+  const defaultPageBackground: PageBackgroundSettings = {
     backgroundColor: '#ffffff',
     backgroundImage: null,
     backgroundType: 'solid',
     gradientFrom: '#ffffff',
     gradientTo: '#f8fafc',
     gradientDirection: 'to-b'
-  })
-  const [appliedPageBackgroundSettings, setAppliedPageBackgroundSettings] = useState<PageBackgroundSettings>({
-    backgroundColor: '#ffffff',
-    backgroundImage: null,
-    backgroundType: 'solid',
-    gradientFrom: '#ffffff',
-    gradientTo: '#f8fafc',
-    gradientDirection: 'to-b'
-  })
+  }
 
+  // Live settings state (what's in the modals)
+  const [fontSettings, setFontSettings] = useState<SimplifiedFontSettings>(defaultFontSettings)
+  const [rowStyleSettings, setRowStyleSettings] = useState<RowStyleSettings>(defaultRowStyles)
+  const [pageBackgroundSettings, setPageBackgroundSettings] = useState<PageBackgroundSettings>(defaultPageBackground)
+
+  // Applied settings state (what's shown in the preview)
+  const [appliedFontSettings, setAppliedFontSettings] = useState<SimplifiedFontSettings>(defaultFontSettings)
+  const [appliedRowStyles, setAppliedRowStyles] = useState<RowStyleSettings>(defaultRowStyles)
+  const [appliedPageBackgroundSettings, setAppliedPageBackgroundSettings] = useState<PageBackgroundSettings>(defaultPageBackground)
+  
   // Modal states
   const [showColorModal, setShowColorModal] = useState(false)
   const [showDesignModal, setShowDesignModal] = useState(false)
   const [showRowStylingModal, setShowRowStylingModal] = useState(false)
   const [showPageBackgroundModal, setShowPageBackgroundModal] = useState(false)
+
   const [notification, setNotification] = useState<{
     show: boolean
     type: "success" | "error" | "warning" | "info"
@@ -336,23 +285,11 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
   // Utility functions
   const showNotification = useCallback((type: "success" | "error" | "warning" | "info", title: string, description: string) => {
     if (type === "success") {
-      toast({
-        title,
-        description,
-        variant: "default",
-      })
+      toast({ title, description, variant: "default" })
     } else if (type === "error") {
-      toast({
-        title,
-        description,
-        variant: "destructive",
-      })
+      toast({ title, description, variant: "destructive" })
     } else {
-      toast({
-        title,
-        description,
-        variant: "default",
-      })
+      toast({ title, description, variant: "default" })
     }
   }, [toast])
 
@@ -378,201 +315,208 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
       try {
         const result = await getMenuCustomizations(restaurant.id)
         if (result.success && result.data) {
-          const customizations = result.data
+          const customizations = result.data as any
           
-          // Load font settings if available
           if (customizations.font_settings) {
             setFontSettings(customizations.font_settings)
             setAppliedFontSettings(customizations.font_settings)
           }
-          
-          // Load page background settings if available
-          if (customizations.page_background_settings && Object.keys(customizations.page_background_settings).length > 0) {
+          if (customizations.page_background_settings) {
             setPageBackgroundSettings(customizations.page_background_settings)
             setAppliedPageBackgroundSettings(customizations.page_background_settings)
           }
-          
-          // Load row styles if available
           if (customizations.row_styles) {
-            setRowStyleSettings(customizations.row_styles)
-            setAppliedRowStyles(customizations.row_styles)
+            // Gracefully handle old border format
+            const incomingStyles = customizations.row_styles;
+            if (typeof incomingStyles.border === 'boolean') {
+              const allBorders: BorderSetting = { enabled: incomingStyles.border, color: incomingStyles.borderColor, width: 1 };
+              setRowStyleSettings({
+                ...defaultRowStyles,
+                ...incomingStyles,
+                borderTop: allBorders,
+                borderBottom: allBorders,
+                borderLeft: allBorders,
+                borderRight: allBorders,
+                borderRadius: incomingStyles.borderRadius,
+              });
+              setAppliedRowStyles({
+                ...defaultRowStyles,
+                ...incomingStyles,
+                borderTop: allBorders,
+                borderBottom: allBorders,
+                borderLeft: allBorders,
+                borderRight: allBorders,
+                borderRadius: incomingStyles.borderRadius,
+              });
+            } else {
+              setRowStyleSettings(incomingStyles)
+              setAppliedRowStyles(incomingStyles)
+            }
           }
         }
       } catch (error) {
         console.error('Error loading customizations:', error)
-        // Silently use defaults on error
       }
     }
-
     loadCustomizations()
   }, [restaurant.id])
 
   // Menu item functions
-  const handleAddItem = useCallback(async (categoryId: string) => {
-    const result = await quickAddItem(categoryId, restaurant.id)
-    if (result.success && result.item) {
-      setCategories((prev) =>
-        prev.map((cat) =>
-          cat.id === categoryId ? { ...cat, menu_items: [...cat.menu_items, result.item as MenuItem] } : cat,
-        ),
-      )
-      showNotification("success", "تم إضافة العنصر", "تم إضافة عنصر جديد للقائمة بنجاح")
-    } else {
-      showNotification("error", "فشل في إضافة العنصر", result.error || "حدث خطأ غير متوقع")
+  const handleAddItem = useCallback((categoryId: string) => {
+    const tempId = `temp_${Date.now()}`
+    const newItem: MenuItem = {
+      id: tempId,
+      name: '',
+      description: null,
+      price: null,
+      image_url: null,
+      is_available: true,
+      is_featured: false,
+      dietary_info: [],
+      display_order: 0,
+      category_id: categoryId,
+      isTemporary: true
+    }
+    setCategories(prev => prev.map(cat => cat.id === categoryId ? { ...cat, menu_items: [...cat.menu_items, newItem] } : cat))
+    showNotification("success", "تم إضافة العنصر", "اضغط حفظ لحفظ التغييرات.")
+  }, [showNotification])
+
+  const handleSaveNewItem = useCallback(async (item: MenuItem) => {
+    if (!item.isTemporary) return
+    if (!item.name.trim()) {
+      showNotification("error", "خطأ", "يجب إدخال اسم العنصر")
+      return
+    }
+
+    try {
+      const result = await quickAddItem(item.category_id!, restaurant.id)
+      if (result.success && result.item) {
+        const finalItem: MenuItem = { ...result.item, ...item, isTemporary: false }
+        setCategories(prev => prev.map(cat => ({
+          ...cat,
+          menu_items: cat.menu_items.map(i => i.id === item.id ? finalItem : i),
+        })))
+        showNotification("success", "تم الحفظ", "تم حفظ العنصر بنجاح")
+      } else {
+        showNotification("error", "فشل الحفظ", result.error || "حدث خطأ")
+      }
+    } catch (error) {
+      showNotification("error", "فشل الحفظ", "حدث خطأ")
     }
   }, [restaurant.id, showNotification])
 
   const handleUpdateItem = useCallback((updatedItem: MenuItem) => {
-    setCategories((prev) =>
-      prev.map((cat) => ({
-        ...cat,
-        menu_items: cat.menu_items.map((item) => (item.id === updatedItem.id ? updatedItem : item)),
-      })),
-    )
+    setCategories(prev => prev.map(cat => ({
+      ...cat,
+      menu_items: cat.menu_items.map(item => item.id === updatedItem.id ? updatedItem : item),
+    })))
   }, [])
 
   const handleDeleteItem = useCallback(async (itemId: string) => {
-    showConfirmation(
-      "حذف العنصر",
-      "هل أنت متأكد من حذف هذا العنصر من القائمة؟",
-      async () => {
-        const result = await quickDeleteItem(itemId)
-        if (result.success) {
-          setCategories((prev) =>
-            prev.map((cat) => ({
-              ...cat,
-              menu_items: cat.menu_items.filter((item) => item.id !== itemId),
-            })),
-          )
-          showNotification("success", "تم حذف العنصر", "تم حذف العنصر من القائمة بنجاح")
-        } else {
-          showNotification("error", "فشل في حذف العنصر", result.error || "حدث خطأ غير متوقع")
-        }
-      },
-      "danger"
-    )
-  }, [showConfirmation, showNotification])
+    if (itemId.startsWith('temp_')) {
+      setCategories(prev => prev.map(cat => ({ ...cat, menu_items: cat.menu_items.filter(item => item.id !== itemId) })))
+      showNotification("success", "تم الحذف", "تم حذف العنصر المؤقت")
+      return
+    }
+    const result = await quickDeleteItem(itemId)
+    if (result.success) {
+      setCategories(prev => prev.map(cat => ({ ...cat, menu_items: cat.menu_items.filter(item => item.id !== itemId) })))
+      showNotification("success", "تم الحذف", "تم حذف العنصر بنجاح")
+    } else {
+      showNotification("error", "فشل الحذف", result.error || "حدث خطأ")
+    }
+  }, [showNotification])
 
   // Category functions
   const handleUpdateCategory = useCallback(async (categoryId: string, field: string, value: string | null) => {
     const result = await quickUpdateCategory(categoryId, field, value)
     if (result.success) {
-      setCategories((prev) => prev.map((cat) => (cat.id === categoryId ? { ...cat, [field]: value } : cat)))
+      setCategories(prev => prev.map(cat => (cat.id === categoryId ? { ...cat, [field]: value } : cat)))
     } else {
-      showNotification("error", "فشل في تحديث القسم", result.error || "حدث خطأ غير متوقع")
-      onRefresh() // Revert on error
+      showNotification("error", "فشل التحديث", result.error || "حدث خطأ")
+      onRefresh()
     }
   }, [showNotification, onRefresh])
 
   const handleDeleteCategory = useCallback(async (categoryId: string) => {
     const result = await quickDeleteCategory(categoryId)
     if (result.success) {
-      setCategories((prev) => prev.filter((cat) => cat.id !== categoryId))
-      showNotification("success", "تم حذف القسم", "تم حذف القسم وجميع عناصره بنجاح")
+      setCategories(prev => prev.filter(cat => cat.id !== categoryId))
+      showNotification("success", "تم الحذف", "تم حذف القسم بنجاح")
     } else {
-      showNotification("error", "فشل في حذف القسم", result.error || "حدث خطأ غير متوقع")
+      showNotification("error", "فشل الحذف", result.error || "حدث خطأ")
     }
   }, [showNotification])
 
   const handleAddCategory = useCallback(async () => {
     const result = await quickAddCategory(restaurant.id, "قسم جديد")
     if (result.success && result.category) {
-      setCategories((prev) => [...prev, { ...result.category, menu_items: [] }])
-      showNotification("success", "تم إضافة القسم", "تم إضافة قسم جديد للقائمة بنجاح")
+      setCategories(prev => [...prev, { ...result.category, menu_items: [] }])
+      showNotification("success", "تم الإضافة", "تم إضافة قسم جديد")
     } else {
-      showNotification("error", "فشل في إضافة القسم", result.error || "حدث خطأ غير متوقع")
+      showNotification("error", "فشل الإضافة", result.error || "حدث خطأ")
     }
   }, [restaurant.id, showNotification])
 
   // Drag and drop functions
   const moveItem = useCallback((categoryId: string, dragIndex: number, hoverIndex: number) => {
-    setCategories((prevCategories) => {
-      const newCategories = [...prevCategories]
-      const categoryIndex = newCategories.findIndex((cat) => cat.id === categoryId)
-      if (categoryIndex === -1) return prevCategories
-
-      const category = newCategories[categoryIndex]
-      const newItems = [...category.menu_items]
+    setCategories(prev => {
+      const newCategories = [...prev]
+      const catIndex = newCategories.findIndex(c => c.id === categoryId)
+      if (catIndex === -1) return prev
+      const newItems = [...newCategories[catIndex].menu_items]
       const [draggedItem] = newItems.splice(dragIndex, 1)
       newItems.splice(hoverIndex, 0, draggedItem)
-
-      newCategories[categoryIndex] = { ...category, menu_items: newItems }
+      newCategories[catIndex] = { ...newCategories[catIndex], menu_items: newItems }
       return newCategories
     })
   }, [])
 
   const handleDropItem = useCallback(async (categoryId: string) => {
-    const category = categories.find((c) => c.id === categoryId)
-    if (!category) return
-
-    const itemIds = category.menu_items.map((item) => item.id)
-    await reorderMenuItems(categoryId, itemIds)
-    onRefresh() // Refresh from DB to ensure order is persisted
+    const category = categories.find(c => c.id === categoryId)
+    if (category) {
+      await reorderMenuItems(categoryId, category.menu_items.map(item => item.id))
+      onRefresh()
+    }
   }, [categories, onRefresh])
 
   // File upload functions
   const handleLogoUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
-
     setIsUploadingLogo(true)
     try {
       const fileExt = file.name.split('.').pop()
       const fileName = `${restaurant.id}-logo-${Date.now()}.${fileExt}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('restaurant-logos')
-        .upload(fileName, file)
-
+      const { error: uploadError } = await supabase.storage.from('restaurant-logos').upload(fileName, file)
       if (uploadError) throw uploadError
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('restaurant-logos')
-        .getPublicUrl(fileName)
-
-      // Update restaurant logo
-      const { error: updateError } = await supabase
-        .from('restaurants')
-        .update({ logo_url: publicUrl })
-        .eq('id', restaurant.id)
-
+      const { data: { publicUrl } } = supabase.storage.from('restaurant-logos').getPublicUrl(fileName)
+      const { error: updateError } = await supabase.from('restaurants').update({ logo_url: publicUrl }).eq('id', restaurant.id)
       if (updateError) throw updateError
-
-      onRefresh() // Refresh to get updated restaurant data
-      showNotification("success", "تم تحديث الشعار", "تم رفع شعار المطعم بنجاح")
+      onRefresh()
+      showNotification("success", "تم التحديث", "تم تحديث الشعار بنجاح")
     } catch (error) {
-      console.error('Logo upload error:', error)
-      showNotification("error", "فشل في رفع الشعار", "حدث خطأ أثناء رفع الشعار. حاول مرة أخرى.")
+      showNotification("error", "فشل الرفع", "حدث خطأ")
     } finally {
       setIsUploadingLogo(false)
     }
   }, [restaurant.id, onRefresh, showNotification])
 
   const handleBgImageUpload = useCallback(async (file: File, categoryId: string) => {
+    if (!file) {
+      showNotification("error", "خطأ", "الرجاء اختيار ملف")
+      throw new Error("No file selected")
+    }
     try {
       const fileExt = file.name.split('.').pop()
       const fileName = `templates/category-backgrounds/${categoryId}-bg-${Date.now()}.${fileExt}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('restaurant-logos')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        })
-
-      if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`)
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('restaurant-logos')
-        .getPublicUrl(fileName)
-
-      // Update category background image
+      const { error: uploadError } = await supabase.storage.from('restaurant-logos').upload(fileName, file)
+      if (uploadError) throw uploadError
+      const { data: { publicUrl } } = supabase.storage.from('restaurant-logos').getPublicUrl(fileName)
       await handleUpdateCategory(categoryId, 'background_image_url', publicUrl)
-      showNotification("success", "تم رفع الصورة بنجاح", "تم تحديث صورة خلفية القسم")
+      showNotification("success", "تم التحديث", "تم تحديث صورة خلفية القسم")
     } catch (error) {
-      console.error('Background upload error:', error)
-      const errorMessage = error instanceof Error ? error.message : 'حدث خطأ غير متوقع'
-      showNotification("error", "فشل في رفع الصورة", errorMessage)
+      showNotification("error", "فشل الرفع", "حدث خطأ")
     }
   }, [handleUpdateCategory, showNotification])
 
@@ -582,41 +526,17 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     try {
       const palette = colorPalettes.find(p => p.id === paletteId)
       if (!palette) throw new Error('Invalid palette')
-
-      // Update local state immediately for real-time preview
-      setCurrentPalette({
-        id: palette.id,
-        name: palette.name,
-        primary: palette.primary,
-        secondary: palette.secondary,
-        accent: palette.accent
-      })
-
-      const { error } = await supabase
-        .from('restaurants')
-        .update({ 
-          color_palette: {
-            id: palette.id,
-            name: palette.name,
-            primary: palette.primary,
-            secondary: palette.secondary,
-            accent: palette.accent
-          }
-        })
-        .eq('id', restaurant.id)
-
+      setCurrentPalette(palette)
+      const { error } = await supabase.from('restaurants').update({ color_palette: palette }).eq('id', restaurant.id)
       if (error) {
-        // Revert local state on error
         setCurrentPalette(restaurant.color_palette || colorPalettes.find(p => p.id === "emerald")!)
         throw error
       }
-
       setSelectedPalette(paletteId)
       setShowColorModal(false)
-      showNotification("success", "تم تحديث الألوان", "تم تحديث لوحة الألوان بنجاح")
+      showNotification("success", "تم التحديث", "تم تحديث لوحة الألوان")
     } catch (error) {
-      console.error('Error updating color palette:', error)
-      showNotification("error", "فشل في تحديث الألوان", "حدث خطأ أثناء تحديث لوحة الألوان")
+      showNotification("error", "فشل التحديث", "حدث خطأ")
     } finally {
       setIsUpdatingPalette(false)
     }
@@ -697,86 +617,66 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
   }, [restaurant.id, categories.length, onRefresh, showNotification, showConfirmation])
 
   // Design changes function
-  const handleSaveDesignChanges = useCallback(async () => {
-    try {
-      // Save font settings to database
-      await saveFontSettings(restaurant.id, fontSettings)
-      
-      // Apply changes to local state
-      setAppliedFontSettings(fontSettings)
-      setAppliedMenuStyles(menuStyles)
-      setShowDesignModal(false)
-      showNotification("success", "تم تطبيق التغييرات", "تم حفظ إعدادات الخط والخلفية بنجاح في قاعدة البيانات")
-    } catch (error: any) {
-      console.error('Error saving design changes:', error)
-      showNotification("error", "فشل في حفظ التغييرات", "حدث خطأ أثناء حفظ الإعدادات في قاعدة البيانات")
-    }
-  }, [fontSettings, menuStyles, restaurant.id, showNotification])
+  const handleSaveDesignChanges = useCallback(() => {
+    setAppliedFontSettings(fontSettings)
+    saveFontSettings(restaurant.id, fontSettings)
+    showNotification("success", "تم الحفظ", "تم حفظ إعدادات الخط بنجاح!")
+  }, [fontSettings, restaurant.id, showNotification])
 
-  const handleSaveRowStyles = useCallback(async (newSettings: RowStyleSettings) => {
-    try {
-      // Save row styles to database
-      await saveRowStyles(restaurant.id, newSettings)
-      
-      // Apply changes to local state
-      setAppliedRowStyles(newSettings)
-      showNotification("success", "تم تطبيق إعدادات العناصر", "تم حفظ إعدادات تخصيص عناصر القائمة بنجاح في قاعدة البيانات")
-    } catch (error: any) {
-      console.error('Error saving row styles:', error)
-      showNotification("error", "فشل في حفظ إعدادات العناصر", "حدث خطأ أثناء حفظ إعدادات العناصر في قاعدة البيانات")
-    }
+  const handleSaveRowStyles = useCallback((newSettings: RowStyleSettings) => {
+    setRowStyleSettings(newSettings)
+    setAppliedRowStyles(newSettings)
+    saveRowStyles(restaurant.id, newSettings)
+    showNotification("success", "تم الحفظ", "تم حفظ تصميم صفوف القائمة!")
   }, [restaurant.id, showNotification])
 
-  const handleSavePageBackground = useCallback(async (newSettings: PageBackgroundSettings) => {
-    try {
-      // Save page background settings to database
-      await savePageBackgroundSettings(restaurant.id, newSettings)
-      
-      // Apply changes to local state
-      setAppliedPageBackgroundSettings(newSettings)
-      showNotification("success", "تم تطبيق إعدادات الخلفية", "تم حفظ إعدادات الخلفية بنجاح في قاعدة البيانات")
-    } catch (error: any) {
-      console.error('Error saving page background:', error)
-      showNotification("error", "فشل في حفظ إعدادات الخلفية", "حدث خطأ أثناء حفظ إعدادات الخلفية في قاعدة البيانات")
-    }
+  const handleSavePageBackground = useCallback((newSettings: PageBackgroundSettings) => {
+    setPageBackgroundSettings(newSettings)
+    setAppliedPageBackgroundSettings(newSettings)
+    savePageBackgroundSettings(restaurant.id, newSettings)
+    showNotification("success", "تم الحفظ", "تم حفظ خلفية الصفحة بنجاح!")
   }, [restaurant.id, showNotification])
+
+  const handleUpdateRestaurantDetails = useCallback(async (details: Partial<Restaurant>) => {
+    const result = await updateRestaurantDetails(restaurant.id, {
+      address: details.address,
+      phone: details.phone,
+      website: details.website,
+    })
+
+    if (result.success) {
+      showNotification("success", "تم الحفظ", "تم تحديث تفاصيل التذييل بنجاح.")
+      // Optionally, refresh data from server to ensure sync
+      onRefresh() 
+    } else {
+      showNotification("error", "فشل الحفظ", "حدث خطأ أثناء تحديث تفاصيل التذييل.")
+    }
+  }, [restaurant.id, onRefresh, showNotification])
 
   const handlePageBgImageUpload = useCallback(async (file: File) => {
+    if (!file) {
+      showNotification("error", "خطأ", "الرجاء اختيار ملف")
+      throw new Error("No file selected")
+    }
     try {
       const fileExt = file.name.split('.').pop()
       const fileName = `media/${Date.now()}-bg.${fileExt}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('restaurant-logos')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        })
-
-      if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`)
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('restaurant-logos')
-        .getPublicUrl(fileName)
-
+      const { error: uploadError } = await supabase.storage.from('restaurant-logos').upload(fileName, file)
+      if (uploadError) throw uploadError
+      const { data: { publicUrl } } = supabase.storage.from('restaurant-logos').getPublicUrl(fileName)
       return publicUrl
     } catch (error) {
-      console.error('Background upload error:', error)
-      const errorMessage = error instanceof Error ? error.message : 'حدث خطأ غير متوقع'
-      showNotification("error", "فشل في رفع الصورة", errorMessage)
+      showNotification("error", "فشل الرفع", "حدث خطأ")
       throw error
     }
   }, [showNotification])
 
   const value: MenuEditorContextType = {
-    // State
     restaurant,
     categories,
     currentPalette,
     fontSettings,
     appliedFontSettings,
-    menuStyles,
-    appliedMenuStyles,
     rowStyleSettings,
     appliedRowStyles,
     pageBackgroundSettings,
@@ -785,18 +685,16 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     isUpdatingPalette,
     isUploadingLogo,
     isLoadingDummy,
+    isEditingFooter,
     showColorModal,
     showDesignModal,
     showRowStylingModal,
     showPageBackgroundModal,
     notification,
     confirmAction,
-
-    // Actions
     setCategories,
     setCurrentPalette,
     setFontSettings,
-    setMenuStyles,
     setRowStyleSettings,
     setPageBackgroundSettings,
     setSelectedPalette,
@@ -804,11 +702,11 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     setShowDesignModal,
     setShowRowStylingModal,
     setShowPageBackgroundModal,
-
-    // Functions
+    setIsEditingFooter,
     handleAddItem,
     handleUpdateItem,
     handleDeleteItem,
+    handleSaveNewItem,
     handleUpdateCategory,
     handleDeleteCategory,
     handleAddCategory,
@@ -824,7 +722,8 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     handlePageBgImageUpload,
     showNotification,
     showConfirmation,
-    onRefresh
+    onRefresh,
+    handleUpdateRestaurantDetails
   }
 
   return (

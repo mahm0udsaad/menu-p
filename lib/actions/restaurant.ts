@@ -130,3 +130,25 @@ export async function createRestaurant(
     return { error: "An unexpected error occurred. Please try again." }
   }
 }
+
+export async function updateRestaurantDetails(restaurantId: string, details: { address?: string, phone?: string, website?: string }) {
+  const supabase = createClient();
+  
+  const { data, error } = await supabase
+    .from('restaurants')
+    .update({
+      address: details.address,
+      phone: details.phone,
+      website: details.website
+    })
+    .eq('id', restaurantId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error updating restaurant details:", error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, data };
+}

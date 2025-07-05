@@ -17,13 +17,13 @@ import {
 
 export default function HeroSection() {
   return (
-    <section className="relative w-full py-12 md:py-20 lg:py-24 overflow-hidden">
+    <section className="relative w-full py-4 md:py-8 lg:py-10 overflow-hidden">
       <div className="container px-4 md:px-6 relative">
         <div className="flex flex-col items-center justify-center text-center space-y-8 md:space-y-12 max-w-5xl mx-auto relative z-10">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2 md:gap-4">
             <Badge className="bg-gradient-to-r from-red-100 to-rose-100 text-red-800 hover:from-red-200 hover:to-rose-200 border border-red-200 px-4 md:px-6 py-2 md:py-3 text-sm md:text-base font-bold backdrop-blur-xl shadow-lg">
               <Crown className="ml-2 h-4 md:h-5 w-4 md:w-5 text-red-600" />
-              المنصة الرقمية الأولى للمطاعم في المنطقة
+منصة الرقمية الأولى للمطاعم في المنطقة
             </Badge>
             <div className="flex items-center gap-2 bg-green-100 border border-green-200 rounded-full px-3 md:px-4 py-1 md:py-2 backdrop-blur-xl shadow-lg">
               <div className="w-2 md:w-3 h-2 md:h-3 bg-green-500 rounded-full animate-pulse"></div>
@@ -57,7 +57,7 @@ export default function HeroSection() {
                 asChild
                 className="group bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:via-rose-500 hover:to-red-500 shadow-2xl hover:shadow-red-500/50 transition-all duration-500 text-lg md:text-xl px-6 md:px-12 py-4 md:py-6 border border-red-400/50 text-white w-full"
               >
-                <Link href="/auth/sign-up">
+                <Link href="/menu-editor">
                   <Rocket className="ml-3 h-5 md:h-6 w-5 md:w-6 group-hover:animate-bounce" />
                   اطلق قائمتك الرقمية
                   <ArrowLeft className="mr-3 h-5 md:h-6 w-5 md:w-6 group-hover:-translate-x-1 transition-transform" />

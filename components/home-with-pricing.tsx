@@ -19,7 +19,7 @@ import Link from "next/link";
 import PricingPlans from "@/components/pricing-plans";
 
 export default async function HomeWithPricing() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createServerComponentClient({ cookies: () => cookieStore });
 
   const {

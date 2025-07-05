@@ -285,9 +285,7 @@ const createStyles = (appliedFontSettings?: any, appliedPageBackgroundSettings?:
   // Menu items styling - properly defined
   itemContainer: {
     marginBottom: 12,
-    paddingBottom: 12,
-    borderBottomColor: "#f3f4f6",
-    borderBottomWidth: 1,
+    padding: 10,
     pageBreakInside: "avoid",
   },
   itemRowLTR: {
@@ -320,7 +318,6 @@ const createStyles = (appliedFontSettings?: any, appliedPageBackgroundSettings?:
   },
   itemNameLTR: {
     fontSize: 14,
-    color: "#1f2937",
     fontWeight: "bold",
     marginBottom: 4,
     textAlign: "left",
@@ -329,7 +326,6 @@ const createStyles = (appliedFontSettings?: any, appliedPageBackgroundSettings?:
   },
   itemNameRTL: {
     fontSize: 14,
-    color: "#1f2937",
     fontWeight: "bold",
     marginBottom: 4,
     textAlign: "right",
@@ -338,14 +334,12 @@ const createStyles = (appliedFontSettings?: any, appliedPageBackgroundSettings?:
   },
   itemDescriptionLTR: {
     fontSize: 11,
-    color: "#6b7280",
     lineHeight: 1.4,
     textAlign: "left",
     fontFamily: "Cairo",
   },
   itemDescriptionRTL: {
     fontSize: 11,
-    color: "#6b7280",
     lineHeight: 1.4,
     textAlign: "right",
     fontFamily: "NotoKufiArabic",
@@ -364,7 +358,6 @@ const createStyles = (appliedFontSettings?: any, appliedPageBackgroundSettings?:
   },
   priceText: {
     fontSize: 13,
-    color: "#d97706",
     fontWeight: "bold",
     fontFamily: "Cairo",
     textAlign: "center",
@@ -440,6 +433,28 @@ const createStyles = (appliedFontSettings?: any, appliedPageBackgroundSettings?:
   },
 })
 
+interface RowStyleSettings {
+  backgroundColor: string
+  backgroundImage: string | null
+  backgroundType: 'solid' | 'image'
+  itemColor: string
+  descriptionColor: string
+  priceColor: string
+  textShadow: boolean
+  border: boolean
+  borderColor: string
+  borderRadius: number
+}
+
+interface PageBackgroundSettings {
+  backgroundColor: string
+  backgroundImage: string | null
+  backgroundType: 'solid' | 'image' | 'gradient'
+  gradientFrom: string
+  gradientTo: string
+  gradientDirection: 'to-b' | 'to-br' | 'to-r' | 'to-tr'
+}
+
 const MenuSectionPDF = ({
   title,
   sectionData,
@@ -453,16 +468,10 @@ const MenuSectionPDF = ({
   colorPalette?: Restaurant['color_palette']
   appliedFontSettings?: any
   styles: any
-  appliedRowStyles?: {
-    backgroundColor: string
-    backgroundImage: string | null
-    backgroundType: 'solid' | 'image'
-    itemColor: string
-    descriptionColor: string
-    priceColor: string
-    textShadow: boolean
-  }
+  appliedRowStyles?: RowStyleSettings
 }) => {
+  const primaryColor = colorPalette?.primary || '#10b981'
+
   // Safety checks
   if (!sectionData || !sectionData.menu_items || !Array.isArray(sectionData.menu_items)) {
     return (
@@ -503,7 +512,7 @@ const MenuSectionPDF = ({
   const titleIsRTL = getTextDirection(title) === 'rtl'
 
   return (
-    <View style={styles.categoryContainer}>
+    <View style={styles.categoryContainer} wrap={false}>
       {sectionData.background_image_url ? (
         <View style={[styles.categoryHeader, { borderLeftColor: safeColorPalette.primary }]}>
           <Image src={sectionData.background_image_url} style={styles.categoryBackgroundImage} />
@@ -541,11 +550,18 @@ const MenuSectionPDF = ({
         const itemIsRTL = getTextDirection(item.name) === 'rtl'
         const descriptionIsRTL = item.description ? getTextDirection(item.description) === 'rtl' : itemIsRTL
 
+        const itemContainerStyle = [
+          styles.itemContainer,
+          appliedRowStyles?.backgroundType === 'solid' ? { backgroundColor: appliedRowStyles.backgroundColor } : {},
+          appliedRowStyles?.border ? {
+            borderWidth: 1,
+            borderColor: appliedRowStyles.borderColor,
+            borderRadius: appliedRowStyles.borderRadius,
+          } : {}
+        ];
+
         return (
-          <View key={item.id} style={[
-            styles.itemContainer,
-            appliedRowStyles?.backgroundType === 'solid' ? { backgroundColor: appliedRowStyles.backgroundColor } : {}
-          ]} wrap={false}>
+          <View key={item.id} style={itemContainerStyle} wrap={false}>
             <View style={itemIsRTL ? styles.itemRowRTL : styles.itemRowLTR}>
               <View style={itemIsRTL ? styles.itemContentRTL : styles.itemContentLTR}>
                 {item.is_featured && (
@@ -554,23 +570,19 @@ const MenuSectionPDF = ({
                     <Text style={[styles.featuredBadge, { fontSize: 10 }]}>مميز</Text>
                   </View>
                 )}
-                <Text style={[
-                  itemIsRTL ? styles.itemNameRTL : styles.itemNameLTR,
-                  { 
-                    color: appliedRowStyles?.itemColor || (itemIsRTL ? styles.itemNameRTL.color : styles.itemNameLTR.color),
-                    textShadow: appliedRowStyles?.textShadow ? '1px 1px 2px rgba(0,0,0,0.3)' : 'none'
-                  }
-                ]}>
+                <Text style={{
+                  ...(itemIsRTL ? styles.itemNameRTL : styles.itemNameLTR),
+                  color: appliedRowStyles?.itemColor,
+                  fontFamily: getFontFamily(itemIsRTL, appliedFontSettings),
+                }}>
                   {item.name}
                 </Text>
                 {item.description && (
-                  <Text style={[
-                    descriptionIsRTL ? styles.itemDescriptionRTL : styles.itemDescriptionLTR,
-                    { 
-                      color: appliedRowStyles?.descriptionColor || (descriptionIsRTL ? styles.itemDescriptionRTL.color : styles.itemDescriptionLTR.color),
-                      textShadow: appliedRowStyles?.textShadow ? '1px 1px 2px rgba(0,0,0,0.2)' : 'none'
-                    }
-                  ]}>
+                  <Text style={{
+                    ...(itemIsRTL ? styles.itemDescriptionRTL : styles.itemDescriptionLTR),
+                    color: appliedRowStyles?.descriptionColor,
+                    fontFamily: getFontFamily(itemIsRTL, appliedFontSettings),
+                  }}>
                     {item.description}
                   </Text>
                 )}
@@ -578,13 +590,10 @@ const MenuSectionPDF = ({
               
               <View style={styles.priceContainer}>
                 <View style={[styles.priceBox, { borderColor: safeColorPalette.secondary, backgroundColor: `${safeColorPalette.secondary}20` }]}>
-                  <Text style={[
-                    styles.priceText, 
-                    { 
-                      color: appliedRowStyles?.priceColor || safeColorPalette.secondary,
-                      textShadow: appliedRowStyles?.textShadow ? '1px 1px 2px rgba(0,0,0,0.3)' : 'none'
-                    }
-                  ]}>
+                  <Text style={{
+                    ...styles.priceText,
+                    color: appliedRowStyles?.priceColor,
+                  }}>
                     ${item.price!.toFixed(2)}
                   </Text>
                 </View>
@@ -616,26 +625,12 @@ export const CafeMenuPDF = ({
     arabic: { font: string; weight: string }
     english: { font: string; weight: string }
   };
-  appliedPageBackgroundSettings?: {
-    backgroundColor: string
-    backgroundImage: string | null
-    backgroundType: 'solid' | 'image' | 'gradient'
-    gradientFrom: string
-    gradientTo: string
-    gradientDirection: 'to-b' | 'to-br' | 'to-r' | 'to-tr'
-  };
-  appliedRowStyles?: {
-    backgroundColor: string
-    backgroundImage: string | null
-    backgroundType: 'solid' | 'image'
-    itemColor: string
-    descriptionColor: string
-    priceColor: string
-    textShadow: boolean
-  };
+  appliedPageBackgroundSettings?: PageBackgroundSettings;
+  appliedRowStyles?: RowStyleSettings;
 }) => {
   // Create styles with the applied settings
   const styles = createStyles(appliedFontSettings, appliedPageBackgroundSettings)
+  const pageBackgroundStyle = getPageBackgroundStyle(appliedPageBackgroundSettings)
 
   // Safety checks
   if (!restaurant || !restaurant.name) {
@@ -701,9 +696,9 @@ export const CafeMenuPDF = ({
     <Document>
       <Page size="A4" style={[
         styles.page, 
-        getPageBackgroundStyle(appliedPageBackgroundSettings), 
+        pageBackgroundStyle, 
         { fontFamily: getFontFamily(true, appliedFontSettings) }
-      ]} wrap>
+      ]}>
         {/* Background Image Layer - Uses fixed to appear on all pages */}
         {appliedPageBackgroundSettings?.backgroundType === 'image' && appliedPageBackgroundSettings.backgroundImage && (
           <View fixed style={{
@@ -726,7 +721,7 @@ export const CafeMenuPDF = ({
         {/* Content Layer */}
         <View style={styles.documentContainer}>
           {/* Header */}
-          <View style={[styles.header, { borderBottomColor: safeColorPalette.primary }]}>
+          <View style={[styles.header, { borderBottomColor: safeColorPalette.primary }]} wrap={false}>
             <View style={styles.logoContainer}>
               {restaurant.logo_url ? (
                 <Image src={restaurant.logo_url} style={styles.logoImage} />
@@ -756,8 +751,8 @@ export const CafeMenuPDF = ({
             />
           ))}
 
-          {/* Footer */}
-          <View style={[styles.footer, { borderTopColor: safeColorPalette.primary }]}>
+          {/* Footer */} 
+          <View style={[styles.footer, { borderTopColor: safeColorPalette.primary }]} wrap={false}>
             <View style={styles.footerContent}>
               <View style={styles.footerSection}>
                 <Text style={styles.footerTitle}>Hours</Text>
