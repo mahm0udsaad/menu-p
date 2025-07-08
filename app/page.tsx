@@ -57,25 +57,6 @@ export default async function LandingPage({ searchParams }: PageProps) {
 
   const user = session?.user
 
-  // Only fetch restaurant data if user exists to prevent UUID errors
-  if (user?.id) {
-    try {
-      const { data: restaurant, error: restaurantError } = await supabase
-        .from('restaurants')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
-
-      if (restaurantError) {
-        console.error('Error fetching restaurant data:', restaurantError)
-      } else {
-        restaurantData = restaurant
-      }
-    } catch (error) {
-      console.error('Error in restaurant fetch:', error)
-    }
-  }
-
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50/90  to-red-50/90 text-gray-900 overflow-hidden backdrop-blur-sm" dir="rtl">
       <AnimatedBackground />
