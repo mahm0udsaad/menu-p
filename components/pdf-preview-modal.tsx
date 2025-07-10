@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { pdf } from "@react-pdf/renderer"
 import { CafeMenuPDF } from "@/components/pdf/cafe-menu-pdf"
 import { Loader2 } from "lucide-react"
+import type { RowStyleSettings } from "@/contexts/menu-editor-context"
 
 interface MenuItem {
   id: string
@@ -56,15 +57,7 @@ interface PdfPreviewModalProps {
     gradientTo: string
     gradientDirection: 'to-b' | 'to-br' | 'to-r' | 'to-tr'
   }
-  appliedRowStyles?: {
-    backgroundColor: string
-    backgroundImage: string | null
-    backgroundType: 'solid' | 'image'
-    itemColor: string
-    descriptionColor: string
-    priceColor: string
-    textShadow: boolean
-  }
+  appliedRowStyles?: RowStyleSettings
 }
 
 export default function PdfPreviewModal({ 

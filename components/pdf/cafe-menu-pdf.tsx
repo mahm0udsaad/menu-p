@@ -1,6 +1,7 @@
-import { Document, Page, Text, View, StyleSheet, Image, Font } from "@react-pdf/renderer"
+import { Document, Page, Text, View, StyleSheet, Image, Font } from "@react-pdf/renderer";
+import type { RowStyleSettings, PageBackgroundSettings } from "@/contexts/menu-editor-context";
 
-// Register local Arabic fonts from public/fonts
+// Register local fonts from the public/fonts directory
 Font.register({
   family: 'Cairo',
   fonts: [
@@ -30,106 +31,115 @@ Font.register({
   ],
 });
 
-// Noto Kufi Arabic and Tajawal are included as options, so we should register them.
-// Using placeholders for now, assuming they might be added later.
-// If the font files don't exist, it will cause an error at render time if selected.
 Font.register({
   family: 'NotoKufiArabic',
   fonts: [
-    // IMPORTANT: Replace with actual path if you have the font files
-    { src: '/fonts/AR/NotoKufi/NotoKufiArabic-Regular.ttf' },
-    { src: '/fonts/AR/NotoKufi/NotoKufiArabic-Bold.ttf', fontWeight: 'bold' },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Noto_Kufi_Arabic/static/NotoKufiArabic-Regular.ttf' },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Noto_Kufi_Arabic/static/NotoKufiArabic-Bold.ttf', fontWeight: 'bold' },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Noto_Kufi_Arabic/static/NotoKufiArabic-Light.ttf', fontWeight: 300 },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Noto_Kufi_Arabic/static/NotoKufiArabic-Medium.ttf', fontWeight: 500 },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Noto_Kufi_Arabic/static/NotoKufiArabic-SemiBold.ttf', fontWeight: 600 },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Noto_Kufi_Arabic/static/NotoKufiArabic-ExtraBold.ttf', fontWeight: 800 },
   ]
 });
 
 Font.register({
-  family: 'Tajawal',
+  family: 'Open Sans',
   fonts: [
-    // IMPORTANT: Replace with actual path if you have the font files
-    { src: '/fonts/AR/Tajawal/Tajawal-Regular.ttf' },
-    { src: '/fonts/AR/Tajawal/Tajawal-Bold.ttf', fontWeight: 'bold' },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Open_Sans/static/OpenSans-Regular.ttf' },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Open_Sans/static/OpenSans-Bold.ttf', fontWeight: 'bold' },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Open_Sans/static/OpenSans-Light.ttf', fontWeight: 300 },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Open_Sans/static/OpenSans-Medium.ttf', fontWeight: 500 },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Open_Sans/static/OpenSans-SemiBold.ttf', fontWeight: 600 },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Open_Sans/static/OpenSans-ExtraBold.ttf', fontWeight: 800 },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Open_Sans/static/OpenSans-Italic.ttf', fontStyle: 'italic' },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Open_Sans/static/OpenSans-BoldItalic.ttf', fontWeight: 'bold', fontStyle: 'italic' },
+  ],
+});
+
+Font.register({
+  family: 'Roboto',
+  fonts: [
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Roboto/static/Roboto-Regular.ttf' },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Roboto/static/Roboto-Bold.ttf', fontWeight: 'bold' },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Roboto/static/Roboto-Light.ttf', fontWeight: 300 },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Roboto/static/Roboto-Medium.ttf', fontWeight: 500 },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Roboto/static/Roboto-Thin.ttf', fontWeight: 100 },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Roboto/static/Roboto-Black.ttf', fontWeight: 900 },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Roboto/static/Roboto-Italic.ttf', fontStyle: 'italic' },
   ]
 });
 
 
 // Helper function to detect text direction (RTL for Arabic)
 const getTextDirection = (text: string) => {
-  const arabicPattern = /[\u0600-\u06FF]/
-  return arabicPattern.test(text) ? 'rtl' : 'ltr'
-}
+  const arabicPattern = /[\u0600-\u06FF]/;
+  return arabicPattern.test(text) ? 'rtl' : 'ltr';
+};
 
 // Define types for better type safety
 interface MenuItem {
-  id: string
-  name: string
-  description?: string
-  price: number
-  is_available: boolean
-  is_featured: boolean
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  is_available: boolean;
+  is_featured: boolean;
 }
 
 interface MenuCategory {
-  id: string
-  name: string
-  menu_items: MenuItem[]
-  background_image_url?: string
+  id: string;
+  name: string;
+  menu_items: MenuItem[];
+  background_image_url?: string;
 }
 
 interface Restaurant {
-  id: string
-  name: string
-  logo_url?: string
-  address?: string
-  phone?: string
-  website?: string
+  id: string;
+  name: string;
+  logo_url?: string;
+  address?: string;
+  phone?: string;
+  website?: string;
   color_palette?: {
-    primary: string
-    secondary: string
-    accent: string
-  }
+    primary: string;
+    secondary: string;
+    accent: string;
+  };
 }
 
 // Helper functions - defined before they're used
 const getFontFamily = (isRTL: boolean, appliedFontSettings?: {
-  arabic: { font: string; weight: string }
-  english: { font: string; weight: string }
+  arabic: { font: string; weight: string };
+  english: { font: string; weight: string };
 }) => {
-  if (!appliedFontSettings) return "Cairo"
+  if (!appliedFontSettings) return "Cairo";
   
-  const fontSettings = isRTL ? appliedFontSettings.arabic : appliedFontSettings.english
+  const fontSettings = isRTL ? appliedFontSettings.arabic : appliedFontSettings.english;
   switch (fontSettings.font) {
-    case 'cairo': return 'Cairo'
-    case 'amiri': return 'Amiri'
-    case 'almarai': return 'Almarai'
-    case 'noto-kufi': return 'NotoKufiArabic'
-    case 'tajawal': return 'Tajawal'
-    // English fonts can be mapped here as well
-    case 'open-sans': return 'Open Sans' // Requires registration
-    case 'roboto': return 'Roboto' // Requires registration
-    default: return 'Cairo'
+    case 'cairo': return 'Cairo';
+    case 'amiri': return 'Amiri';
+    case 'almarai': return 'Almarai';
+    case 'noto-kufi': return 'NotoKufiArabic';
+    case 'open-sans': return 'Open Sans';
+    case 'roboto': return 'Roboto';
+    default: return 'Cairo';
   }
-}
+};
 
-const getPageBackgroundStyle = (appliedPageBackgroundSettings?: {
-  backgroundColor: string
-  backgroundImage: string | null
-  backgroundType: 'solid' | 'image' | 'gradient'
-  gradientFrom: string
-  gradientTo: string
-  gradientDirection: 'to-b' | 'to-br' | 'to-r' | 'to-tr'
-}) => {
+const getPageBackgroundStyle = (appliedPageBackgroundSettings?: PageBackgroundSettings) => {
   if (appliedPageBackgroundSettings) {
     if (appliedPageBackgroundSettings.backgroundType === 'gradient') {
-      return { backgroundColor: appliedPageBackgroundSettings.gradientFrom }
+      return { backgroundColor: appliedPageBackgroundSettings.gradientFrom };
     }
     if (appliedPageBackgroundSettings.backgroundType === 'image') {
       // Don't apply background for images - they need to be rendered as Image components
-      return {}
+      return {};
     }
-    return { backgroundColor: appliedPageBackgroundSettings.backgroundColor }
+    return { backgroundColor: appliedPageBackgroundSettings.backgroundColor };
   }
-  return { backgroundColor: "#ffffff" }
-}
+  return { backgroundColor: "#ffffff" };
+};
 
 // Improved styles with better proportions and spacing
 const createStyles = (appliedFontSettings?: any, appliedPageBackgroundSettings?: any) => StyleSheet.create({
@@ -467,28 +477,6 @@ const createStyles = (appliedFontSettings?: any, appliedPageBackgroundSettings?:
     borderColor: "#93c5fd",
   },
 })
-
-interface RowStyleSettings {
-  backgroundColor: string
-  backgroundImage: string | null
-  backgroundType: 'solid' | 'image'
-  itemColor: string
-  descriptionColor: string
-  priceColor: string
-  textShadow: boolean
-  border: boolean
-  borderColor: string
-  borderRadius: number
-}
-
-interface PageBackgroundSettings {
-  backgroundColor: string
-  backgroundImage: string | null
-  backgroundType: 'solid' | 'image' | 'gradient'
-  gradientFrom: string
-  gradientTo: string
-  gradientDirection: 'to-b' | 'to-br' | 'to-r' | 'to-tr'
-}
 
 const MenuSectionPDF = ({
   title,

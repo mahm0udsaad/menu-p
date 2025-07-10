@@ -3,6 +3,8 @@
 import { generateObject } from "ai"
 import { google } from "@ai-sdk/google"
 import { z } from "zod"
+import { createClient } from "@/lib/supabase/server"
+import { revalidatePath } from "next/cache"
 
 // Schema for translated menu item
 const TranslatedMenuItemSchema = z.object({
@@ -120,6 +122,73 @@ IMPORTANT: Return ONLY the complete, valid JSON object with proper formatting. D
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Translation failed',
+      data: null,
+    }
+  }
+}
+
+export async function saveMenuTranslation(
+  restaurantId: string,
+  targetLanguage: string,
+  sourceLanguage: string,
+  translatedCategories: any[]
+) {
+  const supabase = createClient()
+  try {
+    const { data, error } = await supabase
+      .from("menu_translations")
+      .upsert(
+        {
+          restaurant_id: restaurantId,
+          language_code: targetLanguage,
+          source_language_code: sourceLanguage,
+          translated_data: { categories: translatedCategories },
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "restaurant_id, language_code",
+        }
+      )
+      .select()
+
+    if (error) {
+      console.error("Error saving menu translation:", error)
+      throw new Error(`Failed to save translation: ${error.message}`)
+    }
+
+    revalidatePath(`/menu-editor?id=${restaurantId}`)
+
+    return { success: true, data: data[0] }
+  } catch (error) {
+    console.error("Unexpected error in saveMenuTranslation:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
+    }
+  }
+}
+
+export async function getMenuTranslations(restaurantId: string) {
+  const supabase = createClient()
+  try {
+    const { data, error } = await supabase
+      .from("menu_translations")
+      .select("language_code, translated_data")
+      .eq("restaurant_id", restaurantId)
+
+    if (error) {
+      console.error("Error fetching menu translations:", error)
+      return { success: false, error: error.message, data: null }
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    console.error("Unexpected error in getMenuTranslations:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
       data: null,
     }
   }

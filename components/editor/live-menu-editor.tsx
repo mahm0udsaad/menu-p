@@ -21,6 +21,7 @@ import MenuTranslationDrawer from "@/components/menu-translation-drawer"
 import { useToast } from "@/hooks/use-toast"
 import { SUPPORTED_LANGUAGES } from "@/lib/utils/translation-constants"
 import { useMenuEditor } from "@/contexts/menu-editor-context"
+import { saveMenuTranslation, getMenuTranslations } from "@/lib/actions/menu-translation"
 
 const PdfPreviewModal = dynamic(() => import("@/components/pdf-preview-modal"), {
   loading: () => <div className="h-96 bg-slate-800 rounded-lg animate-pulse"></div>,
@@ -70,7 +71,14 @@ interface LiveMenuEditorProps {
 }
 
 export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: LiveMenuEditorProps) {
-  const [categories, setCategories] = useState<MenuCategory[]>(initialMenuData)
+  const { 
+    categories, 
+    setCategories, 
+    appliedFontSettings, 
+    appliedPageBackgroundSettings, 
+    appliedRowStyles 
+  } = useMenuEditor()
+  
   const [loading, setLoading] = useState(!initialMenuData.length)
   const [refreshing, setRefreshing] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
@@ -82,7 +90,7 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
   
   // New states for multi-version support
   const [menuVersions, setMenuVersions] = useState<{ [language: string]: { categories: MenuCategory[], pdfUrl?: string } }>({
-    'ar': { categories: initialMenuData }
+    'ar': { categories: categories }
   })
   const [activeVersion, setActiveVersion] = useState<string>('ar')
   const [planInfo, setPlanInfo] = useState<{
@@ -95,7 +103,6 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
   const router = useRouter()
   const { hasPaidPlan, loading: paymentLoading, refetch: refetchPaymentStatus } = usePaymentStatus()
   const { toast } = useToast()
-  const { appliedFontSettings, appliedPageBackgroundSettings, appliedRowStyles } = useMenuEditor()
   
   const showNotification = (type: "success" | "error" | "warning" | "info", title: string, description: string) => {
     toast({
@@ -105,6 +112,30 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
     })
   }
 
+  // Load existing translations when component mounts
+  useEffect(() => {
+    const loadTranslations = async () => {
+      const { success, data } = await getMenuTranslations(restaurant.id)
+      if (success && data) {
+        const newVersions = data.reduce((acc: { [language: string]: { categories: MenuCategory[] } }, translation: { language_code: string; translated_data: any }) => {
+          if (translation.translated_data && Array.isArray(translation.translated_data.categories)) {
+            acc[translation.language_code] = {
+              categories: translation.translated_data.categories,
+            }
+          }
+          return acc
+        }, {} as { [language: string]: { categories: MenuCategory[] } })
+
+        setMenuVersions(prev => ({
+          ...prev,
+          ...newVersions,
+        }))
+      }
+    }
+
+    loadTranslations()
+  }, [restaurant.id])
+
   // Auto-publish effect
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
@@ -113,6 +144,13 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
       setTimeout(() => handlePublishMenu(), 1000)
     }
   }, [hasPaidPlan, paymentLoading])
+
+  useEffect(() => {
+    // Initialize versions when categories from context are loaded
+    if (categories.length > 0) {
+      setMenuVersions(prev => ({ ...prev, 'ar': { categories: categories } }))
+    }
+  }, [categories])
 
   useEffect(() => {
     if (!initialMenuData.length) {
@@ -173,12 +211,15 @@ export default function LiveMenuEditor({ restaurant, initialMenuData = [] }: Liv
     fetchPlanInfo()
   }, [restaurant.id])
 
-  const handleTranslationComplete = (translatedCategories: MenuCategory[], targetLanguage: string) => {
+  const handleTranslationComplete = async (translatedCategories: MenuCategory[], targetLanguage: string) => {
     const targetLangName = SUPPORTED_LANGUAGES.find(lang => lang.code === targetLanguage)?.name || targetLanguage
     
+    // Save the translation to the database
+    await saveMenuTranslation(restaurant.id, targetLanguage, activeVersion, translatedCategories)
+
     setMenuVersions(prev => ({
       ...prev,
-      ar: prev.ar || { categories: categories },
+      ar: prev.ar || { categories }, // Ensure 'ar' version is always present
       [targetLanguage]: { categories: translatedCategories }
     }))
     
