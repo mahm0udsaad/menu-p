@@ -1,5 +1,6 @@
 "use client"
 
+import "@/styles/globals.css"
 import React, { useState, useEffect } from "react"
 import {
   Dialog,
@@ -40,6 +41,7 @@ const fontOptions: FontOption[] = [
   { id: "cairo", name: "Cairo", arabicName: "خط القاهرة", family: "Cairo, sans-serif", preview: "Cairo Font", arabicPreview: "خط القاهرة الجميل", category: "arabic" },
   { id: "noto-kufi", name: "Noto Kufi Arabic", arabicName: "نوتو كوفي", family: "Noto Kufi Arabic, sans-serif", preview: "Noto Kufi", arabicPreview: "نوتو كوفي العربي", category: "arabic" },
   { id: "amiri", name: "Amiri", arabicName: "الأميري", family: "Amiri, serif", preview: "Amiri", arabicPreview: "الخط الأميري", category: "arabic" },
+  { id: "almarai", name: "Almarai", arabicName: "المراعي", family: "Almarai, sans-serif", preview: "Almarai", arabicPreview: "خط المراعي", category: "arabic" },
   { id: "tajawal", name: "Tajawal", arabicName: "تجول", family: "Tajawal, sans-serif", preview: "Tajawal", arabicPreview: "خط تجول", category: "arabic" },
   { id: "open-sans", name: "Open Sans", arabicName: "أوبن سانس", family: "Open Sans, sans-serif", preview: "Open Sans Font", arabicPreview: "أوبن سانس", category: "english" },
   { id: "roboto", name: "Roboto", arabicName: "روبوتو", family: "Roboto, sans-serif", preview: "Roboto Font", arabicPreview: "روبوتو", category: "english" },

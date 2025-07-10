@@ -13,6 +13,12 @@ import {
   saveAllCustomizations 
 } from "@/lib/actions/menu-customizations"
 import { updateRestaurantDetails } from '@/lib/actions/restaurant'
+import { 
+  saveMenuTranslation,
+  getMenuTranslation,
+  getAllMenuTranslations,
+  type MenuTranslation
+} from '@/lib/actions/menu-translation-storage'
 
 // Types
 export interface MenuItem {
@@ -44,6 +50,7 @@ export interface Restaurant {
   name: string
   category: string
   logo_url: string | null
+  language?: string // Add optional language field
   color_palette?: {
     id: string
     name: string
@@ -89,6 +96,15 @@ export interface BorderSetting {
   enabled: boolean
   color: string
   width: number
+}
+
+// Add language-related interfaces
+export interface LanguageState {
+  currentLanguage: string
+  originalCategories: MenuCategory[]
+  translations: Record<string, MenuCategory[]>
+  availableLanguages: string[]
+  isLoadingTranslation: boolean
 }
 
 // Color palettes
@@ -138,6 +154,13 @@ interface MenuEditorContextType {
     type?: "danger" | "warning" | "success" | "info"
   }
 
+  // Language state
+  currentLanguage: string
+  originalCategories: MenuCategory[]
+  translations: Record<string, MenuCategory[]>
+  availableLanguages: string[]
+  isLoadingTranslation: boolean
+  
   // Actions
   setCategories: React.Dispatch<React.SetStateAction<MenuCategory[]>>
   setCurrentPalette: React.Dispatch<React.SetStateAction<any>>
@@ -175,6 +198,13 @@ interface MenuEditorContextType {
   showNotification: (type: "success" | "error" | "warning" | "info", title: string, description: string) => void
   showConfirmation: (title: string, description: string, action: () => void, type?: "danger" | "warning" | "success" | "info") => void
   onRefresh: () => void
+
+  // Language functions
+  switchLanguage: (languageCode: string) => Promise<void>
+  saveTranslation: (languageCode: string, translatedCategories: MenuCategory[]) => Promise<void>
+  loadAvailableTranslations: () => Promise<void>
+  deleteTranslation: (languageCode: string) => Promise<void>
+  getCurrentCategories: () => MenuCategory[]
 }
 
 const MenuEditorContext = createContext<MenuEditorContextType | undefined>(undefined)
@@ -279,6 +309,13 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     action: () => {},
     type: "warning"
   })
+
+  // Language state
+  const [currentLanguage, setCurrentLanguage] = useState(restaurant.language || "ar")
+  const [originalCategories, setOriginalCategories] = useState<MenuCategory[]>(initialCategories)
+  const [translations, setTranslations] = useState<Record<string, MenuCategory[]>>({})
+  const [availableLanguages, setAvailableLanguages] = useState<string[]>([])
+  const [isLoadingTranslation, setIsLoadingTranslation] = useState(false)
 
   const { toast } = useToast()
 
@@ -671,6 +708,95 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     }
   }, [showNotification])
 
+  // Language functions
+  const switchLanguage = useCallback(async (languageCode: string) => {
+    setIsLoadingTranslation(true)
+    try {
+      const translation = await getMenuTranslation(restaurant.id, languageCode)
+      if (translation.success && translation.data) {
+        setTranslations(prev => ({ ...prev, [languageCode]: translation.data }))
+        setCurrentLanguage(languageCode)
+        showNotification("success", "تم تغيير اللغة", `تم تغيير اللغة إلى ${languageCode}`)
+      } else {
+        setCurrentLanguage(restaurant.language || "ar") // Revert to original if translation not found
+        showNotification("error", "فشل تغيير اللغة", "لم يتم العثور على ترجمة لهذه اللغة.")
+      }
+    } catch (error) {
+      console.error('Error switching language:', error)
+      setCurrentLanguage(restaurant.language || "ar") // Revert to original on error
+      showNotification("error", "فشل تغيير اللغة", "حدث خطأ أثناء تغيير اللغة.")
+    } finally {
+      setIsLoadingTranslation(false)
+    }
+  }, [restaurant.id, restaurant.language, showNotification])
+
+  const saveTranslation = useCallback(async (languageCode: string, translatedCategories: MenuCategory[]) => {
+    try {
+      await saveMenuTranslation(restaurant.id, languageCode, 'ar', { categories: translatedCategories })
+      setTranslations(prev => ({ ...prev, [languageCode]: translatedCategories }))
+      showNotification("success", "تم حفظ الترجمة", `تم حفظ الترجمة بنجاح لللغة ${languageCode}`)
+    } catch (error) {
+      console.error('Error saving translation:', error)
+      showNotification("error", "فشل حفظ الترجمة", "حدث خطأ أثناء حفظ الترجمة.")
+    }
+  }, [restaurant.id, showNotification])
+
+  const loadAvailableTranslations = useCallback(async () => {
+    setIsLoadingTranslation(true)
+    try {
+      const allTranslations = await getAllMenuTranslations(restaurant.id)
+      if (allTranslations.success && allTranslations.data) {
+        const sourceLanguage = allTranslations.data.find((t: MenuTranslation) => t.language_code === restaurant.language)?.language_code || "ar";
+        const loadedTranslations = allTranslations.data.reduce((acc: Record<string, MenuCategory[]>, t: MenuTranslation) => ({ ...acc, [t.language_code]: (t.translated_data as any).categories }), {});
+        const languages = [
+          sourceLanguage,
+          ...Object.keys(loadedTranslations)
+        ];
+        const uniqueLanguages = Array.from(new Set(languages));
+        console.log('Updated available languages:', uniqueLanguages);
+        setAvailableLanguages(uniqueLanguages);
+      } else {
+        setAvailableLanguages([]);
+      }
+    } catch (error) {
+      console.error('Error loading available translations:', error)
+      setAvailableLanguages([])
+    } finally {
+      setIsLoadingTranslation(false)
+    }
+  }, [restaurant.id, restaurant.language]);
+
+  const deleteTranslation = useCallback(async (languageCode: string) => {
+    if (confirmAction.show) {
+      setConfirmAction({ ...confirmAction, show: false })
+      return
+    }
+    showConfirmation(
+      "حذف الترجمة",
+      `هل أنت متأكد من حذف الترجمة المحفوظة لللغة ${languageCode}؟ هذا سيؤدي إلى إزالة كل الترجمات المتعلقة بهذه اللغة.`,
+      async () => {
+        try {
+          await supabase.from('menu_translations').delete().eq('restaurant_id', restaurant.id).eq('language_code', languageCode)
+          setTranslations(prev => {
+            const newTranslations = { ...prev }
+            delete newTranslations[languageCode]
+            return newTranslations
+          })
+          setAvailableLanguages(prev => prev.filter(lang => lang !== languageCode))
+          showNotification("success", "تم حذف الترجمة", `تم حذف الترجمة بنجاح لللغة ${languageCode}`)
+        } catch (error) {
+          console.error('Error deleting translation:', error)
+          showNotification("error", "فشل حذف الترجمة", "حدث خطأ أثناء حذف الترجمة.")
+        }
+      },
+      "danger"
+    )
+  }, [restaurant.id, currentLanguage, showConfirmation, confirmAction.show, showNotification])
+
+  const getCurrentCategories = useCallback(() => {
+    return translations[currentLanguage] || originalCategories;
+  }, [translations, currentLanguage, originalCategories]);
+
   const value: MenuEditorContextType = {
     restaurant,
     categories,
@@ -723,7 +849,18 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     showNotification,
     showConfirmation,
     onRefresh,
-    handleUpdateRestaurantDetails
+    handleUpdateRestaurantDetails,
+    // Language functions
+    currentLanguage,
+    originalCategories,
+    translations,
+    availableLanguages,
+    isLoadingTranslation,
+    switchLanguage,
+    saveTranslation,
+    loadAvailableTranslations,
+    deleteTranslation,
+    getCurrentCategories
   }
 
   return (

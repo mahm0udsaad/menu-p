@@ -112,30 +112,46 @@ async function saveCustomization(restaurantId: string, key: string, settings: an
   try {
     const supabase = createClient()
     
-    // Upsert ensures that a record is created if it doesn't exist, or updated if it does.
-    const { data, error } = await supabase
+    // First, check if a record for the restaurant already exists.
+    const { data: existing, error: fetchError } = await supabase
       .from('menu_customizations')
-      .upsert({ restaurant_id: restaurantId, [key]: settings })
-      .select()
+      .select('id')
+      .eq('restaurant_id', restaurantId)
       .single()
 
-    if (error) {
-      // It's possible the error is due to a partial update on a non-existent record.
-      // Let's try to create a default record first, then re-attempt the upsert.
-      if (error.code === '23502') { // not_null_violation
-         await getMenuCustomizations(restaurantId) // This will create the default record
-         const { data: retryData, error: retryError } = await supabase
-          .from('menu_customizations')
-          .upsert({ restaurant_id: restaurantId, [key]: settings })
-          .select()
-          .single()
-        
-        if (retryError) throw new Error(`Error on retry saving ${key}: ${retryError.message}`)
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      // PGRST116 is 'exact-one-row-not-found', which is expected if it's a new customization.
+      // Any other error should be thrown.
+      throw new Error(`Error fetching customization: ${fetchError.message}`)
+    }
 
-        revalidatePath('/menu-editor')
-        revalidatePath('/dashboard')
-        return { success: true, data: retryData }
+    let data, error;
+
+    if (existing) {
+      // If it exists, update it.
+      ({ data, error } = await supabase
+          .from('menu_customizations')
+        .update({ [key]: settings, updated_at: new Date().toISOString() })
+        .eq('restaurant_id', restaurantId)
+          .select()
+        .single())
+    } else {
+      // If it doesn't exist, create it.
+      // We need to fetch the default structure first to avoid null constraint violations.
+      const defaultData = await getMenuCustomizations(restaurantId);
+      if (!defaultData.success) {
+        throw new Error("Could not create default customizations before saving.");
       }
+
+      ({ data, error } = await supabase
+        .from('menu_customizations')
+        .update({ [key]: settings, updated_at: new Date().toISOString() })
+        .eq('restaurant_id', restaurantId)
+        .select()
+        .single())
+    }
+
+    if (error) {
       throw new Error(`Error saving ${key}: ${error.message}`)
     }
 

@@ -2,6 +2,64 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Add Amiri Font */
+@font-face {
+  font-family: 'Amiri';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/fonts/AR/Amiri/Amiri-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Amiri';
+  font-style: italic;
+  font-weight: 400;
+  src: url('/fonts/AR/Amiri/Amiri-Italic.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Amiri';
+  font-style: normal;
+  font-weight: 700;
+  src: url('/fonts/AR/Amiri/Amiri-Bold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Amiri';
+  font-style: italic;
+  font-weight: 700;
+  src: url('/fonts/AR/Amiri/Amiri-BoldItalic.ttf') format('truetype');
+}
+
+/* Add Almarai Font */
+@font-face {
+  font-family: 'Almarai';
+  font-style: normal;
+  font-weight: 300;
+  src: url('/fonts/AR/Almarai/Almarai-Light.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Almarai';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/fonts/AR/Almarai/Almarai-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Almarai';
+  font-style: normal;
+  font-weight: 700;
+  src: url('/fonts/AR/Almarai/Almarai-Bold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Almarai';
+  font-style: normal;
+  font-weight: 800;
+  src: url('/fonts/AR/Almarai/Almarai-ExtraBold.ttf') format('truetype');
+}
+
 
 /* Paymob Native Integration Styles */
 /* Override default Paymob styles to match your website design */
@@ -385,7 +443,7 @@ body {
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;

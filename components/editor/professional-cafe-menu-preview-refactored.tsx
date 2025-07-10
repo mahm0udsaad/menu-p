@@ -11,6 +11,10 @@ import { MenuFooter } from "./menu-footer"
 import RowStylingModal from '@/components/row-styling-modal'
 import PageBackgroundModal from '@/components/editor/page-background-modal'
 import { StickyControlBar } from './floating-controls'
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Languages } from "lucide-react"
+import { SUPPORTED_LANGUAGES } from "@/lib/utils/translation-constants"
 
 interface ProfessionalCafeMenuPreviewProps {
   restaurant: Restaurant
@@ -18,10 +22,57 @@ interface ProfessionalCafeMenuPreviewProps {
   onRefresh: () => void
 }
 
+// Language tabs component
+const LanguageTabs: React.FC = () => {
+  const {
+    currentLanguage,
+    availableLanguages,
+    switchLanguage,
+    isLoadingTranslation,
+  } = useMenuEditor()
+
+  if (availableLanguages.length <= 1) {
+    return null // Don't show tabs if only one language
+  }
+
+  return (
+    <div className="bg-white border-b border-gray-200 px-4 py-2">
+      <div className="flex items-center gap-2 max-w-4xl mx-auto">
+        <Languages className="h-4 w-4 text-gray-500" />
+        <span className="text-sm text-gray-600 ml-2">اللغات:</span>
+        <div className="flex gap-2">
+          {availableLanguages.map((langCode) => {
+            const language = SUPPORTED_LANGUAGES.find(l => l.code === langCode)
+            const isActive = currentLanguage === langCode
+            
+            return (
+              <Button
+                key={langCode}
+                variant={isActive ? "default" : "outline"}
+                size="sm"
+                onClick={() => switchLanguage(langCode)}
+                disabled={isLoadingTranslation}
+                className={`text-sm ${isActive ? 'bg-red-600 text-white' : 'text-gray-700'}`}
+              >
+                {language?.name || langCode}
+                {isActive && (
+                  <Badge variant="secondary" className="ml-2 bg-white text-red-600">
+                    نشط
+                  </Badge>
+                )}
+              </Button>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Main menu content component that uses the context
 const MenuContent: React.FC = () => {
   const {
-    categories,
+    getCurrentCategories,
     appliedFontSettings,
     showRowStylingModal,
     setShowRowStylingModal,
@@ -31,8 +82,16 @@ const MenuContent: React.FC = () => {
     showDesignModal,
     showPageBackgroundModal,
     setShowPageBackgroundModal,
+    currentLanguage,
+    loadAvailableTranslations,
   } = useMenuEditor()
 
+  // Load available translations on component mount
+  React.useEffect(() => {
+    loadAvailableTranslations()
+  }, [loadAvailableTranslations])
+
+  const categories = getCurrentCategories()
   const isEmpty = categories.length === 0
 
   // Generate page background style
@@ -57,6 +116,9 @@ const MenuContent: React.FC = () => {
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="min-h-screen" style={getPageBackgroundStyle()}>
+        {/* Language Tabs */}
+        <LanguageTabs />
+        
         {/* Sticky Control Bar */}
         <StickyControlBar />
         
@@ -75,14 +137,32 @@ const MenuContent: React.FC = () => {
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">لا توجد أقسام في القائمة</h3>
                 <p className="text-gray-500 mb-6">ابدأ بإضافة أقسام وعناصر لقائمتك</p>
+                {currentLanguage !== 'ar' && (
+                  <p className="text-sm text-blue-600 bg-blue-50 p-2 rounded">
+                    عرض الترجمة لـ {SUPPORTED_LANGUAGES.find(l => l.code === currentLanguage)?.name}
+                  </p>
+                )}
               </div>
             ) : (
-              categories.map((category: MenuCategory) => (
-                <MenuSection
-                  key={category.id}
-                  category={category}
-                />
-              ))
+              <>
+                {currentLanguage !== 'ar' && (
+                  <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+                    <div className="flex">
+                      <div className="ml-3">
+                        <p className="text-sm text-blue-700">
+                          عرض الترجمة لـ <strong>{SUPPORTED_LANGUAGES.find(l => l.code === currentLanguage)?.name}</strong>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {categories.map((category: MenuCategory) => (
+                  <MenuSection
+                    key={category.id}
+                    category={category}
+                  />
+                ))}
+              </>
             )}
           </div>
 

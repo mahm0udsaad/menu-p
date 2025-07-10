@@ -5,23 +5,23 @@ import { LANGUAGE_NAMES } from "@/lib/utils/translation-constants"
 
 // Schema for translated menu item
 const TranslatedMenuItemSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string().nullable(),
-  price: z.number().nullable(),
-  image_url: z.string().nullable(),
-  is_available: z.boolean(),
-  is_featured: z.boolean(),
-  dietary_info: z.array(z.string()),
+  id: z.string().describe("The original, untranslated ID of the menu item. This must be preserved exactly."),
+  name: z.string().optional().describe("The translated name of the menu item. Should be preserved if missing."),
+  description: z.string().nullable().describe("The translated description of the menu item. Should be null if the original is null."),
+  price: z.number().nullable().optional().describe("The price of the item. This should not be translated or changed."),
+  image_url: z.string().nullable().describe("The URL for the item's image. This should not be translated or changed."),
+  is_available: z.boolean().describe("The availability status of the item. This should not be translated or changed."),
+  is_featured: z.boolean().describe("The featured status of the item. This should not be translated or changed."),
+  dietary_info: z.array(z.string()).describe("An array of dietary information tags (e.g., 'vegan', 'gluten-free'). These should be translated."),
 })
 
 // Schema for translated category
 const TranslatedCategorySchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string().nullable(),
-  background_image_url: z.string().nullable(),
-  menu_items: z.array(TranslatedMenuItemSchema),
+  id: z.string().describe("The original, untranslated ID of the category. This must be preserved exactly."),
+  name: z.string().optional().describe("The translated name of the category. Should be preserved if missing."),
+  description: z.string().nullable().describe("The translated description of the category. Should be null if the original is null."),
+  background_image_url: z.string().nullable().describe("The URL for the category's background image. This should not be translated or changed."),
+  menu_items: z.array(TranslatedMenuItemSchema).describe("The list of menu items within this category."),
 })
 
 // Schema for the complete translated menu
@@ -100,7 +100,7 @@ export async function POST(req: Request) {
 
     // Calculate estimated token requirement based on menu size
     const totalItems = categories.reduce((sum, cat) => sum + (cat.menu_items?.length || 0), 0)
-    const estimatedTokens = Math.max(8000, totalItems * 150 + categories.length * 200)
+    const estimatedTokens = Math.max(16000, totalItems * 300 + categories.length * 500)
     console.log(`📏 Estimated tokens needed: ${estimatedTokens} (${categories.length} categories, ${totalItems} items)`)
 
     // Initialize Google AI model
@@ -119,28 +119,46 @@ export async function POST(req: Request) {
       })
     }
 
-    const prompt = `You are a professional food and beverage translator specializing in restaurant menus. 
+    // Create simplified categories for translation (remove complex nested structures)
+    const simplifiedCategories = categories.map(cat => ({
+      id: cat.id,
+      name: cat.name || '',
+      description: cat.description,
+      background_image_url: cat.background_image_url,
+      menu_items: (cat.menu_items || []).map((item: any) => ({
+        id: item.id,
+        name: item.name || '',
+        description: item.description,
+        price: item.price,
+        image_url: item.image_url,
+        is_available: item.is_available,
+        is_featured: item.is_featured,
+        dietary_info: item.dietary_info || []
+      }))
+    }))
 
-Translate the following menu from ${sourceLangName} to ${targetLangName}. 
+    const prompt = `You are a professional restaurant menu translator. Translate from ${sourceLangName} to ${targetLangName}.
 
-CRITICAL REQUIREMENTS:
-1. You MUST complete the entire JSON structure - do not truncate or leave incomplete
-2. Preserve the exact same structure and IDs - do not change any IDs
-3. Translate only the "name" and "description" fields for categories and menu items
-4. Keep all other fields (price, image_url, is_available, is_featured, dietary_info, etc.) exactly the same
-5. For food names, use culturally appropriate translations that sound appetizing in ${targetLangName}
-6. For descriptions, maintain the appetizing and descriptive tone while being accurate
-7. If dietary_info contains terms like "vegan", "vegetarian", "gluten-free", translate them appropriately
-8. Keep prices in the same currency and format
-9. Preserve all boolean values and arrays exactly as they are
-10. If a description is null, keep it as null
-11. ENSURE ALL CATEGORIES AND MENU ITEMS ARE INCLUDED IN THE RESPONSE
+⚠️ CRITICAL: Output ONLY valid JSON. No text before or after. No explanations.
 
-Here is the menu to translate:
+🔧 RULES:
+1. Preserve ALL IDs exactly
+2. Translate ONLY "name" and "description" fields  
+3. Keep ALL other fields unchanged (price, URLs, booleans, arrays)
+4. Use proper JSON escaping for quotes in strings
+5. If "name" is missing, don't add it
+6. If "description" is null, keep null
+7. Make food names appetizing in ${targetLangName}
 
-${JSON.stringify(categories, null, 2)}
+📋 DIETARY TERMS:
+- "vegan" → "${targetLanguage === 'en' ? 'vegan' : targetLanguage === 'fr' ? 'végétalien' : 'نباتي'}"
+- "vegetarian" → "${targetLanguage === 'en' ? 'vegetarian' : targetLanguage === 'fr' ? 'végétarien' : 'نباتي جزئي'}"
+- "gluten-free" → "${targetLanguage === 'en' ? 'gluten-free' : targetLanguage === 'fr' ? 'sans gluten' : 'خالي من الجلوتين'}"
 
-Return the complete translated menu with the exact same structure, ensuring every category and menu item is fully translated and included.`
+INPUT:
+${JSON.stringify(simplifiedCategories, null, 2)}
+
+OUTPUT (JSON only):`
 
     console.log('🚀 Starting streaming translation...')
     
@@ -189,7 +207,16 @@ Return the complete translated menu with the exact same structure, ensuring ever
             throw new Error(`Translation incomplete: Expected ${categories.length} categories, got ${finalObject.categories?.length || 0}`)
           }
           
-          console.log('✅ Translation completed successfully')
+          // Validate each category has the right number of items
+          for (let i = 0; i < categories.length; i++) {
+            const originalItemCount = categories[i].menu_items?.length || 0
+            const translatedItemCount = finalObject.categories[i]?.menu_items?.length || 0
+            if (originalItemCount !== translatedItemCount) {
+              throw new Error(`Category ${i} item count mismatch: Expected ${originalItemCount}, got ${translatedItemCount}`)
+            }
+          }
+          
+          console.log('✅ Translation completed and validated successfully')
           
           const finalChunk = encoder.encode(`data: ${JSON.stringify({ final: true, object: finalObject })}\n\n`)
           controller.enqueue(finalChunk)

@@ -6,23 +6,23 @@ import { z } from "zod"
 
 // Schema for translated menu item
 const TranslatedMenuItemSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string().nullable(),
-  price: z.number().nullable(),
-  image_url: z.string().nullable(),
-  is_available: z.boolean(),
-  is_featured: z.boolean(),
-  dietary_info: z.array(z.string()),
+  id: z.string().describe("The original, untranslated ID of the menu item. This must be preserved exactly."),
+  name: z.string().optional().describe("The translated name of the menu item. Should be preserved if missing."),
+  description: z.string().nullable().describe("The translated description of the menu item. Should be null if the original is null."),
+  price: z.number().nullable().optional().describe("The price of the item. This should not be translated or changed."),
+  image_url: z.string().nullable().describe("The URL for the item's image. This should not be translated or changed."),
+  is_available: z.boolean().describe("The availability status of the item. This should not be translated or changed."),
+  is_featured: z.boolean().describe("The featured status of the item. This should not be translated or changed."),
+  dietary_info: z.array(z.string()).describe("An array of dietary information tags (e.g., 'vegan', 'gluten-free'). These should be translated."),
 })
 
 // Schema for translated category
 const TranslatedCategorySchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string().nullable(),
-  background_image_url: z.string().nullable(),
-  menu_items: z.array(TranslatedMenuItemSchema),
+  id: z.string().describe("The original, untranslated ID of the category. This must be preserved exactly."),
+  name: z.string().optional().describe("The translated name of the category. Should be preserved if missing."),
+  description: z.string().nullable().describe("The translated description of the category. Should be null if the original is null."),
+  background_image_url: z.string().nullable().describe("The URL for the category's background image. This should not be translated or changed."),
+  menu_items: z.array(TranslatedMenuItemSchema).describe("The list of menu items within this category."),
 })
 
 // Schema for the complete translated menu
@@ -77,22 +77,27 @@ export async function translateMenuWithAI({
 
 Translate the following menu from ${sourceLangName} to ${targetLangName}. 
 
-IMPORTANT INSTRUCTIONS:
-1. Preserve the exact same structure and IDs - do not change any IDs
-2. Translate only the "name" and "description" fields for categories and menu items
-3. Keep all other fields (price, image_url, is_available, is_featured, dietary_info, etc.) exactly the same
-4. For food names, use culturally appropriate translations that sound appetizing in ${targetLangName}
-5. For descriptions, maintain the appetizing and descriptive tone while being accurate
-6. If dietary_info contains terms like "vegan", "vegetarian", "gluten-free", translate them appropriately
-7. Keep prices in the same currency and format
-8. Preserve all boolean values and arrays exactly as they are
-9. If a description is null, keep it as null
+CRITICAL REQUIREMENTS FOR VALID JSON OUTPUT:
+1. You MUST output COMPLETE, VALID JSON - do not truncate strings or leave incomplete objects
+2. EVERY string value must be properly closed with quotes - no broken strings like "Mo{" 
+3. EVERY JSON object and array must be properly closed with closing brackets
+4. Preserve the exact same structure and IDs - do not change any IDs
+5. If a category or menu item is missing "name" field, do not add it - preserve structure exactly
+6. Translate only existing "name" and "description" fields for categories and menu items
+7. Keep all other fields (price, image_url, is_available, is_featured, dietary_info, etc.) exactly the same
+8. For food names, use culturally appropriate translations that sound appetizing in ${targetLangName}
+9. For descriptions, maintain the appetizing and descriptive tone while being accurate
+10. If dietary_info contains terms like "vegan", "vegetarian", "gluten-free", translate them appropriately
+11. Keep prices in the same currency and format
+12. Preserve all boolean values and arrays exactly as they are
+13. If a description is null, keep it as null
+14. ENSURE ALL CATEGORIES AND MENU ITEMS ARE INCLUDED IN THE RESPONSE
+15. DOUBLE-CHECK that your JSON is valid and complete before finishing
 
-Here is the menu to translate:
-
+JSON TO TRANSLATE:
 ${JSON.stringify(categories, null, 2)}
 
-Return the translated menu with the exact same structure, only changing the text content where appropriate.`
+IMPORTANT: Return ONLY the complete, valid JSON object with proper formatting. Do not include any explanatory text before or after the JSON.`
 
     console.log('🤖 Starting menu translation with Gemini 2.0 Flash...')
     
@@ -100,7 +105,7 @@ Return the translated menu with the exact same structure, only changing the text
       model,
       schema: TranslatedMenuSchema,
       prompt,
-      maxTokens: 4000,
+      maxTokens: 8000,
     })
 
     console.log('✅ Translation completed successfully')

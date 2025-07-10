@@ -4,24 +4,53 @@ import { Document, Page, Text, View, StyleSheet, Image, Font } from "@react-pdf/
 Font.register({
   family: 'Cairo',
   fonts: [
-    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Cairo/static/Cairo-Regular.ttf', fontWeight: 'normal' },
-    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Cairo/static/Cairo-Bold.ttf', fontWeight: 'bold' },
-    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Cairo/static/Cairo-Light.ttf', fontWeight: 300 },
-    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Cairo/static/Cairo-Medium.ttf', fontWeight: 500 },
-    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Cairo/static/Cairo-SemiBold.ttf', fontWeight: 600 },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Cairo/static/Cairo-Regular.ttf' },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Cairo/static/Cairo-Bold.ttf', fontWeight: 'bold' },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Cairo/static/Cairo-Light.ttf', fontWeight: 300 },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Cairo/static/Cairo-Medium.ttf', fontWeight: 500 },
+    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Cairo/static/Cairo-SemiBold.ttf', fontWeight: 600 },
   ]
 });
 
 Font.register({
+  family: 'Amiri',
+  fonts: [
+    { src: '/fonts/AR/Amiri/Amiri-Regular.ttf' },
+    { src: '/fonts/AR/Amiri/Amiri-Bold.ttf', fontWeight: 'bold' },
+  ],
+});
+
+Font.register({
+  family: 'Almarai',
+  fonts: [
+    { src: '/fonts/AR/Almarai/Almarai-Regular.ttf' },
+    { src: '/fonts/AR/Almarai/Almarai-Light.ttf', fontWeight: 300 },
+    { src: '/fonts/AR/Almarai/Almarai-Bold.ttf', fontWeight: 'bold' },
+    { src: '/fonts/AR/Almarai/Almarai-ExtraBold.ttf', fontWeight: 800 },
+  ],
+});
+
+// Noto Kufi Arabic and Tajawal are included as options, so we should register them.
+// Using placeholders for now, assuming they might be added later.
+// If the font files don't exist, it will cause an error at render time if selected.
+Font.register({
   family: 'NotoKufiArabic',
   fonts: [
-    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Rubik-Regular.ttf', fontWeight: 'normal' },
-    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Rubik-Regular.ttf', fontWeight: 'bold' },
-    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Rubik-Regular.ttf', fontWeight: 300 },
-    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Rubik-Regular.ttf', fontWeight: 500 },
-    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Rubik-Regular.ttf', fontWeight: 600 },
+    // IMPORTANT: Replace with actual path if you have the font files
+    { src: '/fonts/AR/NotoKufi/NotoKufiArabic-Regular.ttf' },
+    { src: '/fonts/AR/NotoKufi/NotoKufiArabic-Bold.ttf', fontWeight: 'bold' },
   ]
 });
+
+Font.register({
+  family: 'Tajawal',
+  fonts: [
+    // IMPORTANT: Replace with actual path if you have the font files
+    { src: '/fonts/AR/Tajawal/Tajawal-Regular.ttf' },
+    { src: '/fonts/AR/Tajawal/Tajawal-Bold.ttf', fontWeight: 'bold' },
+  ]
+});
+
 
 // Helper function to detect text direction (RTL for Arabic)
 const getTextDirection = (text: string) => {
@@ -70,7 +99,13 @@ const getFontFamily = (isRTL: boolean, appliedFontSettings?: {
   const fontSettings = isRTL ? appliedFontSettings.arabic : appliedFontSettings.english
   switch (fontSettings.font) {
     case 'cairo': return 'Cairo'
-    case 'noto-kufi-arabic': return 'NotoKufiArabic'
+    case 'amiri': return 'Amiri'
+    case 'almarai': return 'Almarai'
+    case 'noto-kufi': return 'NotoKufiArabic'
+    case 'tajawal': return 'Tajawal'
+    // English fonts can be mapped here as well
+    case 'open-sans': return 'Open Sans' // Requires registration
+    case 'roboto': return 'Roboto' // Requires registration
     default: return 'Cairo'
   }
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Drawer,
@@ -23,6 +23,7 @@ import { Languages, Loader2, Sparkles, CheckCircle, AlertCircle, X, Brain, Wand2
 import { translateMenuWithAI } from "@/lib/actions/menu-translation"
 import { SUPPORTED_LANGUAGES, type Language } from "@/lib/utils/translation-constants"
 import { toast } from "sonner"
+import { saveMenuTranslation } from "@/lib/actions/menu-translation-storage";
 
 interface MenuItem {
   id: string
@@ -41,13 +42,15 @@ interface MenuCategory {
   description: string | null
   background_image_url: string | null
   menu_items: MenuItem[]
+  restaurant_id?: string // Add optional restaurant_id field
 }
 
 interface MenuTranslationDrawerProps {
   isOpen: boolean
   onClose: () => void
   categories: MenuCategory[]
-  onTranslationComplete: (translatedCategories: MenuCategory[], targetLanguage: string) => void
+  onTranslationComplete: (allTranslations: Record<string, MenuCategory[]>) => void
+  restaurantId: string
 }
 
 function StreamingTranslationScreen({ 
@@ -112,12 +115,17 @@ function StreamingTranslationScreen({
                   const data = JSON.parse(line.slice(6)) // Remove 'data: ' prefix
                   
                   if (data.error) {
-                    onError(data.error)
+                    console.error('Server returned error:', data.error, data.details)
+                    onError(data.details || data.error)
                     return
                   }
                   
                   if (data.final) {
                     // Final complete object
+                    if (!data.object || !data.object.categories) {
+                      onError('Invalid response: Missing translated categories')
+                      return
+                    }
                     setPartialTranslation(data.object)
                     setIsComplete(true)
                     setTimeout(() => {
@@ -128,7 +136,13 @@ function StreamingTranslationScreen({
                     setPartialTranslation(data)
                   }
                 } catch (parseError) {
-                  console.warn('Failed to parse streaming data:', parseError)
+                  console.warn('Failed to parse streaming data:', parseError, 'Raw data:', line)
+                  // If we can't parse the data and it contains error keywords, treat as error
+                  const lowercaseLine = line.toLowerCase()
+                  if (lowercaseLine.includes('error') || lowercaseLine.includes('validation') || lowercaseLine.includes('schema')) {
+                    onError(`Parse error: ${line.slice(6)}`)
+                    return
+                  }
                 }
               }
             }
@@ -181,63 +195,12 @@ function StreamingTranslationScreen({
 
       {/* Translation Content */}
       <div className="flex gap-6 h-96">
-        {/* Source Content */}
-        <div className="flex-1 bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
-          <div className="bg-gradient-to-r from-gray-100 to-gray-50 p-4 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-              <FileText className="h-5 w-5 text-gray-600" />
-              <span className="text-gray-900 font-medium">المحتوى الأصلي</span>
-            </div>
-        </div>
-        
-          <ScrollArea className="h-80 p-4">
-            <div className="space-y-4">
-              {categories.map((category, categoryIndex) => (
-                <div key={category.id} className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-                  <div className="mb-3">
-                    <h4 className="text-lg font-semibold text-gray-900">
-                      {category.name}
-                    </h4>
-                    {category.description && (
-                      <p className="text-gray-600 text-sm mt-1">{category.description}</p>
-                    )}
-                  </div>
-                  
-                  {category.menu_items.slice(0, 3).map((item, itemIndex) => (
-                    <div key={item.id} className="py-2 border-b border-gray-100 last:border-b-0">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                          <h5 className="font-medium text-gray-800 text-sm">{item.name}</h5>
-                          {item.description && (
-                            <p className="text-gray-600 text-xs mt-1 line-clamp-2">{item.description}</p>
-                              )}
-                            </div>
-                        {item.price && (
-                          <span className="text-sm font-medium text-red-600 ml-2">
-                            {item.price} ر.س
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                  
-                  {category.menu_items.length > 3 && (
-                    <p className="text-xs text-gray-500 mt-2">
-                      +{category.menu_items.length - 3} عنصر آخر...
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-        </div>
-
         {/* Translated Content */}
         <div className="flex-1 bg-red-50 rounded-xl border border-red-200 overflow-hidden">
           <div className="bg-gradient-to-r from-red-100 to-rose-100 p-4 border-b border-red-200">
             <div className="flex items-center gap-3">
               <FileText className="h-5 w-5 text-red-600" />
-              <span className="text-red-900 font-medium">المحتوى المترجم</span>
+              <span className="text-center text-red-900 font-medium">المحتوى المترجم</span>
               {!isComplete && <Wand2 className="h-4 w-4 text-red-600 animate-bounce" />}
             </div>
           </div>
@@ -324,12 +287,16 @@ export default function MenuTranslationDrawer({
   onClose,
   categories,
   onTranslationComplete,
+  restaurantId,
 }: MenuTranslationDrawerProps) {
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([])
   const [sourceLanguage, setSourceLanguage] = useState<string>("ar")
   const [isTranslating, setIsTranslating] = useState(false)
-  const [translationStatus, setTranslationStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [translationStatus, setTranslationStatus] = useState<'idle' | 'in_progress' | 'success' | 'error'>('idle')
   const [currentTranslatingLang, setCurrentTranslatingLang] = useState<string>("")
+  const [completedLanguages, setCompletedLanguages] = useState<string[]>([])
+  const [currentLanguageIndex, setCurrentLanguageIndex] = useState(0)
+  const [allTranslations, setAllTranslations] = useState<Record<string, MenuCategory[]>>({})
 
   const handleLanguageToggle = (languageCode: string) => {
     setSelectedLanguages(prev => 
@@ -339,50 +306,81 @@ export default function MenuTranslationDrawer({
     )
   }
 
-  const handleTranslate = async () => {
+  const handleTranslate = () => {
     if (selectedLanguages.length === 0) {
       toast.error("يرجى اختيار لغة واحدة على الأقل للترجمة")
       return
     }
-
     if (categories.length === 0) {
       toast.error("لا توجد عناصر قائمة للترجمة")
       return
     }
 
     setIsTranslating(true)
-    setTranslationStatus('idle')
-    setCurrentTranslatingLang(selectedLanguages[0]) // Start with first language
+    setTranslationStatus('in_progress')
+    setCompletedLanguages([])
+    setCurrentLanguageIndex(0)
+    setAllTranslations({})
+    setCurrentTranslatingLang(selectedLanguages[0])
   }
 
-  const handleStreamingComplete = (translatedCategories: MenuCategory[]) => {
-    onTranslationComplete(translatedCategories, currentTranslatingLang)
-    toast.success(`تمت الترجمة بنجاح إلى ${SUPPORTED_LANGUAGES.find(lang => lang.code === currentTranslatingLang)?.name}!`)
+  const handleNextLanguage = useCallback(() => {
+    const nextIndex = currentLanguageIndex + 1;
+    if (nextIndex >= selectedLanguages.length) {
+      setTranslationStatus('success');
+      setIsTranslating(false);
+      onTranslationComplete(allTranslations);
+    } else {
+      setCurrentLanguageIndex(nextIndex);
+      setCurrentTranslatingLang(selectedLanguages[nextIndex]);
+    }
+  }, [currentLanguageIndex, selectedLanguages, allTranslations, onTranslationComplete]);
+
+
+  const handleStreamingComplete = useCallback(async (translatedCategories: MenuCategory[]) => {
+    const completedLang = selectedLanguages[currentLanguageIndex];
     
-    setTranslationStatus('success')
-    setTimeout(() => {
-      onClose()
-      setIsTranslating(false)
-      setTranslationStatus('idle')
-      setSelectedLanguages([])
-      setCurrentTranslatingLang("")
-    }, 2000)
-  }
+    const newTranslations = { ...allTranslations, [completedLang]: translatedCategories };
+    setAllTranslations(newTranslations);
+    setCompletedLanguages(prev => [...prev, completedLang]);
+    
+    try {
+      await saveMenuTranslation({
+        restaurant_id: restaurantId,
+        language_code: completedLang,
+        source_language_code: sourceLanguage,
+        translated_data: { categories: translatedCategories },
+        is_published: false
+      });
+      toast.success(`تم حفظ ترجمة ${SUPPORTED_LANGUAGES.find(lang => lang.code === completedLang)?.name}`);
+    } catch (error) {
+      console.error("Failed to save translation:", error);
+      toast.error(`فشل حفظ ترجمة ${SUPPORTED_LANGUAGES.find(lang => lang.code === completedLang)?.name}`);
+    }
+
+    handleNextLanguage();
+  }, [allTranslations, currentLanguageIndex, handleNextLanguage, restaurantId, selectedLanguages, sourceLanguage]);
 
   const handleStreamingError = (error: string) => {
-    setTranslationStatus('error')
-    setIsTranslating(false)
-    console.error("Streaming translation error:", error)
-    toast.error("حدث خطأ أثناء الترجمة")
+    const langName = SUPPORTED_LANGUAGES.find(lang => lang.code === currentTranslatingLang)?.name;
+    toast.error(`حدث خطأ أثناء ترجمة ${langName}`);
+    setTranslationStatus('error');
+    // Stop translating process on error
+    setIsTranslating(false);
   }
 
   const handleClose = () => {
-    if (!isTranslating) {
-      onClose()
-      setTranslationStatus('idle')
-      setSelectedLanguages([])
-      setCurrentTranslatingLang("")
+    if (isTranslating) {
+      // Maybe show a confirmation dialog
+      return;
     }
+    onClose()
+    setTranslationStatus('idle')
+    setSelectedLanguages([])
+    setCurrentTranslatingLang("")
+    setCompletedLanguages([])
+    setCurrentLanguageIndex(0)
+    setAllTranslations({})
   }
 
   const getMenuItemsCount = () => {
@@ -491,7 +489,7 @@ export default function MenuTranslationDrawer({
                       }`}
                       onClick={() => handleLanguageToggle(lang.code)}
                     >
-                      <div className="flex items-center space-x-3 space-x-reverse">
+                      <div className="flex items-center gap-3 gap-reverse">
                         <Checkbox
                           checked={selectedLanguages.includes(lang.code)}
                           onCheckedChange={() => handleLanguageToggle(lang.code)}
