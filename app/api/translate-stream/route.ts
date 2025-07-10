@@ -119,46 +119,31 @@ export async function POST(req: Request) {
       })
     }
 
-    // Create simplified categories for translation (remove complex nested structures)
-    const simplifiedCategories = categories.map(cat => ({
-      id: cat.id,
-      name: cat.name || '',
-      description: cat.description,
-      background_image_url: cat.background_image_url,
-      menu_items: (cat.menu_items || []).map((item: any) => ({
-        id: item.id,
-        name: item.name || '',
-        description: item.description,
-        price: item.price,
-        image_url: item.image_url,
-        is_available: item.is_available,
-        is_featured: item.is_featured,
-        dietary_info: item.dietary_info || []
-      }))
-    }))
+    const prompt = `You are a professional food and beverage translator specializing in restaurant menus. 
 
-    const prompt = `You are a professional restaurant menu translator. Translate from ${sourceLangName} to ${targetLangName}.
+Translate the following menu from ${sourceLangName} to ${targetLangName}. 
 
-⚠️ CRITICAL: Output ONLY valid JSON. No text before or after. No explanations.
+CRITICAL REQUIREMENTS FOR VALID JSON OUTPUT:
+1. You MUST output COMPLETE, VALID JSON - do not truncate strings or leave incomplete objects
+2. EVERY string value must be properly closed with quotes - no broken strings like "Mo{" 
+3. EVERY JSON object and array must be properly closed with closing brackets
+4. Preserve the exact same structure and IDs - do not change any IDs
+5. If a category or menu item is missing "name" field, do not add it - preserve structure exactly
+6. Translate only existing "name" and "description" fields for categories and menu items
+7. Keep all other fields (price, image_url, is_available, is_featured, dietary_info, etc.) exactly the same
+8. For food names, use culturally appropriate translations that sound appetizing in ${targetLangName}
+9. For descriptions, maintain the appetizing and descriptive tone while being accurate
+10. If dietary_info contains terms like "vegan", "vegetarian", "gluten-free", translate them appropriately
+11. Keep prices in the same currency and format
+12. Preserve all boolean values and arrays exactly as they are
+13. If a description is null, keep it as null
+14. ENSURE ALL CATEGORIES AND MENU ITEMS ARE INCLUDED IN THE RESPONSE
+15. DOUBLE-CHECK that your JSON is valid and complete before finishing
 
-🔧 RULES:
-1. Preserve ALL IDs exactly
-2. Translate ONLY "name" and "description" fields  
-3. Keep ALL other fields unchanged (price, URLs, booleans, arrays)
-4. Use proper JSON escaping for quotes in strings
-5. If "name" is missing, don't add it
-6. If "description" is null, keep null
-7. Make food names appetizing in ${targetLangName}
+JSON TO TRANSLATE:
+${JSON.stringify(categories, null, 2)}
 
-📋 DIETARY TERMS:
-- "vegan" → "${targetLanguage === 'en' ? 'vegan' : targetLanguage === 'fr' ? 'végétalien' : 'نباتي'}"
-- "vegetarian" → "${targetLanguage === 'en' ? 'vegetarian' : targetLanguage === 'fr' ? 'végétarien' : 'نباتي جزئي'}"
-- "gluten-free" → "${targetLanguage === 'en' ? 'gluten-free' : targetLanguage === 'fr' ? 'sans gluten' : 'خالي من الجلوتين'}"
-
-INPUT:
-${JSON.stringify(simplifiedCategories, null, 2)}
-
-OUTPUT (JSON only):`
+IMPORTANT: Return ONLY the complete, valid JSON object with proper formatting. Do not include any explanatory text before or after the JSON.`
 
     console.log('🚀 Starting streaming translation...')
     
@@ -207,16 +192,7 @@ OUTPUT (JSON only):`
             throw new Error(`Translation incomplete: Expected ${categories.length} categories, got ${finalObject.categories?.length || 0}`)
           }
           
-          // Validate each category has the right number of items
-          for (let i = 0; i < categories.length; i++) {
-            const originalItemCount = categories[i].menu_items?.length || 0
-            const translatedItemCount = finalObject.categories[i]?.menu_items?.length || 0
-            if (originalItemCount !== translatedItemCount) {
-              throw new Error(`Category ${i} item count mismatch: Expected ${originalItemCount}, got ${translatedItemCount}`)
-            }
-          }
-          
-          console.log('✅ Translation completed and validated successfully')
+          console.log('✅ Translation completed successfully')
           
           const finalChunk = encoder.encode(`data: ${JSON.stringify({ final: true, object: finalObject })}\n\n`)
           controller.enqueue(finalChunk)
