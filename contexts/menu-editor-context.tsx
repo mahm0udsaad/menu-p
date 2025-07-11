@@ -125,7 +125,8 @@ interface MenuEditorContextType {
   isLoadingDummy: boolean
   isEditingFooter: boolean
   selectedTemplate: TemplateId | null
-  
+  currentLanguage: string
+
   // Modal states
   showColorModal: boolean
   showDesignModal: boolean
@@ -159,6 +160,7 @@ interface MenuEditorContextType {
   setShowPageBackgroundModal: React.Dispatch<React.SetStateAction<boolean>>
   setShowTemplateSwitcherModal: React.Dispatch<React.SetStateAction<boolean>>
   setIsEditingFooter: React.Dispatch<React.SetStateAction<boolean>>
+  setCurrentLanguage: React.Dispatch<React.SetStateAction<string>>
   
   // Functions
   handleAddItem: (categoryId: string) => void
@@ -214,6 +216,7 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
 }) => {
   // State
   const [categories, setCategories] = useState<MenuCategory[]>(initialCategories)
+  const [currentLanguage, setCurrentLanguage] = useState('ar')
   const [currentPalette, setCurrentPalette] = useState(() => 
     restaurant.color_palette || colorPalettes.find(p => p.id === "emerald")!
   )
@@ -508,14 +511,13 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
         if (result.success) {
           setCategories(prev => prev.filter(cat => cat.id !== categoryId))
           showNotification("success", "Category Deleted", "The category has been deleted.")
-          onRefresh()
         } else {
           showNotification("error", "Failed to delete category", result.error || "An unknown error occurred")
         }
       },
       "danger"
     )
-  }, [showNotification, onRefresh, showConfirmation])
+  }, [showNotification, showConfirmation])
 
   const handleAddCategory = useCallback(() => {
     const newCategory: MenuCategory = {
@@ -792,13 +794,16 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     isLoadingDummy,
     isEditingFooter,
     selectedTemplate,
+    notification,
+    confirmAction,
     showColorModal,
     showDesignModal,
     showRowStylingModal,
     showPageBackgroundModal,
     showTemplateSwitcherModal,
-    notification,
-    confirmAction,
+    currentLanguage,
+
+    // Actions
     setCategories,
     setCurrentPalette,
     setFontSettings,
@@ -811,6 +816,9 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     setShowPageBackgroundModal,
     setShowTemplateSwitcherModal,
     setIsEditingFooter,
+    setCurrentLanguage,
+
+    // Functions
     handleAddItem,
     handleUpdateItem,
     handleDeleteItem,
@@ -851,13 +859,16 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     isLoadingDummy,
     isEditingFooter,
     selectedTemplate,
+    notification,
+    confirmAction,
     showColorModal,
     showDesignModal,
     showRowStylingModal,
     showPageBackgroundModal,
     showTemplateSwitcherModal,
-    notification,
-    confirmAction,
+    currentLanguage,
+
+    // Actions
     setCategories,
     setCurrentPalette,
     setFontSettings,
@@ -870,6 +881,9 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     setShowPageBackgroundModal,
     setShowTemplateSwitcherModal,
     setIsEditingFooter,
+    setCurrentLanguage,
+
+    // Functions
     handleAddItem,
     handleUpdateItem,
     handleDeleteItem,

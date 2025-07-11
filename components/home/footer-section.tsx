@@ -172,17 +172,17 @@ export default function FooterSection() {
           </div>
 
           <nav className="flex flex-wrap gap-4 md:gap-8 justify-center lg:justify-end">
-            <Link className="text-red-200 hover:text-white transition-all duration-300 font-bold text-sm md:text-lg hover:scale-105" href="/terms">
+            <Link className="text-red-200 hover:text-white transition-all duration-300 font-bold text-sm md:text-lg hover:scale-105" href="/terms-of-service">
               شروط الخدمة
             </Link>
-            <Link className="text-red-200 hover:text-white transition-all duration-300 font-bold text-sm md:text-lg hover:scale-105" href="/privacy">
+            <Link className="text-red-200 hover:text-white transition-all duration-300 font-bold text-sm md:text-lg hover:scale-105" href="/privacy-policy">
               سياسة الخصوصية
             </Link>
-            <Link className="text-red-200 hover:text-white transition-all duration-300 font-bold text-sm md:text-lg hover:scale-105" href="/support">
+            <Link className="text-red-200 hover:text-white transition-all duration-300 font-bold text-sm md:text-lg hover:scale-105" href="/saas-support">
               الدعم المميز
             </Link>
-            <Link className="text-red-200 hover:text-white transition-all duration-300 font-bold text-sm md:text-lg hover:scale-105" href="/api">
-              API للمطورين
+            <Link className="text-red-200 hover:text-white transition-all duration-300 font-bold text-sm md:text-lg hover:scale-105" href="/about-creator">
+              عن المطور
             </Link>
           </nav>
         </div>

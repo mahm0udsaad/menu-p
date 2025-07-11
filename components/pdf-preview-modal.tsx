@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react"
 import { pdf } from "@react-pdf/renderer"
 import { CafeMenuPDF } from "@/components/pdf/cafe-menu-pdf"
 import { PaintingStylePdf } from "@/components/pdf/templates/painting-style/PaintingStylePdf"
+import { VintagePdf } from "@/components/pdf/templates/vintage/VintagePdf"
 import { Loader2 } from "lucide-react"
 import type { RowStyleSettings, TemplateId } from "@/contexts/menu-editor-context"
 
@@ -60,6 +61,7 @@ interface PdfPreviewModalProps {
   }
   appliedRowStyles?: RowStyleSettings
   selectedTemplate: TemplateId
+  currentLanguage?: string
 }
 
 export default function PdfPreviewModal({ 
@@ -70,7 +72,8 @@ export default function PdfPreviewModal({
   appliedFontSettings, 
   appliedPageBackgroundSettings, 
   appliedRowStyles,
-  selectedTemplate
+  selectedTemplate,
+  currentLanguage,
 }: PdfPreviewModalProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -139,16 +142,27 @@ export default function PdfPreviewModal({
         categories: categoriesForPdf,
       }
 
-      if (selectedTemplate === 'painting') {
-        PdfComponent = PaintingStylePdf
-      } else {
-        PdfComponent = CafeMenuPDF
-        props = {
-          ...props,
-          appliedFontSettings,
-          appliedPageBackgroundSettings,
-          appliedRowStyles,
-        }
+      switch (selectedTemplate) {
+        case 'painting':
+          PdfComponent = PaintingStylePdf
+          break
+        case 'vintage':
+          PdfComponent = VintagePdf
+          props = {
+            ...props,
+            appliedPageBackgroundSettings,
+            appliedRowStyles,
+            currentLanguage,
+          }
+          break
+        default:
+          PdfComponent = CafeMenuPDF
+          props = {
+            ...props,
+            appliedFontSettings,
+            appliedPageBackgroundSettings,
+            appliedRowStyles,
+          }
       }
       
       // Generate PDF blob

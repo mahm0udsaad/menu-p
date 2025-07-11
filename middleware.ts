@@ -18,6 +18,6 @@ export const config = {
      * - /api/paymob-webhook (webhook endpoint)
      * Feel free to modify this pattern to include more paths.
      */
-    "/((?!_next/static|_next/image|favicon.ico|^/$|^/menus/|^/api/menu-pdf/|api/paymob-webhook|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|^/$|^/menus/|^/api/menu-pdf/|api/paymob-webhook|about-creator|saas-support|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 }

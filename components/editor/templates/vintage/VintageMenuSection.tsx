@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
-import { useMenuEditor, type MenuCategory } from '@/contexts/menu-editor-context'
+import { useMenuEditor, type MenuCategory, type RowStyleSettings } from '@/contexts/menu-editor-context'
 import VintageEditableMenuItem from './VintageEditableMenuItem'
 import { Button } from '@/components/ui/button'
 import { Plus, Edit, Save, X, Trash2 } from 'lucide-react'
@@ -11,9 +11,10 @@ import { resolveFontFamily } from '@/lib/font-config'
 interface VintageMenuSectionProps {
   category: MenuCategory
   currencySymbol: string
+  appliedRowStyles: RowStyleSettings
 }
 
-const VintageMenuSection: React.FC<VintageMenuSectionProps> = ({ category, currencySymbol }) => {
+const VintageMenuSection: React.FC<VintageMenuSectionProps> = ({ category, currencySymbol, appliedRowStyles }) => {
   const { 
     handleAddItem, 
     moveItem, 
@@ -22,7 +23,7 @@ const VintageMenuSection: React.FC<VintageMenuSectionProps> = ({ category, curre
     handleSaveNewCategory,
     appliedFontSettings,
     currentPalette,
-    showConfirmation,
+    currentLanguage,
   } = useMenuEditor()
 
   const [isEditing, setIsEditing] = useState(category.isTemporary || false)
@@ -52,15 +53,8 @@ const VintageMenuSection: React.FC<VintageMenuSectionProps> = ({ category, curre
     }
   }
 
-  const onDeleteConfirm = () => {
-    showConfirmation(
-        `Delete '${category.name}'?`,
-        "Are you sure you want to delete this category and all its items? This action cannot be undone.",
-        () => handleDeleteCategory(category.id),
-        'danger'
-    )
-  }
-  
+  const isArabic = currentLanguage === 'ar';
+
   const titleStyle = {
     fontFamily: resolveFontFamily(appliedFontSettings.english.font),
     color: currentPalette.accent,
@@ -68,15 +62,15 @@ const VintageMenuSection: React.FC<VintageMenuSectionProps> = ({ category, curre
   };
 
   return (
-    <div className="w-full p-4 rounded-lg relative group">
-      <div className="relative mb-4 flex items-center justify-between">
+    <div className="w-full p-4 rounded-lg relative group" dir={isArabic ? 'rtl' : 'ltr'}>
+      <div className={`relative mb-4 flex items-center justify-between ${isArabic ? 'flex-row-reverse' : ''}`}>
         {isEditing ? (
           <div className="flex items-center gap-2 flex-grow">
             <Input 
               value={editedName} 
               onChange={(e) => setEditedName(e.target.value)}
               className="text-lg font-bold uppercase p-0 border-0 border-b-2"
-              style={titleStyle}
+              style={{...titleStyle, textAlign: isArabic ? 'right' : 'left'}}
               autoFocus
             />
             <Button onClick={onSave} variant="ghost" size="icon"><Save className="w-5 h-5 text-green-600" /></Button>
@@ -84,12 +78,12 @@ const VintageMenuSection: React.FC<VintageMenuSectionProps> = ({ category, curre
           </div>
         ) : (
           <>
-            <h3 className="text-lg font-bold uppercase pb-2 border-b-2 flex-grow" style={titleStyle}>
+            <h3 className="text-lg font-bold uppercase pb-2 border-b-2 flex-grow" style={{...titleStyle, textAlign: isArabic ? 'right' : 'left'}}>
                 {category.name}
             </h3>
-            <div className="flex items-center ml-2">
+            <div className={`flex items-center ${isArabic ? 'mr-2' : 'ml-2'}`}>
                 <Button onClick={() => setIsEditing(true)} variant="ghost" size="icon" className="h-8 w-8"><Edit className="w-4 h-4" /></Button>
-                <Button onClick={onDeleteConfirm} variant="ghost" size="icon" className="h-8 w-8"><Trash2 className="w-4 h-4 text-red-500" /></Button>
+                <Button onClick={() => handleDeleteCategory(category.id)} variant="ghost" size="icon" className="h-8 w-8"><Trash2 className="w-4 h-4 text-red-500" /></Button>
             </div>
           </>
         )}
@@ -104,6 +98,7 @@ const VintageMenuSection: React.FC<VintageMenuSectionProps> = ({ category, curre
             categoryId={category.id}
             moveItem={(dragIndex, hoverIndex) => moveItem(category.id, dragIndex, hoverIndex)}
             currencySymbol={currencySymbol}
+            appliedRowStyles={appliedRowStyles}
           />
         ))}
       </div>

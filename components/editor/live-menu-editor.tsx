@@ -92,7 +92,8 @@ export default function LiveMenuEditor({
     appliedRowStyles,
     selectedTemplate,
     confirmAction,
-    hideConfirmation
+    hideConfirmation,
+    setCurrentLanguage,
   } = useMenuEditor()
   
   const [refreshing, setRefreshing] = useState(false)
@@ -142,8 +143,9 @@ export default function LiveMenuEditor({
         ...(prev[activeVersion] || {}),
         categories: categories,
       }
-    }))
-  }, [categories, activeVersion])
+    }));
+    setCurrentLanguage(activeVersion);
+  }, [categories, activeVersion]);
 
   const { onRefresh } = useMenuEditor()
 
@@ -308,7 +310,7 @@ export default function LiveMenuEditor({
     <>
       <div className="space-y-4 h-full flex flex-col">
         {/* Unified Control Bar */}
-        <div className="w-11/12 mx-auto sticky top-1 z-50 flex flex-col sm:flex-row items-center justify-between gap-3 bg-white/80 backdrop-blur-md border border-red-200 rounded-xl p-2 shadow-lg">
+        <div className="w-11/12 mx-auto sticky top-1 z-50 flex items-center justify-between gap-3 bg-white/80 backdrop-blur-md border border-red-200 rounded-xl p-2 shadow-lg">
           
           {/* Left Side: Publish Button */}
           <div className="flex-shrink-0">
@@ -476,6 +478,7 @@ export default function LiveMenuEditor({
           appliedPageBackgroundSettings={appliedPageBackgroundSettings}
           appliedRowStyles={appliedRowStyles}
           selectedTemplate={selectedTemplate}
+          currentLanguage={activeVersion}
         />
       )}
 

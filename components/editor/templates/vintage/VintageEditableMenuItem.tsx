@@ -3,7 +3,7 @@
 import React, { useRef, useState, useEffect } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
 import { GripVertical, Edit, Save, X, Trash2 } from 'lucide-react'
-import { useMenuEditor, type MenuItem } from '@/contexts/menu-editor-context'
+import { useMenuEditor, type MenuItem, type RowStyleSettings } from '@/contexts/menu-editor-context'
 import { resolveFontFamily } from '@/lib/font-config'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -19,9 +19,10 @@ interface VintageEditableMenuItemProps {
   categoryId: string
   moveItem: (dragIndex: number, hoverIndex: number) => void
   currencySymbol: string
+  appliedRowStyles: RowStyleSettings
 }
 
-const VintageEditableMenuItem: React.FC<VintageEditableMenuItemProps> = ({ item, categoryId, index, moveItem, currencySymbol }) => {
+const VintageEditableMenuItem: React.FC<VintageEditableMenuItemProps> = ({ item, categoryId, index, moveItem, currencySymbol, appliedRowStyles }) => {
   const { 
     handleUpdateItem,
     appliedFontSettings, 
@@ -29,6 +30,7 @@ const VintageEditableMenuItem: React.FC<VintageEditableMenuItemProps> = ({ item,
     handleDeleteItem,
     showConfirmation,
     currentPalette,
+    currentLanguage,
   } = useMenuEditor()
 
   const ref = useRef<HTMLDivElement>(null)
@@ -102,28 +104,50 @@ const VintageEditableMenuItem: React.FC<VintageEditableMenuItemProps> = ({ item,
 
   drag(drop(ref))
 
+  const isArabic = currentLanguage === 'ar';
+  const activeFontSettings = isArabic ? appliedFontSettings.arabic : appliedFontSettings.english;
+
+  const itemContainerStyle: React.CSSProperties = {
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  if (appliedRowStyles) {
+    if (appliedRowStyles.backgroundType === 'solid') {
+      itemContainerStyle.backgroundColor = appliedRowStyles.backgroundColor;
+    }
+    if (appliedRowStyles.borderBottom.enabled) {
+      itemContainerStyle.borderStyle = 'solid';
+      itemContainerStyle.borderWidth = `${appliedRowStyles.borderBottom.width}px`;
+      itemContainerStyle.borderColor = appliedRowStyles.borderBottom.color;
+      itemContainerStyle.borderRadius = `${appliedRowStyles.borderRadius}px`;
+      itemContainerStyle.padding = '1rem';
+    }
+  }
+
   // Style objects for dynamic fonts
   const nameStyle = {
-    fontFamily: resolveFontFamily(appliedFontSettings.english.font),
-    fontWeight: appliedFontSettings.english.weight || 'bold',
-    color: currentPalette.primary,
+    fontFamily: resolveFontFamily(activeFontSettings.font),
+    fontWeight: activeFontSettings.weight || 'bold',
+    color: appliedRowStyles?.itemColor || currentPalette.primary,
+    textAlign: (isArabic ? 'right' : 'left') as 'right' | 'left',
   };
 
   const descriptionStyle = {
-    fontFamily: resolveFontFamily(appliedFontSettings.english.font),
+    fontFamily: resolveFontFamily(activeFontSettings.font),
     fontWeight: 400,
-    color: currentPalette.secondary,
+    color: appliedRowStyles?.descriptionColor || currentPalette.secondary,
+    textAlign: (isArabic ? 'right' : 'left') as 'right' | 'left',
   };
 
   const priceStyle = {
-    fontFamily: resolveFontFamily(appliedFontSettings.english.font),
-    fontWeight: appliedFontSettings.english.weight || 'bold',
-    color: currentPalette.primary,
+    fontFamily: resolveFontFamily(activeFontSettings.font),
+    fontWeight: activeFontSettings.weight || 'bold',
+    color: appliedRowStyles?.priceColor || currentPalette.primary,
   };
 
   if (isEditing) {
     return (
-      <div ref={ref} className="p-3 my-2 border border-blue-400 rounded-md bg-white shadow-lg">
+      <div ref={ref} className="p-3 my-2 border border-blue-400 rounded-md bg-white shadow-lg" style={itemContainerStyle} dir={isArabic ? 'rtl' : 'ltr'}>
         <Input
           value={editedItem.name}
           onChange={(e) => setEditedItem(prev => ({ ...prev, name: e.target.value }))}
@@ -138,9 +162,9 @@ const VintageEditableMenuItem: React.FC<VintageEditableMenuItemProps> = ({ item,
           className="text-sm mt-1 border-0 p-0 h-auto"
           style={descriptionStyle}
         />
-        <div className="flex justify-between items-center mt-2">
-          <div className="flex items-center">
-            <span className="mr-1" style={priceStyle}>{currencySymbol}</span>
+        <div className={`flex justify-between items-center mt-2`}>
+          <div className={`flex items-center ${isArabic ? 'flex-row-reverse' : ''}`}>
+            <span className={isArabic ? 'ml-1' : 'mr-1'} style={priceStyle}>{currencySymbol}</span>
             <Input
               value={editedItem.price ?? ''}
               onChange={(e) => setEditedItem(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
@@ -163,22 +187,22 @@ const VintageEditableMenuItem: React.FC<VintageEditableMenuItemProps> = ({ item,
     <div
       ref={ref}
       data-handler-id={handlerId}
-      style={{ opacity: isDragging ? 0.5 : 1 }}
-      className="py-2 flex items-center justify-between"
+      style={itemContainerStyle}
+      className={`py-2 flex items-center justify-between w-full`}
     >
-      <div className="flex-grow flex items-center">
-        <div className="cursor-move pr-2">
+        <div className={`cursor-move ${isArabic ? 'pl-2' : 'pr-2'}`}>
             <GripVertical className="text-gray-400 h-4 w-4" />
         </div>
+      <div className={`flex items-center ${isArabic ? 'flex-row-reverse' : ''}`}>
         <div>
             <h4 className="text-base font-bold" style={nameStyle}>{item.name}</h4>
             {item.description && <p className="text-sm mt-1" style={descriptionStyle}>{item.description}</p>}
         </div>
       </div>
 
-      <div className="flex items-center flex-shrink-0 ml-4">
+      <div className="flex items-center flex-shrink-0">
         <p className="text-base font-bold" style={priceStyle}>{currencySymbol}{item.price}</p>
-        <div className="flex items-center">
+        <div className={`flex items-center ${isArabic ? 'mr-2' : 'ml-2'}`}>
           <Button onClick={() => setIsEditing(true)} variant="ghost" size="icon" className="h-8 w-8"><Edit className="w-4 h-4" /></Button>
           <Button onClick={onDeleteConfirm} variant="ghost" size="icon" className="h-8 w-8"><Trash2 className="w-4 h-4 text-red-500" /></Button>
         </div>
