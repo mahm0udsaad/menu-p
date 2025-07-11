@@ -45,6 +45,7 @@ export interface Restaurant {
   name: string
   category: string
   logo_url: string | null
+  currency?: string | null
   color_palette?: {
     id: string
     name: string
@@ -59,7 +60,7 @@ export interface Restaurant {
   page_background_url?: string | null
 }
 
-export type TemplateId = 'classic' | 'painting';
+export type TemplateId = 'classic' | 'painting' | 'vintage';
 
 export interface SimplifiedFontSettings {
   arabic: { font: string; weight: string }
