@@ -37,6 +37,7 @@ export interface MenuCategory {
   description: string | null
   menu_items: MenuItem[]
   background_image_url?: string | null
+  isTemporary?: boolean
 }
 
 export interface Restaurant {
@@ -165,7 +166,8 @@ interface MenuEditorContextType {
   handleSaveNewItem: (item: MenuItem) => Promise<void>
   handleUpdateCategory: (categoryId: string, field: string, value: string | null) => Promise<void>
   handleDeleteCategory: (categoryId: string) => Promise<void>
-  handleAddCategory: () => Promise<void>
+  handleAddCategory: () => void
+  handleSaveNewCategory: (category: MenuCategory) => Promise<void>
   moveItem: (categoryId: string, dragIndex: number, hoverIndex: number) => void
   handleDropItem: (categoryId: string) => Promise<void>
   handleLogoUpload: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>
@@ -182,6 +184,7 @@ interface MenuEditorContextType {
   // Utility functions
   showNotification: (type: "success" | "error" | "warning" | "info", title: string, description: string) => void
   showConfirmation: (title: string, description: string, action: () => void, type?: "danger" | "warning" | "success" | "info") => void
+  hideConfirmation: () => void
   onRefresh: () => void
 }
 
@@ -307,6 +310,15 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     setConfirmAction({ show: true, title, description, action, type })
   }, [])
 
+  const hideConfirmation = useCallback(() => {
+    setConfirmAction({
+      show: false,
+      title: '',
+      description: '',
+      action: () => {},
+    })
+  }, [])
+
   // Effects
   useEffect(() => {
     setCategories(initialCategories)
@@ -394,29 +406,51 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     showNotification("success", "تم إضافة العنصر", "اضغط حفظ لحفظ التغييرات.")
   }, [showNotification])
 
-  const handleSaveNewItem = useCallback(async (item: MenuItem) => {
-    if (!item.isTemporary) return
-    if (!item.name.trim()) {
-      showNotification("error", "خطأ", "يجب إدخال اسم العنصر")
+  const handleSaveNewItem = async (item: MenuItem) => {
+    // Make sure category_id is present
+    if (!item.category_id) {
+      showNotification("error", "Cannot save item", "Category ID is missing.")
+      // Clean up the temporary item
+      setCategories(prev =>
+        prev.map(cat => ({
+          ...cat,
+          menu_items: cat.menu_items.filter(i => i.id !== item.id),
+        }))
+      )
       return
     }
 
-    try {
-      const result = await quickAddItem(item.category_id!, restaurant.id)
-      if (result.success && result.item) {
-        const finalItem: MenuItem = { ...result.item, ...item, isTemporary: false }
-        setCategories(prev => prev.map(cat => ({
+    const result = await quickAddItem(item.category_id, restaurant.id, {
+      name: item.name,
+      description: item.description,
+      price: item.price
+    })
+
+    if (result.success && result.item) {
+      setCategories(prev =>
+        prev.map(cat =>
+          cat.id === item.category_id
+            ? {
+                ...cat,
+                menu_items: cat.menu_items.map(i =>
+                  i.id === item.id ? { ...result.item, isTemporary: false } : i
+                ),
+              }
+            : cat
+        )
+      )
+      showNotification("success", "Item Added", `${result.item.name} has been added.`)
+    } else {
+      showNotification("error", "Failed to add item", result.error || "An unknown error occurred")
+      // Clean up the temporary item on failure
+      setCategories(prev =>
+        prev.map(cat => ({
           ...cat,
-          menu_items: cat.menu_items.map(i => i.id === item.id ? finalItem : i),
-        })))
-        showNotification("success", "تم الحفظ", "تم حفظ العنصر بنجاح")
-      } else {
-        showNotification("error", "فشل الحفظ", result.error || "حدث خطأ")
-      }
-    } catch (error) {
-      showNotification("error", "فشل الحفظ", "حدث خطأ")
+          menu_items: cat.menu_items.filter(i => i.id !== item.id),
+        }))
+      )
     }
-  }, [restaurant.id, showNotification])
+  }
 
   const handleUpdateItem = useCallback((updatedItem: MenuItem) => {
     setCategories(prev => prev.map(cat => ({
@@ -431,14 +465,22 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
       showNotification("success", "تم الحذف", "تم حذف العنصر المؤقت")
       return
     }
-    const result = await quickDeleteItem(itemId)
-    if (result.success) {
-      setCategories(prev => prev.map(cat => ({ ...cat, menu_items: cat.menu_items.filter(item => item.id !== itemId) })))
-      showNotification("success", "تم الحذف", "تم حذف العنصر بنجاح")
-    } else {
-      showNotification("error", "فشل الحذف", result.error || "حدث خطأ")
-    }
-  }, [showNotification])
+
+    showConfirmation(
+      "Delete Item?",
+      "Are you sure you want to delete this item? This action cannot be undone.",
+      async () => {
+        const result = await quickDeleteItem(itemId)
+        if (result.success) {
+          setCategories(prev => prev.map(cat => ({ ...cat, menu_items: cat.menu_items.filter(item => item.id !== itemId) })))
+          showNotification("success", "Item Deleted", "The item has been deleted successfully.")
+        } else {
+          showNotification("error", "Failed to delete item", result.error || "An unknown error occurred")
+        }
+      },
+      "danger"
+    )
+  }, [showNotification, showConfirmation])
 
   // Category functions
   const handleUpdateCategory = useCallback(async (categoryId: string, field: string, value: string | null) => {
@@ -452,22 +494,53 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
   }, [showNotification, onRefresh])
 
   const handleDeleteCategory = useCallback(async (categoryId: string) => {
-    const result = await quickDeleteCategory(categoryId)
-    if (result.success) {
+    if (categoryId.startsWith('temp-cat-')) {
       setCategories(prev => prev.filter(cat => cat.id !== categoryId))
-      showNotification("success", "تم الحذف", "تم حذف القسم بنجاح")
-    } else {
-      showNotification("error", "فشل الحذف", result.error || "حدث خطأ")
+      return
     }
-  }, [showNotification])
 
-  const handleAddCategory = useCallback(async () => {
-    const result = await quickAddCategory(restaurant.id, "قسم جديد")
+    showConfirmation(
+      "Delete Category?",
+      "Are you sure you want to delete this category? This action cannot be undone.",
+      async () => {
+        const result = await quickDeleteCategory(categoryId)
+        if (result.success) {
+          setCategories(prev => prev.filter(cat => cat.id !== categoryId))
+          showNotification("success", "Category Deleted", "The category has been deleted.")
+          onRefresh()
+        } else {
+          showNotification("error", "Failed to delete category", result.error || "An unknown error occurred")
+        }
+      },
+      "danger"
+    )
+  }, [showNotification, onRefresh, showConfirmation])
+
+  const handleAddCategory = useCallback(() => {
+    const newCategory: MenuCategory = {
+      id: `temp-cat-${Date.now()}`,
+      name: 'New Category',
+      description: null,
+      menu_items: [],
+      isTemporary: true,
+    }
+    setCategories(prev => [...prev, newCategory])
+  }, [])
+
+  const handleSaveNewCategory = useCallback(async (category: MenuCategory) => {
+    const result = await quickAddCategory(restaurant.id, category.name)
     if (result.success && result.category) {
-      setCategories(prev => [...prev, { ...result.category, menu_items: [] }])
-      showNotification("success", "تم الإضافة", "تم إضافة قسم جديد")
+      setCategories(prev =>
+        prev.map(c =>
+          c.id === category.id
+            ? { ...c, ...result.category, isTemporary: false, menu_items: c.menu_items }
+            : c
+        )
+      )
+      showNotification("success", "Category Added", "You can now add items to it.")
     } else {
-      showNotification("error", "فشل الإضافة", result.error || "حدث خطأ")
+      showNotification("error", "Failed to add category", result.error || "An unknown error occurred")
+      setCategories(prev => prev.filter(c => c.id !== category.id))
     }
   }, [restaurant.id, showNotification])
 
@@ -744,6 +817,7 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     handleUpdateCategory,
     handleDeleteCategory,
     handleAddCategory,
+    handleSaveNewCategory,
     moveItem,
     handleDropItem,
     handleLogoUpload,
@@ -758,6 +832,7 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     handlePageBgImageUpload,
     showNotification,
     showConfirmation,
+    hideConfirmation,
     onRefresh,
   }), [
     restaurant,
@@ -801,6 +876,7 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     handleUpdateCategory,
     handleDeleteCategory,
     handleAddCategory,
+    handleSaveNewCategory,
     moveItem,
     handleDropItem,
     handleLogoUpload,
@@ -815,6 +891,7 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     handlePageBgImageUpload,
     showNotification,
     showConfirmation,
+    hideConfirmation,
     onRefresh,
   ])
 

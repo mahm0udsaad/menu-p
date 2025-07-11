@@ -2,13 +2,24 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { PostgrestSingleResponse } from "@supabase/supabase-js"
 
 export type MenuItemFormState = {
   error?: string
   success?: boolean
 } | null
 
-export async function quickAddItem(categoryId: string, restaurantId: string) {
+interface NewMenuItemData {
+  name: string
+  description: string | null
+  price: number | null
+}
+
+export async function quickAddItem(
+  categoryId: string, 
+  restaurantId: string,
+  itemData: NewMenuItemData
+) {
   const supabase = createClient()
 
   const {
@@ -22,7 +33,7 @@ export async function quickAddItem(categoryId: string, restaurantId: string) {
 
   try {
     // Get the next display order
-    const { data: lastItem } = await supabase
+    const { data: lastItem }: PostgrestSingleResponse<{ display_order: number }> = await supabase
       .from("menu_items")
       .select("display_order")
       .eq("category_id", categoryId)
@@ -33,14 +44,14 @@ export async function quickAddItem(categoryId: string, restaurantId: string) {
     const displayOrder = (lastItem?.display_order || 0) + 1
 
     // Insert a new blank item
-    const { data, error } = await supabase
+    const { data, error }: PostgrestSingleResponse<any> = await supabase
       .from("menu_items")
       .insert({
         restaurant_id: restaurantId,
         category_id: categoryId,
-        name: "New Item",
-        description: null,
-        price: null,
+        name: itemData.name,
+        description: itemData.description,
+        price: itemData.price,
         is_available: true,
         is_featured: false,
         display_order: displayOrder,
@@ -79,7 +90,7 @@ export async function updateMenuItemData(
       updated_at: new Date().toISOString(),
     }
 
-    const { data: updatedItem, error } = await supabase
+    const { data: updatedItem, error }: PostgrestSingleResponse<any> = await supabase
       .from("menu_items")
       .update(updateData)
       .eq("id", itemId)

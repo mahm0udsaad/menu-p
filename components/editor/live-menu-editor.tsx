@@ -22,6 +22,7 @@ import { SUPPORTED_LANGUAGES } from "@/lib/utils/translation-constants"
 import { useMenuEditor } from "@/contexts/menu-editor-context"
 import { saveMenuTranslation, getMenuTranslations } from "@/lib/actions/menu-translation"
 import { QuickActionsBar } from "./floating-controls"
+import ConfirmationModal from "@/components/ui/confirmation-modal"
 
 const PdfPreviewModal = dynamic(() => import("@/components/pdf-preview-modal"), {
   loading: () => <div className="h-96 bg-slate-800 rounded-lg animate-pulse"></div>,
@@ -89,7 +90,9 @@ export default function LiveMenuEditor({
     appliedFontSettings, 
     appliedPageBackgroundSettings, 
     appliedRowStyles,
-    selectedTemplate 
+    selectedTemplate,
+    confirmAction,
+    hideConfirmation
   } = useMenuEditor()
   
   const [refreshing, setRefreshing] = useState(false)
@@ -493,6 +496,18 @@ export default function LiveMenuEditor({
           background_image_url: cat.background_image_url || null
         }))}
         onTranslationComplete={handleTranslationComplete}
+      />
+
+      <ConfirmationModal
+        isOpen={confirmAction.show}
+        onClose={hideConfirmation}
+        onConfirm={() => {
+          confirmAction.action()
+          hideConfirmation()
+        }}
+        title={confirmAction.title}
+        description={confirmAction.description}
+        type={confirmAction.type}
       />
 
       <Dialog open={showDeleteLangModal} onOpenChange={setShowDeleteLangModal}>

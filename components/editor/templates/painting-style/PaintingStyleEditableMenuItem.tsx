@@ -1,10 +1,13 @@
 "use client"
 
-import React, { useRef } from 'react'
+import React, { useRef, useState, useEffect } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
-import { GripVertical } from 'lucide-react'
+import { GripVertical, Edit, Save, X, Trash2 } from 'lucide-react'
 import { useMenuEditor, type MenuItem } from '@/contexts/menu-editor-context'
 import { resolveFontFamily } from '@/lib/font-config'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
 
 const ItemTypes = {
   MENU_ITEM: 'menu_item',
@@ -18,8 +21,41 @@ interface PaintingStyleEditableMenuItemProps {
 }
 
 const PaintingStyleEditableMenuItem: React.FC<PaintingStyleEditableMenuItemProps> = ({ item, categoryId, index, moveItem }) => {
-  const { handleUpdateItem, appliedRowStyles, appliedFontSettings } = useMenuEditor()
+  const { 
+    handleUpdateItem, 
+    appliedRowStyles, 
+    appliedFontSettings, 
+    handleSaveNewItem, 
+    handleDeleteItem 
+  } = useMenuEditor()
+
   const ref = useRef<HTMLDivElement>(null)
+  const [isEditing, setIsEditing] = useState(item.isTemporary || false)
+  const [editedItem, setEditedItem] = useState(item)
+
+  useEffect(() => {
+    if (item.isTemporary) {
+      setIsEditing(true)
+    }
+  }, [item.isTemporary])
+  
+  const onSave = () => {
+    if (item.isTemporary) {
+      handleSaveNewItem({ ...editedItem, category_id: categoryId })
+    } else {
+      handleUpdateItem(editedItem)
+    }
+    setIsEditing(false)
+  }
+
+  const onCancel = () => {
+    if (item.isTemporary) {
+      handleDeleteItem(item.id)
+    } else {
+      setEditedItem(item)
+      setIsEditing(false)
+    }
+  }
 
   const [{ handlerId }, drop] = useDrop<{ id: string; index: number }, void, { handlerId: string | symbol | null }>({
     accept: ItemTypes.MENU_ITEM,
@@ -54,6 +90,38 @@ const PaintingStyleEditableMenuItem: React.FC<PaintingStyleEditableMenuItemProps
   })
 
   drag(drop(ref))
+
+  if (isEditing) {
+    return (
+      <div className="flex items-center bg-white/80 p-4 rounded-lg shadow-sm border border-blue-300 flex-col gap-2">
+        <Input
+          value={editedItem.name}
+          onChange={(e) => setEditedItem(prev => ({ ...prev, name: e.target.value }))}
+          placeholder="Item Name"
+          className="text-lg font-bold text-[#3a3a3a]"
+        />
+        <Textarea
+          value={editedItem.description || ''}
+          onChange={(e) => setEditedItem(prev => ({ ...prev, description: e.target.value }))}
+          placeholder="Description"
+          className="text-sm text-gray-600 mt-1"
+        />
+        <div className="flex justify-between w-full items-center">
+            <Input
+              value={editedItem.price || ''}
+              onChange={(e) => setEditedItem(prev => ({ ...prev, price: parseFloat(e.target.value) || null }))}
+              placeholder="Price"
+              className="text-lg font-bold text-[#c8a97e] w-24"
+              type="number"
+            />
+            <div className="flex gap-1">
+                <Button onClick={onSave} variant="ghost" size="icon"><Save className="w-5 h-5 text-green-600" /></Button>
+                <Button onClick={onCancel} variant="ghost" size="icon"><X className="w-5 h-5 text-red-600" /></Button>
+            </div>
+        </div>
+      </div>
+    )
+  }
 
   const isRTL = (text: string) => /[\u0600-\u06FF]/.test(text)
   const nameIsRTL = isRTL(item.name)
@@ -107,6 +175,10 @@ const PaintingStyleEditableMenuItem: React.FC<PaintingStyleEditableMenuItemProps
         }}
       >
         {item.price}
+      </div>
+      <div className="flex gap-1 ml-4">
+        <Button onClick={() => setIsEditing(true)} variant="ghost" size="icon"><Edit className="w-4 h-4" /></Button>
+        <Button onClick={() => handleDeleteItem(item.id)} variant="ghost" size="icon"><Trash2 className="w-4 h-4 text-red-600" /></Button>
       </div>
     </div>
   )
