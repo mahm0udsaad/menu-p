@@ -131,24 +131,19 @@ export async function createRestaurant(
   }
 }
 
-export async function updateRestaurantDetails(restaurantId: string, details: { address?: string, phone?: string, website?: string }) {
+export async function updateRestaurantDetails(restaurantId: string, details: { address?: string, phone?: string, website?: string, template_name?: string }) {
   const supabase = createClient();
   
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('restaurants')
-    .update({
-      address: details.address,
-      phone: details.phone,
-      website: details.website
-    })
-    .eq('id', restaurantId)
-    .select()
-    .single();
+    .update(details)
+    .eq('id', restaurantId);
 
   if (error) {
     console.error("Error updating restaurant details:", error);
     return { success: false, error: error.message };
   }
 
-  return { success: true, data };
+  revalidatePath(`/dashboard/menu/${restaurantId}/editor`);
+  return { success: true };
 }

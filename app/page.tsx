@@ -58,7 +58,7 @@ export default async function LandingPage({ searchParams }: PageProps) {
   const user = session?.user
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50/90  to-red-50/90 text-gray-900 overflow-hidden backdrop-blur-sm" dir="rtl">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-white  to-blue-custom text-gray-900 overflow-hidden backdrop-blur-sm" dir="rtl">
       <AnimatedBackground />
       <HeaderSection user={user} />
 

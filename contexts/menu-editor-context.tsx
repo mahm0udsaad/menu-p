@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react'
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabase/client"
 import { quickAddItem, quickDeleteItem, reorderMenuItems } from "@/lib/actions/editor/quick-menu-actions"
@@ -54,7 +54,11 @@ export interface Restaurant {
   address?: string
   phone?: string
   website?: string
+  template_name?: string
+  page_background_url?: string | null
 }
+
+export type TemplateId = 'classic' | 'painting';
 
 export interface SimplifiedFontSettings {
   arabic: { font: string; weight: string }
@@ -118,12 +122,14 @@ interface MenuEditorContextType {
   isUploadingLogo: boolean
   isLoadingDummy: boolean
   isEditingFooter: boolean
+  selectedTemplate: TemplateId | null
   
   // Modal states
   showColorModal: boolean
   showDesignModal: boolean
   showRowStylingModal: boolean
   showPageBackgroundModal: boolean
+  showTemplateSwitcherModal: boolean
   notification: {
     show: boolean
     type: "success" | "error" | "warning" | "info"
@@ -149,6 +155,7 @@ interface MenuEditorContextType {
   setShowDesignModal: React.Dispatch<React.SetStateAction<boolean>>
   setShowRowStylingModal: React.Dispatch<React.SetStateAction<boolean>>
   setShowPageBackgroundModal: React.Dispatch<React.SetStateAction<boolean>>
+  setShowTemplateSwitcherModal: React.Dispatch<React.SetStateAction<boolean>>
   setIsEditingFooter: React.Dispatch<React.SetStateAction<boolean>>
   
   // Functions
@@ -168,6 +175,7 @@ interface MenuEditorContextType {
   handleSaveRowStyles: (newSettings: RowStyleSettings) => void
   handleSavePageBackground: (newSettings: PageBackgroundSettings) => void
   handleUpdateRestaurantDetails: (details: Partial<Restaurant>) => Promise<void>
+  handleTemplateChange: (templateId: TemplateId) => Promise<void>
   handleBgImageUpload: (file: File, categoryId: string) => Promise<void>
   handlePageBgImageUpload: (file: File) => Promise<string>
   
@@ -206,6 +214,7 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     restaurant.color_palette || colorPalettes.find(p => p.id === "emerald")!
   )
   const [selectedPalette, setSelectedPalette] = useState(restaurant.color_palette?.id || "emerald")
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateId>(restaurant.template_name as TemplateId || 'classic')
   const [isUpdatingPalette, setIsUpdatingPalette] = useState(false)
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const [isLoadingDummy, setIsLoadingDummy] = useState(false)
@@ -254,6 +263,7 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
   const [showDesignModal, setShowDesignModal] = useState(false)
   const [showRowStylingModal, setShowRowStylingModal] = useState(false)
   const [showPageBackgroundModal, setShowPageBackgroundModal] = useState(false)
+  const [showTemplateSwitcherModal, setShowTemplateSwitcherModal] = useState(false)
 
   const [notification, setNotification] = useState<{
     show: boolean
@@ -352,6 +362,9 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
               setRowStyleSettings(incomingStyles)
               setAppliedRowStyles(incomingStyles)
             }
+          }
+          if (customizations.template_name) {
+            setSelectedTemplate(customizations.template_name as TemplateId)
           }
         }
       } catch (error) {
@@ -653,6 +666,24 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     }
   }, [restaurant.id, onRefresh, showNotification])
 
+  const handleTemplateChange = async (templateId: TemplateId) => {
+    try {
+      await updateRestaurantDetails(restaurant.id, { template_name: templateId });
+      setSelectedTemplate(templateId);
+      toast({
+        title: "Template Updated",
+        description: "Your menu template has been successfully updated.",
+      });
+      setShowTemplateSwitcherModal(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Could not update the template. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handlePageBgImageUpload = useCallback(async (file: File) => {
     if (!file) {
       showNotification("error", "خطأ", "الرجاء اختيار ملف")
@@ -671,7 +702,7 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     }
   }, [showNotification])
 
-  const value: MenuEditorContextType = {
+  const value = useMemo(() => ({
     restaurant,
     categories,
     currentPalette,
@@ -686,10 +717,12 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     isUploadingLogo,
     isLoadingDummy,
     isEditingFooter,
+    selectedTemplate,
     showColorModal,
     showDesignModal,
     showRowStylingModal,
     showPageBackgroundModal,
+    showTemplateSwitcherModal,
     notification,
     confirmAction,
     setCategories,
@@ -702,6 +735,7 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     setShowDesignModal,
     setShowRowStylingModal,
     setShowPageBackgroundModal,
+    setShowTemplateSwitcherModal,
     setIsEditingFooter,
     handleAddItem,
     handleUpdateItem,
@@ -718,13 +752,71 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     handleSaveDesignChanges,
     handleSaveRowStyles,
     handleSavePageBackground,
+    handleUpdateRestaurantDetails,
+    handleTemplateChange,
     handleBgImageUpload,
     handlePageBgImageUpload,
     showNotification,
     showConfirmation,
     onRefresh,
-    handleUpdateRestaurantDetails
-  }
+  }), [
+    restaurant,
+    categories,
+    currentPalette,
+    fontSettings,
+    appliedFontSettings,
+    rowStyleSettings,
+    appliedRowStyles,
+    pageBackgroundSettings,
+    appliedPageBackgroundSettings,
+    selectedPalette,
+    isUpdatingPalette,
+    isUploadingLogo,
+    isLoadingDummy,
+    isEditingFooter,
+    selectedTemplate,
+    showColorModal,
+    showDesignModal,
+    showRowStylingModal,
+    showPageBackgroundModal,
+    showTemplateSwitcherModal,
+    notification,
+    confirmAction,
+    setCategories,
+    setCurrentPalette,
+    setFontSettings,
+    setRowStyleSettings,
+    setPageBackgroundSettings,
+    setSelectedPalette,
+    setShowColorModal,
+    setShowDesignModal,
+    setShowRowStylingModal,
+    setShowPageBackgroundModal,
+    setShowTemplateSwitcherModal,
+    setIsEditingFooter,
+    handleAddItem,
+    handleUpdateItem,
+    handleDeleteItem,
+    handleSaveNewItem,
+    handleUpdateCategory,
+    handleDeleteCategory,
+    handleAddCategory,
+    moveItem,
+    handleDropItem,
+    handleLogoUpload,
+    handleUpdateColorPalette,
+    handleLoadDummyData,
+    handleSaveDesignChanges,
+    handleSaveRowStyles,
+    handleSavePageBackground,
+    handleUpdateRestaurantDetails,
+    handleTemplateChange,
+    handleBgImageUpload,
+    handlePageBgImageUpload,
+    showNotification,
+    showConfirmation,
+    onRefresh,
+  ])
 
   return (
     <MenuEditorContext.Provider value={value}>

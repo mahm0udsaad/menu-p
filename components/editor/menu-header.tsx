@@ -17,7 +17,7 @@ export const MenuHeader: React.FC<MenuHeaderProps> = ({ isEmpty }) => {
   } = useMenuEditor()
 
   return (
-    <div className="min-h-screen bg-white p-8 flex flex-col">
+    <div className=" bg-white p-8 flex flex-col">
       {/* Header Section */}
       <div className="flex flex-col items-center text-center mb-8">
         {/* Logo Section */}

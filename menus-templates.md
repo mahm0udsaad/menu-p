@@ -176,7 +176,7 @@ ReactPDF.render(<Quixote />);
 
 
 ------------------------------------------
-
+EXAMPLE GETTING FROM REACT PDF PLAYGOROUND
 
 Font.register({
   family: 'Oswald',

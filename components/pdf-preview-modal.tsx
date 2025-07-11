@@ -1,11 +1,12 @@
 "use client"
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { pdf } from "@react-pdf/renderer"
 import { CafeMenuPDF } from "@/components/pdf/cafe-menu-pdf"
+import { PaintingStylePdf } from "@/components/pdf/templates/painting-style/PaintingStylePdf"
 import { Loader2 } from "lucide-react"
-import type { RowStyleSettings } from "@/contexts/menu-editor-context"
+import type { RowStyleSettings, TemplateId } from "@/contexts/menu-editor-context"
 
 interface MenuItem {
   id: string
@@ -58,6 +59,7 @@ interface PdfPreviewModalProps {
     gradientDirection: 'to-b' | 'to-br' | 'to-r' | 'to-tr'
   }
   appliedRowStyles?: RowStyleSettings
+  selectedTemplate: TemplateId
 }
 
 export default function PdfPreviewModal({ 
@@ -67,7 +69,8 @@ export default function PdfPreviewModal({
   categories, 
   appliedFontSettings, 
   appliedPageBackgroundSettings, 
-  appliedRowStyles 
+  appliedRowStyles,
+  selectedTemplate
 }: PdfPreviewModalProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -129,17 +132,27 @@ export default function PdfPreviewModal({
           image_url: item.image_url || undefined
         }))
       }))
+
+      let PdfComponent: React.ElementType
+      let props: any = {
+        restaurant: restaurantForPdf,
+        categories: categoriesForPdf,
+      }
+
+      if (selectedTemplate === 'painting') {
+        PdfComponent = PaintingStylePdf
+      } else {
+        PdfComponent = CafeMenuPDF
+        props = {
+          ...props,
+          appliedFontSettings,
+          appliedPageBackgroundSettings,
+          appliedRowStyles,
+        }
+      }
       
       // Generate PDF blob
-      const blob = await pdf(
-        <CafeMenuPDF 
-          restaurant={restaurantForPdf} 
-          categories={categoriesForPdf}
-          appliedFontSettings={appliedFontSettings}
-          appliedPageBackgroundSettings={appliedPageBackgroundSettings}
-          appliedRowStyles={appliedRowStyles}
-        />
-      ).toBlob()
+      const blob = await pdf(React.createElement(PdfComponent, props)).toBlob()
       
       // Create object URL for iframe
       const url = URL.createObjectURL(blob)

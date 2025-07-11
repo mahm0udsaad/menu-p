@@ -1,6 +1,6 @@
 import type React from "react"
 import type { Metadata, Viewport } from "next"
-import { IBM_Plex_Sans_Arabic, Rubik } from 'next/font/google'
+import { IBM_Plex_Sans_Arabic, Rubik, Oswald } from 'next/font/google'
 import Script from "next/script"
 import "./globals.css"
 import { Toaster } from "sonner"
@@ -16,6 +16,11 @@ const ibmPlexSansArabic = IBM_Plex_Sans_Arabic({
 const rubik = Rubik({
   subsets: ['latin', 'arabic'],
   variable: '--font-rubik',
+})
+
+const oswald = Oswald({
+  subsets: ['latin'],
+  variable: '--font-oswald',
 })
 
 // Advanced SEO Metadata for PDF Menu Generator
@@ -194,7 +199,7 @@ export default function RootLayout({
         <link rel="alternate" hrefLang="x-default" href="https://menu-p.com" />
       </head>
       
-      <body className={cn("min-h-screen bg-background font-sans antialiased", ibmPlexSansArabic.variable, rubik.variable)}>
+      <body className={cn("min-h-screen bg-background font-sans antialiased", ibmPlexSansArabic.variable, rubik.variable, oswald.variable)}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
