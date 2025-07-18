@@ -6,11 +6,7 @@ import { HTML5Backend } from "react-dnd-html5-backend"
 import { useMenuEditor, type Restaurant, type MenuCategory } from "@/contexts/menu-editor-context"
 import { MenuHeader } from "./menu-header"
 import { MenuSection } from "./menu-section"
-import { FontSettingsModal } from "./font-settings-modal"
 import { MenuFooter } from "./menu-footer"
-import RowStylingModal from '@/components/row-styling-modal'
-import PageBackgroundModal from '@/components/editor/page-background-modal'
-import { TemplateSwitcherModal } from './template-switcher-modal'
 import PaintingStylePreview from './templates/painting-style/PaintingStylePreview'
 import VintagePreview from './templates/vintage/VintagePreview'
 import ModernPreview from './templates/modern/ModernPreview'
@@ -77,13 +73,6 @@ const ClassicMenuContent: React.FC = () => {
 const MenuContent: React.FC = () => {
   const {
     selectedTemplate,
-    showDesignModal,
-    showRowStylingModal,
-    setShowRowStylingModal,
-    rowStyleSettings,
-    handleSaveRowStyles,
-    showPageBackgroundModal,
-    setShowPageBackgroundModal
   } = useMenuEditor()
 
   const renderTemplatePreview = () => {
@@ -104,18 +93,7 @@ const MenuContent: React.FC = () => {
     <DndProvider backend={HTML5Backend}>
       <div>
         {renderTemplatePreview()}
-        {showDesignModal && <FontSettingsModal />}
-        <RowStylingModal
-            isOpen={showRowStylingModal}
-            onClose={() => setShowRowStylingModal(false)}
-            onSave={handleSaveRowStyles}
-            currentSettings={rowStyleSettings}
-        />
-        <PageBackgroundModal
-            isOpen={showPageBackgroundModal}
-            onClose={() => setShowPageBackgroundModal(false)}
-        />
-        <TemplateSwitcherModal />
+        {/* Modals are now managed centrally in ModalManager */}
       </div>
     </DndProvider>
   )

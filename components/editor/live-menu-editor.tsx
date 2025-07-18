@@ -20,9 +20,10 @@ import { useToast } from "@/hooks/use-toast"
 import { SUPPORTED_LANGUAGES } from "@/lib/utils/translation-constants"
 import { useMenuEditor } from "@/contexts/menu-editor-context"
 import { saveMenuTranslation,  deleteMenuTranslation } from "@/lib/actions/menu-translation"
-import { QuickActionsBar } from "./floating-controls"
+import ReusableFloatingControls from "@/components/ui/reusable-floating-controls"
 import ConfirmationModal from "@/components/ui/confirmation-modal"
 import { PublishingProgressBox } from "./PublishingProgressBox"
+import ModalManager from "./modal-manager"
 
 const PdfPreviewModal = dynamic(() => import("@/components/pdf-preview-modal"), {
   loading: () => <div className="h-96 bg-slate-800 rounded-lg animate-pulse"></div>,
@@ -775,7 +776,7 @@ export default function LiveMenuEditor({
             onRefresh={() => {}}
           />
         </div>
-        {!isPreviewMode && <QuickActionsBar />}
+        {!isPreviewMode && <ReusableFloatingControls />}
       </div>
 
       {/* Success Dialog */}
@@ -860,17 +861,8 @@ export default function LiveMenuEditor({
         onTranslationComplete={handleTranslationComplete}
       />
 
-      <ConfirmationModal
-        isOpen={confirmAction.show}
-        onClose={hideConfirmation}
-        onConfirm={() => {
-          confirmAction.action()
-          hideConfirmation()
-        }}
-        title={confirmAction.title}
-        description={confirmAction.description}
-        type={confirmAction.type}
-      />
+      {/* All modals are managed centrally */}
+      <ModalManager />
 
       <Dialog open={showDeleteLangModal} onOpenChange={setShowDeleteLangModal}>
         <DialogContent className="max-w-xs">

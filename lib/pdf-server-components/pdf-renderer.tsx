@@ -1,4 +1,4 @@
-import HTMLTemplateGenerator from './html-template-generator'
+import { HTMLTemplateGenerator } from './html-template-generator'
 import { TemplateId, PDFTemplateProps } from './pdf-template-factory'
 
 export interface PDFRenderOptions {

@@ -464,4 +464,4 @@ export class HTMLTemplateGenerator {
   }
 }
 
-export default HTMLTemplateGenerator 
+// Export removed to avoid conflicts with named export 

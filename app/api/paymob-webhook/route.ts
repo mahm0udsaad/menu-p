@@ -1,14 +1,11 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/server';
 import { sendPaymentNotificationEmail } from '@/lib/email/service';
-
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function POST(req: Request) {
   try {
+    const supabase = createClient();
+    
     const body = await req.json();
     console.log('🔔 [WEBHOOK] Paymob webhook received:', JSON.stringify(body, null, 2));
     console.log('🔔 [WEBHOOK] Request headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
