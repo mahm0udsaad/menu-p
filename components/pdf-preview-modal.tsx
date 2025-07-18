@@ -6,6 +6,7 @@ import { pdf } from "@react-pdf/renderer"
 import { CafeMenuPDF } from "@/components/pdf/cafe-menu-pdf"
 import { PaintingStylePdf } from "@/components/pdf/templates/painting-style/PaintingStylePdf"
 import { VintagePdf } from "@/components/pdf/templates/vintage/VintagePdf"
+import { ModernPdf } from "@/components/pdf/templates/modern/ModernPdf"
 import { Loader2 } from "lucide-react"
 import type { RowStyleSettings, TemplateId } from "@/contexts/menu-editor-context"
 
@@ -156,12 +157,13 @@ export default function PdfPreviewModal({
           }
           break
         case 'modern':
-          PdfComponent = CafeMenuPDF
+          PdfComponent = ModernPdf
           props = {
             ...props,
             appliedFontSettings,
             appliedPageBackgroundSettings,
             appliedRowStyles,
+            currentLanguage,
           }
           break
         default:

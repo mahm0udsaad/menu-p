@@ -174,73 +174,77 @@ export function ModernPDFTemplate({
                   {validItems.map((item) => (
                     <div
                       key={item.id}
-                      className="group flex justify-between items-start p-4 bg-white/60 backdrop-blur-sm rounded-lg border border-gray-200/60 hover:bg-white/80 hover:border-gray-300/80 transition-all duration-200 shadow-sm hover:shadow-md"
+                      className="group flex justify-between items-start hover:bg-gray-50/50 p-2 rounded-lg transition-all duration-200"
                       style={{
                         pageBreakInside: 'avoid',
                         breakInside: 'avoid'
                       }}
                     >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 
-                                className="font-semibold text-gray-900 text-base leading-tight"
-                                style={{
-                                  fontFamily: fontName,
-                                  fontWeight: activeFontSettings.weight,
-                                }}
-                              >
-                                {item.name}
-                              </h3>
-                              {item.is_featured && (
-                                <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded-full flex-shrink-0">
-                                  ⭐
-                                </span>
-                              )}
-                            </div>
-                            
-                            {item.description && (
-                              <p 
-                                className="text-gray-600 text-sm leading-relaxed mb-2"
-                                style={{
-                                  fontFamily: fontName,
-                                }}
-                              >
-                                {item.description}
-                              </p>
-                            )}
-                            
-                            {/* Dietary Info */}
-                            {item.dietary_info && item.dietary_info.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mt-2">
-                                {item.dietary_info.map((info, idx) => (
-                                  <span
-                                    key={idx}
-                                    className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full"
-                                    style={{
-                                      fontFamily: fontName,
-                                    }}
-                                  >
-                                    {info}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Price */}
-                          <div className="text-right flex-shrink-0 ml-4">
-                            <span 
-                              className="text-lg font-bold text-gray-900 whitespace-nowrap"
+                      {/* Item content - matches the current clean design */}
+                      <div className="flex-1 flex justify-between items-start">
+                        <div className="flex-1">
+                          {/* Item name */}
+                          <div className="mb-1">
+                            <h3 
+                              className="text-lg font-medium text-gray-800"
                               style={{
                                 fontFamily: fontName,
                                 fontWeight: activeFontSettings.weight,
                               }}
                             >
-                              {formatPrice(item.price)}
-                            </span>
+                              {item.name}
+                            </h3>
+                            {item.is_featured && (
+                              <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded-full flex-shrink-0 ml-2 inline-block">
+                                ⭐
+                              </span>
+                            )}
                           </div>
+                          
+                          {/* Item description */}
+                          {item.description && (
+                            <div className="mb-1">
+                              <p 
+                                className="text-sm text-gray-600 leading-relaxed"
+                                style={{
+                                  fontFamily: fontName,
+                                  fontWeight: 'normal',
+                                }}
+                              >
+                                {item.description}
+                              </p>
+                            </div>
+                          )}
+                          
+                          {/* Dietary Info */}
+                          {item.dietary_info && item.dietary_info.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {item.dietary_info.map((info, idx) => (
+                                <span
+                                  key={idx}
+                                  className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full"
+                                  style={{
+                                    fontFamily: fontName,
+                                  }}
+                                >
+                                  {info}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Price */}
+                        <div className="ml-4 text-right">
+                          <span 
+                            className="text-lg font-semibold text-gray-800"
+                            style={{
+                              fontFamily: fontName,
+                              fontWeight: activeFontSettings.weight,
+                            }}
+                          >
+                            {formatPrice(item.price)}
+                          </span>
                         </div>
                       </div>
                     </div>

@@ -394,26 +394,9 @@ export function generateHTMLContent(options: PDFGenerationOptions): string {
 }
 
 export class PlaywrightPDFGenerator {
-  private browser: Browser | null = null;
+  // Removed browser field as we now use per-call browser instances
 
-  async initialize() {
-    if (!this.browser) {
-      this.browser = await chromium.launch({
-        headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-gpu',
-          '--no-first-run',
-          '--no-zygote',
-          '--single-process',
-          '--disable-features=VizDisplayCompositor'
-        ]
-      });
-    }
-    return this.browser;
-  }
+  // Removed initialize() method as we now use per-call browser instances
 
   async generatePDF(options: PDFGenerationOptions): Promise<Buffer> {
     let browser: Browser | null = null;
@@ -588,13 +571,42 @@ export class PlaywrightPDFGenerator {
   }
 
   public async generatePDFFromHTML(htmlContent: string, options: { format?: 'A4' | 'Letter', margin?: any }): Promise<Buffer> {
-    if (!this.browser) {
-      throw new Error('Browser not initialized. Call initialize() first.');
-    }
-
-    const page = await this.browser.newPage();
+    let browser: Browser | null = null;
+    let page: Page | null = null;
 
     try {
+      console.log('🚀 Starting PDF generation from HTML with per-call browser...');
+      
+      // Create a new browser instance for each PDF generation
+      browser = await chromium.launch({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--no-first-run',
+          '--no-zygote',
+          '--single-process',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-renderer-backgrounding',
+          '--disable-extensions',
+          '--disable-plugins',
+          '--disable-default-apps',
+          '--run-all-compositor-stages-before-draw'
+        ]
+      });
+
+      const context = await browser.newContext({
+        viewport: { width: 1200, height: 1600 },
+        javaScriptEnabled: true,
+      });
+
+      page = await context.newPage();
+      
       await page.setContent(htmlContent, { waitUntil: 'networkidle' });
 
       const pdfBuffer = await page.pdf({
@@ -603,18 +615,30 @@ export class PlaywrightPDFGenerator {
         margin: options.margin || { top: '0px', right: '0px', bottom: '0px', left: '0px' },
       });
 
+      console.log(`✅ PDF generated successfully from HTML, size: ${pdfBuffer.length} bytes`);
       return pdfBuffer;
     } catch (error) {
       console.error('Error generating PDF from HTML content:', error);
       throw error;
     } finally {
-      await page.close();
+      if (page) {
+        try {
+          await page.close();
+        } catch (closeError) {
+          console.warn('⚠️ Warning: Error closing page:', closeError);
+        }
+      }
+      if (browser) {
+        try {
+          await browser.close();
+        } catch (closeError) {
+          console.warn('⚠️ Warning: Error closing browser:', closeError);
+        }
+      }
     }
   }
 
-  public isBrowserInitialized(): boolean {
-    return this.browser !== null;
-  }
+  // Removed isBrowserInitialized() method as we now use per-call browser instances
 }
 
 interface GeneratePDFFromDataOptions {
@@ -632,7 +656,8 @@ interface GeneratePDFFromDataOptions {
 export async function generatePDFFromMenuData(options: GeneratePDFFromDataOptions): Promise<Buffer> {
   const { htmlContent, format = 'A4', margin } = options;
   
-  const generator = await getPlaywrightPDFGenerator();
+  // Create a new generator instance for each call (no singleton pattern)
+  const generator = new PlaywrightPDFGenerator();
   
   try {
     return await generator.generatePDFFromHTML(htmlContent, {
@@ -645,22 +670,7 @@ export async function generatePDFFromMenuData(options: GeneratePDFFromDataOption
   }
 }
 
-let generatorPromise: Promise<PlaywrightPDFGenerator> | null = null;
-
-export async function getPlaywrightPDFGenerator(): Promise<PlaywrightPDFGenerator> {
-  if (!generatorPromise) {
-    generatorPromise = (async () => {
-      const generator = new PlaywrightPDFGenerator();
-      await generator.initialize();
-      // Add a check to ensure the browser was initialized successfully
-      if (!generator.isBrowserInitialized()) {
-        throw new Error('Playwright browser could not be initialized. This might be due to a missing dependency in the serverless environment.');
-      }
-      return generator;
-    })();
-  }
-  return generatorPromise;
-}
+// Removed singleton pattern as we now use per-call browser instances for better reliability in serverless environments
 
 export async function cleanupPDFGenerator() {
   console.log('PDF generator cleanup called (no action needed with per-call instances)');
