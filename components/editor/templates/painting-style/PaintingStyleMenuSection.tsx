@@ -17,7 +17,8 @@ const PaintingStyleMenuSection: React.FC<PaintingStyleMenuSectionProps> = ({ cat
     moveItem, 
     handleUpdateCategory, 
     handleDeleteCategory,
-    handleSaveNewCategory
+    handleSaveNewCategory,
+    isPreviewMode
   } = useMenuEditor()
 
   const [isEditing, setIsEditing] = useState(category.isTemporary || false)
@@ -66,10 +67,12 @@ const PaintingStyleMenuSection: React.FC<PaintingStyleMenuSectionProps> = ({ cat
               <span className="z-10 relative">{category.name}</span>
               <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-24 h-0.5 bg-[#c8a97e]"></span>
             </h2>
-            <div className="absolute top-0 right-0">
-              <Button onClick={() => setIsEditing(true)} variant="ghost" size="icon"><Edit className="w-4 h-4" /></Button>
-              <Button onClick={() => handleDeleteCategory(category.id)} variant="ghost" size="icon"><Trash2 className="w-4 h-4 text-red-600" /></Button>
-            </div>
+            {!isPreviewMode && (
+              <div className="absolute top-0 right-0">
+                <Button onClick={() => setIsEditing(true)} variant="ghost" size="icon"><Edit className="w-4 h-4" /></Button>
+                <Button onClick={() => handleDeleteCategory(category.id)} variant="ghost" size="icon"><Trash2 className="w-4 h-4 text-red-600" /></Button>
+              </div>
+            )}
           </>
         )}
       </div>
@@ -85,11 +88,13 @@ const PaintingStyleMenuSection: React.FC<PaintingStyleMenuSectionProps> = ({ cat
           />
         ))}
       </div>
-      <div className="mt-6 text-center">
-        <Button onClick={() => handleAddItem(category.id)} variant="ghost" className="text-gray-500 hover:text-[#c8a97e]">
-          <Plus className="w-4 h-4 mr-2" /> Add Item
-        </Button>
-      </div>
+      {!isPreviewMode && (
+        <div className="mt-6 text-center">
+          <Button onClick={() => handleAddItem(category.id)} variant="ghost" className="text-gray-500 hover:text-[#c8a97e]">
+            <Plus className="w-4 h-4 mr-2" /> Add Item
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

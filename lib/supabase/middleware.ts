@@ -54,7 +54,7 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   // Allow home page and menu pages for public access (no auth required)
   const isHomePage = request.nextUrl.pathname === "/"
   const isMenuPage = request.nextUrl.pathname.startsWith("/menus/")
-  const isApiMenuPdf = request.nextUrl.pathname.startsWith("/api/menu-pdf/")
+  const isApiMenuPdf = request.nextUrl.pathname.startsWith("/api/menu-pdf")
 
   if (!isAuthRoute && !isHomePage && !isMenuPage && !isApiMenuPdf) {
     const {

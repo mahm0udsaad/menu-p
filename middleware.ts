@@ -14,10 +14,10 @@ export const config = {
      * - favicon.ico (favicon file)
      * - / (home page - should be public)
      * - /menus/ (menu pages - should be public)
-     * - /api/menu-pdf/ (menu PDF API - should be public)
+     * - /api/menu-pdf (menu PDF API - should be public)
      * - /api/paymob-webhook (webhook endpoint)
      * Feel free to modify this pattern to include more paths.
      */
-    "/((?!_next/static|_next/image|favicon.ico|^/$|^/menus/|^/api/menu-pdf/|api/paymob-webhook|about-creator|saas-support|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|^/$|^/menus/|^/api/menu-pdf|^/api/paymob-webhook|about-creator|saas-support|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 }

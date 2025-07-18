@@ -30,6 +30,14 @@ const nextConfig = {
         },
       });
     }
+
+    // Playwright configuration for serverless
+    if (isServer) {
+      config.externals.push({
+        'playwright': 'commonjs playwright',
+        '@playwright/test': 'commonjs @playwright/test'
+      });
+    }
     
     return config;
   },

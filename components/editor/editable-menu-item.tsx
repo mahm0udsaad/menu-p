@@ -66,7 +66,7 @@ export default function EditableMenuItem({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const { appliedRowStyles } = useMenuEditor()
+  const { appliedRowStyles, isPreviewMode } = useMenuEditor()
 
   // Auto-enter edit mode for temporary items
   useEffect(() => {
@@ -118,6 +118,7 @@ export default function EditableMenuItem({
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
+    canDrag: !isPreviewMode,
     end: (draggedItem, monitor) => {
       if (!monitor.didDrop()) {
         // If dropped outside a valid target, handle it here if needed
@@ -238,9 +239,11 @@ export default function EditableMenuItem({
       >
         <div className="flex gap-3 sm:gap-4">
           {/* Drag handle */}
-          <div className="cursor-move pt-1 flex-shrink-0">
-            <GripVertical className="h-5 w-5 text-slate-400" />
-          </div>
+          {!isPreviewMode && (
+            <div className="cursor-move pt-1 flex-shrink-0">
+              <GripVertical className="h-5 w-5 text-slate-400" />
+            </div>
+          )}
 
           {isEditing ? (
             // EDIT MODE
@@ -330,14 +333,16 @@ export default function EditableMenuItem({
                 <h3 className="text-lg sm:text-xl font-semibold capitalize leading-tight" style={{ color: appliedRowStyles.itemColor, textShadow: appliedRowStyles.textShadow ? '1px 1px 2px rgba(0,0,0,0.1)' : 'none' }}>
                   {item.name}
                 </h3>
-                <Button
-                  onClick={toggleFeatured}
-                  size="sm"
-                  variant="ghost"
-                  className="p-1 h-auto transition-opacity flex-shrink-0"
-                >
-                  <Star className={`h-4 w-4 ${item.is_featured ? "text-amber-500 fill-current" : "text-slate-300"}`} />
-                </Button>
+                {!isPreviewMode && (
+                  <Button
+                    onClick={toggleFeatured}
+                    size="sm"
+                    variant="ghost"
+                    className="p-1 h-auto transition-opacity flex-shrink-0"
+                  >
+                    <Star className={`h-4 w-4 ${item.is_featured ? "text-amber-500 fill-current" : "text-slate-300"}`} />
+                  </Button>
+                )}
               </div>
               
               {item.description && (
@@ -353,7 +358,7 @@ export default function EditableMenuItem({
           )}
 
           {/* Action buttons in view mode */}
-          {!isEditing && (
+          {!isEditing && !isPreviewMode && (
             <div className="flex flex-col items-center gap-2 transition-opacity flex-shrink-0">
               <Button onClick={() => setIsEditing(true)} size="sm" variant="outline">
                 <Edit className="h-4 w-4" />

@@ -31,6 +31,7 @@ const VintageEditableMenuItem: React.FC<VintageEditableMenuItemProps> = ({ item,
     showConfirmation,
     currentPalette,
     currentLanguage,
+    isPreviewMode,
   } = useMenuEditor()
 
   const ref = useRef<HTMLDivElement>(null)
@@ -190,9 +191,11 @@ const VintageEditableMenuItem: React.FC<VintageEditableMenuItemProps> = ({ item,
       style={itemContainerStyle}
       className={`py-2 flex items-center justify-between w-full`}
     >
-        <div className={`cursor-move ${isArabic ? 'pl-2' : 'pr-2'}`}>
-            <GripVertical className="text-gray-400 h-4 w-4" />
-        </div>
+        {!isPreviewMode && (
+          <div className={`cursor-move ${isArabic ? 'pl-2' : 'pr-2'}`}>
+              <GripVertical className="text-gray-400 h-4 w-4" />
+          </div>
+        )}
       <div className={`flex items-center ${isArabic ? 'flex-row-reverse' : ''}`}>
         <div>
             <h4 className="text-base font-bold" style={nameStyle}>{item.name}</h4>
@@ -202,10 +205,12 @@ const VintageEditableMenuItem: React.FC<VintageEditableMenuItemProps> = ({ item,
 
       <div className="flex items-center flex-shrink-0">
         <p className="text-base font-bold" style={priceStyle}>{currencySymbol}{item.price}</p>
-        <div className={`flex items-center ${isArabic ? 'mr-2' : 'ml-2'}`}>
-          <Button onClick={() => setIsEditing(true)} variant="ghost" size="icon" className="h-8 w-8"><Edit className="w-4 h-4" /></Button>
-          <Button onClick={onDeleteConfirm} variant="ghost" size="icon" className="h-8 w-8"><Trash2 className="w-4 h-4 text-red-500" /></Button>
-        </div>
+        {!isPreviewMode && (
+          <div className={`flex items-center ${isArabic ? 'mr-2' : 'ml-2'}`}>
+            <Button onClick={() => setIsEditing(true)} variant="ghost" size="icon" className="h-8 w-8"><Edit className="w-4 h-4" /></Button>
+            <Button onClick={onDeleteConfirm} variant="ghost" size="icon" className="h-8 w-8"><Trash2 className="w-4 h-4 text-red-500" /></Button>
+          </div>
+        )}
       </div>
     </div>
   )

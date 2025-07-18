@@ -2,11 +2,10 @@
 
 import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { RefreshCw, FileText, Loader2, Eye, CheckCircle, QrCode, ExternalLink, Languages, X } from "lucide-react"
+import { RefreshCw, FileText, Loader2, Eye, CheckCircle, QrCode, ExternalLink, Languages, X, Database, Globe } from "lucide-react"
 import ProfessionalCafeMenuPreview from "./professional-cafe-menu-preview-refactored"
-import { generateAndSaveMenuPdf } from "@/lib/actions/pdf-actions"
+import { supabase } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
-import { pdf } from "@react-pdf/renderer"
 import {
   Dialog,
   DialogContent,
@@ -20,9 +19,10 @@ import MenuTranslationDrawer from "@/components/menu-translation-drawer"
 import { useToast } from "@/hooks/use-toast"
 import { SUPPORTED_LANGUAGES } from "@/lib/utils/translation-constants"
 import { useMenuEditor } from "@/contexts/menu-editor-context"
-import { saveMenuTranslation, getMenuTranslations } from "@/lib/actions/menu-translation"
+import { saveMenuTranslation,  deleteMenuTranslation } from "@/lib/actions/menu-translation"
 import { QuickActionsBar } from "./floating-controls"
 import ConfirmationModal from "@/components/ui/confirmation-modal"
+import { PublishingProgressBox } from "./PublishingProgressBox"
 
 const PdfPreviewModal = dynamic(() => import("@/components/pdf-preview-modal"), {
   loading: () => <div className="h-96 bg-slate-800 rounded-lg animate-pulse"></div>,
@@ -78,6 +78,81 @@ interface LiveMenuEditorProps {
   initialTranslations?: { [language: string]: { categories: MenuCategory[] } }
 }
 
+// New PDF generation function using the template system
+async function generateMenuPdfWithTemplates(
+  restaurant: any,
+  categories: any[],
+  templateId: string,
+  language: string,
+  customizations: any,
+  menuName: string = "Current Menu",
+  parentMenuId?: string
+): Promise<{ pdfUrl?: string; error?: string; menuId?: string }> {
+  try {
+    // Step 1: Generate PDF using the new template API
+    const response = await fetch('/api/menu-pdf/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        menuId: restaurant.id,
+        templateId,
+        language,
+        customizations,
+        format: 'A4',
+        forceRegenerate: true
+      })
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      try {
+        const errorData = JSON.parse(errorText);
+        throw new Error(errorData.details || 'Failed to generate PDF');
+      } catch (e) {
+        console.error("Non-JSON error response from server:", errorText);
+        throw new Error('An unexpected server error occurred. Check server logs for details.');
+      }
+    }
+
+    const { pdfUrl } = await response.json()
+
+    // Step 2: Save to published_menus table for menu management
+    const menuUuid = crypto.randomUUID()
+
+    const languageNames: { [key: string]: string } = {
+      'ar': 'الأصل',
+      'en': 'English', 
+      'fr': 'Français',
+      'es': 'Español'
+    }
+
+    const { error: dbError } = await supabase
+      .from("published_menus")
+      .insert({
+        id: menuUuid,
+        restaurant_id: restaurant.id,
+        menu_name: menuName,
+        pdf_url: pdfUrl,
+        language_code: language,
+        version_name: languageNames[language] || language,
+        parent_menu_id: parentMenuId,
+        is_primary_version: language === 'ar' && !parentMenuId
+      })
+
+    if (dbError) {
+      console.error("DB Insert Error:", dbError)
+      throw new Error(`Failed to save menu: ${dbError.message}`)
+    }
+
+    return { pdfUrl, menuId: menuUuid }
+  } catch (error: any) {
+    console.error("PDF Generation Error:", error)
+    return { error: error.message || "An unexpected error occurred" }
+  }
+}
+
 export default function LiveMenuEditor({ 
   restaurant, 
   initialMenuData = [], 
@@ -94,6 +169,8 @@ export default function LiveMenuEditor({
     confirmAction,
     hideConfirmation,
     setCurrentLanguage,
+    isPreviewMode,
+    setIsPreviewMode,
   } = useMenuEditor()
   
   const [refreshing, setRefreshing] = useState(false)
@@ -103,6 +180,7 @@ export default function LiveMenuEditor({
   const [publishResult, setPublishResult] = useState<{ pdfUrl?: string; menuId?: string } | null>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showTranslationDrawer, setShowTranslationDrawer] = useState(false)
+  const [showProgressBox, setShowProgressBox] = useState(false)
   
   // New states for multi-version support
   const [menuVersions, setMenuVersions] = useState<{ [language: string]: { categories: MenuCategory[], pdfUrl?: string } }>({
@@ -111,6 +189,18 @@ export default function LiveMenuEditor({
   })
   const [activeVersion, setActiveVersion] = useState<string>('ar')
   const [planInfo, setPlanInfo] = useState(initialPlanInfo)
+  const [publishingProgress, setPublishingProgress] = useState<{ 
+    current: string; 
+    total: number; 
+    completed: number; 
+    error?: string;
+    steps?: Array<{
+      id: string;
+      label: string;
+      status: 'pending' | 'active' | 'completed' | 'error';
+      icon?: React.ComponentType<{ className?: string }>;
+    }>;
+  }>({ current: '', total: 0, completed: 0 })
   
   const router = useRouter()
   const { hasPaidPlan, loading: paymentLoading, refetch: refetchPaymentStatus } = usePaymentStatus()
@@ -211,61 +301,274 @@ export default function LiveMenuEditor({
   }
 
   const handlePublishMenu = async () => {
-    if (!hasPaidPlan) {
-      setShowPaymentModal(true)
-      return
-    }
+    // if (!hasPaidPlan) {
+    //   setShowPaymentModal(true)
+    //   return
+    // }
 
     setIsPublishing(true)
+    setShowProgressBox(true)
+    
+    // Get all available language versions
+    const availableLanguages = Object.keys(menuVersions).filter(lang => {
+      const version = menuVersions[lang];
+      return version && version.categories && version.categories.length > 0;
+    });
+    
+    if (availableLanguages.length === 0) {
+      setPublishingProgress(prev => ({ 
+        ...prev, 
+        error: "لا توجد نسخ صالحة للنشر" 
+      }));
+      setIsPublishing(false);
+      return;
+    }
+
+    // Initialize steps based on available languages
+    const initialSteps = [
+      { id: 'preparing', label: 'Preparing menu data...', status: 'active' as const, icon: Database },
+      ...availableLanguages.map(lang => {
+        const langName = SUPPORTED_LANGUAGES.find(l => l.code === lang)?.name || lang;
+        return {
+          id: `publish-${lang}`,
+          label: `Publishing ${langName} version`,
+          status: 'pending' as const,
+          icon: Globe
+        };
+      }),
+      { id: 'finishing', label: 'Finalizing publication...', status: 'pending' as const, icon: CheckCircle }
+    ];
+    
+    setPublishingProgress({ 
+      current: 'Preparing data...', 
+      total: availableLanguages.length, 
+      completed: 0,
+      steps: initialSteps
+    });
+    
     try {
-      let PdfComponent: React.ElementType
-      let props: any = {
-        restaurant: restaurant,
-        categories: categories,
+      console.log('🎨 Publishing menu with Playwright...', {
+        template: selectedTemplate,
+        restaurant: restaurant.name,
+        availableLanguages: availableLanguages,
+        totalLanguages: availableLanguages.length
+      })
+
+      // Step 1: Complete preparation
+      await new Promise(resolve => setTimeout(resolve, 500)); // Small delay for UX
+      setPublishingProgress(prev => ({
+        ...prev,
+        steps: prev.steps?.map(step => 
+          step.id === 'preparing' 
+            ? { ...step, status: 'completed' as const }
+            : step
+        )
+      }));
+
+      // Map template names for the Playwright PDF generator
+      const getPlaywrightTemplate = (template: string | null) => {
+        switch (template) {
+          case 'classic':
+            return 'cafe';
+          case 'painting':
+            return 'painting';
+          case 'vintage':
+            return 'vintage';
+          case 'modern':
+            return 'modern';
+          default:
+            return 'cafe'; // Default fallback
+        }
+      };
+      
+      const templateForPlaywright = getPlaywrightTemplate(selectedTemplate);
+
+      console.log('🎨 Template mapping:', {
+        original: selectedTemplate,
+        mapped: templateForPlaywright,
+        availableLanguages: availableLanguages.length
+      });
+
+      // Prepare customizations for Playwright
+      const customizations = {
+        fontSettings: appliedFontSettings,
+        pageBackgroundSettings: appliedPageBackgroundSettings,
+        rowStyles: appliedRowStyles,
       }
 
-      if (selectedTemplate === 'painting') {
-        const { PaintingStylePdf } = await import("@/components/pdf/templates/painting-style/PaintingStylePdf")
-        PdfComponent = PaintingStylePdf
-      } else {
-        const { CafeMenuPDF } = await import("@/components/pdf/cafe-menu-pdf")
-        PdfComponent = CafeMenuPDF
-        props = {
-          ...props,
-          appliedFontSettings,
-          appliedPageBackgroundSettings,
-          appliedRowStyles,
+      const publishResults: { language: string; result: any }[] = [];
+      let primaryMenuId: string | null = null;
+
+      // Publish each language version
+      for (let i = 0; i < availableLanguages.length; i++) {
+        const language = availableLanguages[i];
+        const languageData = menuVersions[language];
+        
+        // Update progress to show current language being processed
+        const langName = SUPPORTED_LANGUAGES.find(lang => lang.code === language)?.name || language;
+        setPublishingProgress(prev => ({ 
+          ...prev, 
+          current: langName,
+          steps: prev.steps?.map(step => 
+            step.id === `publish-${language}`
+              ? { ...step, status: 'active' as const }
+              : step
+          )
+        }));
+        
+        if (!languageData || !languageData.categories || languageData.categories.length === 0) {
+          console.warn(`Skipping ${language}: No valid menu data`);
+          // Mark step as error
+          setPublishingProgress(prev => ({
+            ...prev,
+            steps: prev.steps?.map(step => 
+              step.id === `publish-${language}`
+                ? { ...step, status: 'error' as const }
+                : step
+            )
+          }));
+          continue;
+        }
+
+        console.log(`📄 Generating PDF for ${language}...`);
+        
+        try {
+          const result = await generateMenuPdfWithTemplates(
+            restaurant,
+            languageData.categories,
+            templateForPlaywright,
+            language,
+            customizations,
+            "Current Menu",
+            language === 'ar' ? undefined : primaryMenuId || undefined // Set parent for non-Arabic versions
+          );
+
+          if (result.pdfUrl && result.menuId) {
+            publishResults.push({ language, result });
+            
+            // Set the primary menu ID (usually Arabic) for other versions to reference
+            if (language === 'ar' || !primaryMenuId) {
+              primaryMenuId = result.menuId;
+            }
+            
+            // Update the menu version with the PDF URL
+            setMenuVersions(prev => ({
+              ...prev,
+              [language]: {
+                ...prev[language],
+                pdfUrl: result.pdfUrl
+              }
+            }));
+            
+            // Mark step as completed
+            setPublishingProgress(prev => ({
+              ...prev,
+              completed: i + 1,
+              steps: prev.steps?.map(step => 
+                step.id === `publish-${language}`
+                  ? { ...step, status: 'completed' as const }
+                  : step
+              )
+            }));
+            
+            console.log(`✅ Successfully published ${language} version`);
+          } else {
+            console.error(`❌ Failed to publish ${language}:`, result.error);
+            throw new Error(`Failed to publish ${language}: ${result.error}`);
+          }
+        } catch (languageError: any) {
+          console.error(`❌ Error publishing ${language}:`, languageError);
+          // Mark step as error
+          setPublishingProgress(prev => ({
+            ...prev,
+            steps: prev.steps?.map(step => 
+              step.id === `publish-${language}`
+                ? { ...step, status: 'error' as const }
+                : step
+            )
+          }));
+          throw new Error(`Failed to publish ${language}: ${languageError.message}`);
         }
       }
-      
-      const blob = await pdf(React.createElement(PdfComponent, props)).toBlob()
 
-      const formData = new FormData()
-      formData.append("pdfFile", blob, "menu.pdf")
-      formData.append("restaurantId", restaurant.id)
-
-      const result = await generateAndSaveMenuPdf(null, formData)
-
-      if (result.pdfUrl && result.menuId) {
-        setPublishResult({
-          pdfUrl: result.pdfUrl,
-          menuId: result.menuId
-        })
-        setShowSuccessDialog(true)
-      } else {
-        throw new Error(`Failed to publish: ${result.error}`)
+      if (publishResults.length === 0) {
+        throw new Error('No valid language versions found to publish');
       }
 
-      const languageCount = 1 // Always publish one version for now
+      console.log('📊 Publishing results:', {
+        totalResults: publishResults.length,
+        languages: publishResults.map(r => r.language),
+        primaryResult: publishResults.find(r => r.language === 'ar') || publishResults[0]
+      });
+
+      // Step 3: Finishing
+      setPublishingProgress(prev => ({
+        ...prev,
+        current: 'Finalizing...',
+        steps: prev.steps?.map(step => 
+          step.id === 'finishing'
+            ? { ...step, status: 'active' as const }
+            : step
+        )
+      }));
+
+      await new Promise(resolve => setTimeout(resolve, 500)); // Small delay for UX
+
+      // Complete finishing step
+      setPublishingProgress(prev => ({
+        ...prev,
+        steps: prev.steps?.map(step => 
+          step.id === 'finishing'
+            ? { ...step, status: 'completed' as const }
+            : step
+        )
+      }));
+
+      // Set the primary result for the success dialog
+      const primaryResult = publishResults.find(r => r.language === 'ar') || publishResults[0];
+      setPublishResult({
+        pdfUrl: primaryResult.result.pdfUrl,
+        menuId: primaryResult.result.menuId
+      });
+
+      console.log('✅ Publishing completed successfully, showing success dialog');
+      
+      // Close the progress box and show success dialog after a short delay
+      setTimeout(() => {
+        setShowProgressBox(false);
+        setShowSuccessDialog(true);
+      }, 1000);
+
+      // Show success notification with actual language count
+      const languageCount = publishResults.length;
+      const publishedLanguages = publishResults.map(r => {
+        const langName = SUPPORTED_LANGUAGES.find(lang => lang.code === r.language)?.name || r.language;
+        return langName;
+      }).join('، ');
+
       showNotification("success", "تم نشر القائمة بنجاح", 
-        `تم نشر القائمة بـ ${languageCount} ${languageCount === 1 ? 'لغة' : 'لغات'} بنجاح!`)
+        `تم نشر القائمة بـ ${languageCount} ${languageCount === 1 ? 'لغة' : 'لغات'}: ${publishedLanguages}`);
       
     } catch (error: any) {
       console.error("Publishing error:", error)
+      setPublishingProgress(prev => ({ 
+        ...prev, 
+        error: error.message || "حدث خطأ أثناء نشر القائمة",
+        steps: prev.steps?.map(step => 
+          step.status === 'active' 
+            ? { ...step, status: 'error' as const }
+            : step
+        )
+      }));
       showNotification("error", "خطأ في النشر", `حدث خطأ أثناء نشر القائمة: ${error.message}`)
     } finally {
       setIsPublishing(false)
+      // Don't automatically close the progress box on error - let user see the error
     }
+  }
+
+  const handleTogglePreviewMode = () => {
+    setIsPreviewMode(!isPreviewMode)
   }
 
   const handlePdfPreview = () => {
@@ -288,18 +591,46 @@ export default function LiveMenuEditor({
   const [languageToDelete, setLanguageToDelete] = useState<string | null>(null)
   const [showDeleteLangModal, setShowDeleteLangModal] = useState(false)
 
-  const handleDeleteLanguage = () => {
+  const handleDeleteLanguage = async () => {
     if (languageToDelete && menuVersions[languageToDelete]) {
-      setMenuVersions(prev => {
-        const updated = { ...prev }
-        delete updated[languageToDelete]
-        return updated
-      })
-      // If the deleted language was active, switch to 'ar' or first available
-      if (activeVersion === languageToDelete) {
-        const fallback = Object.keys(menuVersions).find(l => l !== languageToDelete) || 'ar'
-        setActiveVersion(fallback)
-        setCategories(menuVersions[fallback]?.categories || [])
+      try {
+        // Delete from database
+        const result = await deleteMenuTranslation(restaurant.id, languageToDelete)
+        
+        if (result.success) {
+          // Update local state only after successful database deletion
+          setMenuVersions(prev => {
+            const updated = { ...prev }
+            delete updated[languageToDelete]
+            return updated
+          })
+          
+          // If the deleted language was active, switch to 'ar' or first available
+          if (activeVersion === languageToDelete) {
+            const fallback = Object.keys(menuVersions).find(l => l !== languageToDelete) || 'ar'
+            setActiveVersion(fallback)
+            setCategories(menuVersions[fallback]?.categories || [])
+          }
+          
+          const languageName = SUPPORTED_LANGUAGES.find(lang => lang.code === languageToDelete)?.name || languageToDelete
+          toast({
+            title: "تم الحذف بنجاح",
+            description: `تم حذف ترجمة ${languageName} بنجاح`,
+          })
+        } else {
+          toast({
+            title: "فشل في الحذف",
+            description: result.error || "حدث خطأ أثناء حذف الترجمة",
+            variant: "destructive"
+          })
+        }
+      } catch (error) {
+        console.error("Error deleting translation:", error)
+        toast({
+          title: "فشل في الحذف",
+          description: "حدث خطأ غير متوقع أثناء حذف الترجمة",
+          variant: "destructive"
+        })
       }
     }
     setShowDeleteLangModal(false)
@@ -313,12 +644,16 @@ export default function LiveMenuEditor({
         <div className="w-11/12 mx-auto sticky top-1 z-50 flex items-center justify-between gap-3 bg-white/80 backdrop-blur-md border border-red-200 rounded-xl p-2 shadow-lg">
           
           {/* Left Side: Publish Button */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 relative">
             <Button
               onClick={handlePublishMenu}
-              disabled={isPublishing || !planInfo?.canPublish || categories.length === 0}
+              disabled={isPublishing}
               size="sm"
-              className="bg-green-500 hover:bg-green-600 text-white h-8 px-4 transition-colors flex items-center"
+              className={`h-8 px-4 transition-colors flex items-center ${
+                isPublishing 
+                  ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                  : 'bg-green-500 hover:bg-green-600 text-white'
+              }`}
               title={!planInfo?.canPublish && planInfo ? `لقد وصلت إلى الحد الأقصى (${planInfo.currentMenus}/${planInfo.maxMenus}) للقوائم في خطتك.` : "نشر القائمة"}
             >
               {isPublishing ? (
@@ -330,6 +665,11 @@ export default function LiveMenuEditor({
                 {isPublishing ? "جاري النشر..." : "نشر القائمة"}
               </span>
             </Button>
+            <PublishingProgressBox
+              isOpen={showProgressBox}
+              progress={publishingProgress}
+              onClose={() => setShowProgressBox(false)}
+            />
           </div>
 
           {/* Center: Language Controls */}
@@ -393,22 +733,36 @@ export default function LiveMenuEditor({
             <Button
               variant="outline"
               onClick={handleRefresh}
-              disabled={refreshing}
+              disabled={refreshing || isPreviewMode}
               size="sm"
-              className="border-red-200 text-gray-600 hover:text-red-600 hover:bg-red-50 h-8 w-8 p-0 transition-colors flex-shrink-0"
+              className={`border-red-200 text-gray-600 hover:text-red-600 hover:bg-red-50 h-8 w-8 p-0 transition-colors flex-shrink-0 ${isPreviewMode ? 'opacity-50' : ''}`}
               title="تحديث"
             >
               <RefreshCw className="h-4 w-4" />
             </Button>
+            {!isPreviewMode && (
+              <Button
+                variant="outline"
+                onClick={handlePdfPreview}
+                size="sm"
+                className={`border-red-200 text-gray-600 hover:text-red-600 hover:bg-red-50 h-8 w-8 p-0 transition-colors flex-shrink-0 ${!hasPaidPlan && !paymentLoading ? 'opacity-75' : ''}`}
+                title={!hasPaidPlan && !paymentLoading ? 'الترقية للمعاينة' : 'معاينة PDF'}
+                disabled={paymentLoading}
+              >
+                <FileText className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               variant="outline"
-              onClick={handlePdfPreview}
+              onClick={handleTogglePreviewMode}
               size="sm"
-              className={`border-red-200 text-gray-600 hover:text-red-600 hover:bg-red-50 h-8 w-8 p-0 transition-colors flex-shrink-0 ${!hasPaidPlan && !paymentLoading ? 'opacity-75' : ''}`}
-              title={!hasPaidPlan && !paymentLoading ? 'الترقية للمعاينة' : 'معاينة PDF'}
-              disabled={paymentLoading}
+              className={`border-red-200 text-gray-600 hover:text-red-600 hover:bg-red-50 h-8 px-3 transition-colors flex-shrink-0 ${isPreviewMode ? 'bg-red-50 text-red-600' : ''}`}
+              title={isPreviewMode ? 'العودة للتحرير' : 'معاينة القائمة'}
             >
-              <Eye className="h-4 w-4" />
+              <Eye className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline text-xs">
+                {isPreviewMode ? 'تحرير' : 'معاينة'}
+              </span>
             </Button>
           </div>
         </div>
@@ -421,7 +775,7 @@ export default function LiveMenuEditor({
             onRefresh={() => {}}
           />
         </div>
-        <QuickActionsBar />
+        {!isPreviewMode && <QuickActionsBar />}
       </div>
 
       {/* Success Dialog */}
@@ -435,7 +789,12 @@ export default function LiveMenuEditor({
           </DialogHeader>
           <div className="space-y-4 py-4">
             <p className="text-gray-600">
-              تم إنشاء ملف PDF للقائمة وحفظه بنجاح! يمكنك الآن:
+              تم إنشاء ملف PDF للقائمة وحفظه بنجاح! 
+              {Object.keys(menuVersions).length > 1 
+                ? ` تم نشر ${Object.keys(menuVersions).length} نسخة بلغات مختلفة.`
+                : ''
+              }
+              {' '}يمكنك الآن:
             </p>
             <div className="space-y-2">
               {publishResult?.pdfUrl && (

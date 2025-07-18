@@ -194,3 +194,34 @@ export async function getMenuTranslations(restaurantId: string) {
   }
 }
 
+export async function deleteMenuTranslation(
+  restaurantId: string,
+  languageCode: string
+) {
+  const supabase = createClient()
+  try {
+    // Delete the translation from the database
+    const { error } = await supabase
+      .from("menu_translations")
+      .delete()
+      .eq("restaurant_id", restaurantId)
+      .eq("language_code", languageCode)
+
+    if (error) {
+      console.error("Error deleting menu translation:", error)
+      throw new Error(`Failed to delete translation: ${error.message}`)
+    }
+
+    revalidatePath(`/menu-editor?id=${restaurantId}`)
+
+    return { success: true }
+  } catch (error) {
+    console.error("Unexpected error in deleteMenuTranslation:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
+    }
+  }
+}
+

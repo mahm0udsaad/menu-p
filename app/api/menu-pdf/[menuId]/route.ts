@@ -104,14 +104,25 @@ export async function GET(
     if (pdfBuffer.byteLength === 0) {
       throw new Error('PDF file is empty')
     }
+
+    // Validate PDF structure
+    const pdfHeader = Buffer.from(pdfBuffer).toString('ascii', 0, 4);
+    if (pdfHeader !== '%PDF') {
+      console.error('Invalid PDF header in stored file:', pdfHeader);
+      throw new Error('Stored file is not a valid PDF');
+    }
+    
+    console.log('✅ Valid PDF found, size:', pdfBuffer.byteLength, 'bytes');
     
     // Return the PDF with appropriate headers
     return new NextResponse(pdfBuffer, {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename="${publishedMenu.menu_name || 'menu'}.pdf"`,
+        "Content-Length": pdfBuffer.byteLength.toString(),
         "Cache-Control": "public, max-age=3600", // Cache for 1 hour
-        "X-Content-Type-Options": "nosniff"
+        "X-Content-Type-Options": "nosniff",
+        "Accept-Ranges": "bytes"
       }
     })
   } catch (error) {

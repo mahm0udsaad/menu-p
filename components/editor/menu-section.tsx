@@ -26,7 +26,8 @@ export const MenuSection: React.FC<MenuSectionProps> = ({ category }) => {
     handleDeleteCategory,
     handleBgImageUpload,
     moveItem,
-    handleDropItem
+    handleDropItem,
+    isPreviewMode
   } = useMenuEditor()
 
   const [showImageUpload, setShowImageUpload] = useState(false)
@@ -114,34 +115,36 @@ export const MenuSection: React.FC<MenuSectionProps> = ({ category }) => {
           </div>
           
           {/* Edit Controls - Always visible now */}
-          <div className="absolute top-2 right-2 flex gap-2 z-20">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-white hover:text-white hover:bg-white/20 shadow-lg"
-              title="تحديث صورة الخلفية"
-              onClick={() => setShowImageUpload(true)}
-            >
-              <ImageIcon className="h-4 w-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-white hover:text-white hover:bg-white/20 shadow-lg"
-              title="تعديل اسم القسم"
-              onClick={() => setIsEditingCategory(true)}
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button
-              onClick={() => setShowDeleteConfirm(true)}
-              size="sm"
-              variant="ghost"
-              className="text-white hover:text-red-300 hover:bg-red-500/20 shadow-lg"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
+          {!isPreviewMode && (
+            <div className="absolute top-2 right-2 flex gap-2 z-20">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-white hover:text-white hover:bg-white/20 shadow-lg"
+                title="تحديث صورة الخلفية"
+                onClick={() => setShowImageUpload(true)}
+              >
+                <ImageIcon className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-white hover:text-white hover:bg-white/20 shadow-lg"
+                title="تعديل اسم القسم"
+                onClick={() => setIsEditingCategory(true)}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button
+                onClick={() => setShowDeleteConfirm(true)}
+                size="sm"
+                variant="ghost"
+                className="text-white hover:text-red-300 hover:bg-red-500/20 shadow-lg"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Menu Items */}
@@ -160,30 +163,32 @@ export const MenuSection: React.FC<MenuSectionProps> = ({ category }) => {
           ))}
           
           {/* Add Item Button */}
-          <div className="mt-6 text-center">
-            <Button
-              onClick={() => handleAddItem(category.id)}
-              variant="outline"
-              size="sm"
-              className="hover:text-white transition-colors"
-              style={{ 
-                borderColor: currentPalette.primary, 
-                color: currentPalette.primary,
-                backgroundColor: 'transparent'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = currentPalette.primary
-                e.currentTarget.style.color = 'white'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent'
-                e.currentTarget.style.color = currentPalette.primary
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              إضافة عنصر إلى {category.name}
-            </Button>
-          </div>
+          {!isPreviewMode && (
+            <div className="mt-6 text-center">
+              <Button
+                onClick={() => handleAddItem(category.id)}
+                variant="outline"
+                size="sm"
+                className="hover:text-white transition-colors"
+                style={{ 
+                  borderColor: currentPalette.primary, 
+                  color: currentPalette.primary,
+                  backgroundColor: 'transparent'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = currentPalette.primary
+                  e.currentTarget.style.color = 'white'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                  e.currentTarget.style.color = currentPalette.primary
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                إضافة عنصر إلى {category.name}
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Drop handler */}

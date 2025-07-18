@@ -60,7 +60,7 @@ export interface Restaurant {
   page_background_url?: string | null
 }
 
-export type TemplateId = 'classic' | 'painting' | 'vintage';
+export type TemplateId = 'classic' | 'painting' | 'vintage' | 'modern';
 
 export interface SimplifiedFontSettings {
   arabic: { font: string; weight: string }
@@ -126,6 +126,7 @@ interface MenuEditorContextType {
   isEditingFooter: boolean
   selectedTemplate: TemplateId | null
   currentLanguage: string
+  isPreviewMode: boolean
 
   // Modal states
   showColorModal: boolean
@@ -160,6 +161,7 @@ interface MenuEditorContextType {
   setShowPageBackgroundModal: React.Dispatch<React.SetStateAction<boolean>>
   setShowTemplateSwitcherModal: React.Dispatch<React.SetStateAction<boolean>>
   setIsEditingFooter: React.Dispatch<React.SetStateAction<boolean>>
+  setIsPreviewMode: React.Dispatch<React.SetStateAction<boolean>>
   setCurrentLanguage: React.Dispatch<React.SetStateAction<string>>
   
   // Functions
@@ -226,6 +228,7 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const [isLoadingDummy, setIsLoadingDummy] = useState(false)
   const [isEditingFooter, setIsEditingFooter] = useState(false)
+  const [isPreviewMode, setIsPreviewMode] = useState(false)
 
   // Default settings
   const defaultFontSettings: SimplifiedFontSettings = {
@@ -793,6 +796,7 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     isUploadingLogo,
     isLoadingDummy,
     isEditingFooter,
+    isPreviewMode,
     selectedTemplate,
     notification,
     confirmAction,
@@ -816,6 +820,7 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     setShowPageBackgroundModal,
     setShowTemplateSwitcherModal,
     setIsEditingFooter,
+    setIsPreviewMode,
     setCurrentLanguage,
 
     // Functions
@@ -858,6 +863,7 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     isUploadingLogo,
     isLoadingDummy,
     isEditingFooter,
+    isPreviewMode,
     selectedTemplate,
     notification,
     confirmAction,
@@ -881,6 +887,7 @@ export const MenuEditorProvider: React.FC<MenuEditorProviderProps> = ({
     setShowPageBackgroundModal,
     setShowTemplateSwitcherModal,
     setIsEditingFooter,
+    setIsPreviewMode,
     setCurrentLanguage,
 
     // Functions

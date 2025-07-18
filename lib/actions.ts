@@ -32,7 +32,7 @@ export async function signUp(state: { error?: string; success?: string } | null,
     email,
     password,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/`,
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || ('http://localhost:' + (process.env.PORT || process.env.NEXT_PUBLIC_PORT || '3001'))}/`,
     },
   })
 
@@ -102,7 +102,7 @@ export async function forgotPassword(state: { error?: string; success?: string }
     const supabase = createServerActionClient({ cookies })
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/reset-password`,
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || ('http://localhost:' + (process.env.PORT || process.env.NEXT_PUBLIC_PORT || '3001'))}/auth/reset-password`,
     })
 
     if (error) {
@@ -233,7 +233,7 @@ export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/`,
+              redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || ('http://localhost:' + (process.env.PORT || process.env.NEXT_PUBLIC_PORT || '3001'))}/`,
     },
   })
 

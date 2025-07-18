@@ -24,6 +24,7 @@ const VintageMenuSection: React.FC<VintageMenuSectionProps> = ({ category, curre
     appliedFontSettings,
     currentPalette,
     currentLanguage,
+    isPreviewMode,
   } = useMenuEditor()
 
   const [isEditing, setIsEditing] = useState(category.isTemporary || false)
@@ -81,10 +82,12 @@ const VintageMenuSection: React.FC<VintageMenuSectionProps> = ({ category, curre
             <h3 className="text-lg font-bold uppercase pb-2 border-b-2 flex-grow" style={{...titleStyle, textAlign: isArabic ? 'right' : 'left'}}>
                 {category.name}
             </h3>
-            <div className={`flex items-center ${isArabic ? 'mr-2' : 'ml-2'}`}>
-                <Button onClick={() => setIsEditing(true)} variant="ghost" size="icon" className="h-8 w-8"><Edit className="w-4 h-4" /></Button>
-                <Button onClick={() => handleDeleteCategory(category.id)} variant="ghost" size="icon" className="h-8 w-8"><Trash2 className="w-4 h-4 text-red-500" /></Button>
-            </div>
+            {!isPreviewMode && (
+              <div className={`flex items-center ${isArabic ? 'mr-2' : 'ml-2'}`}>
+                  <Button onClick={() => setIsEditing(true)} variant="ghost" size="icon" className="h-8 w-8"><Edit className="w-4 h-4" /></Button>
+                  <Button onClick={() => handleDeleteCategory(category.id)} variant="ghost" size="icon" className="h-8 w-8"><Trash2 className="w-4 h-4 text-red-500" /></Button>
+              </div>
+            )}
           </>
         )}
       </div>
@@ -103,15 +106,17 @@ const VintageMenuSection: React.FC<VintageMenuSectionProps> = ({ category, curre
         ))}
       </div>
       
-      <div className="mt-4 text-center">
-            <Button 
-                onClick={() => handleAddItem(category.id)} 
-                variant="ghost" 
-                className="text-gray-500 hover:text-gray-800"
-            >
-            <Plus className="w-4 h-4 mr-2" /> Add Item
-            </Button>
-      </div>
+      {!isPreviewMode && (
+        <div className="mt-4 text-center">
+              <Button 
+                  onClick={() => handleAddItem(category.id)} 
+                  variant="ghost" 
+                  className="text-gray-500 hover:text-gray-800"
+              >
+              <Plus className="w-4 h-4 mr-2" /> Add Item
+              </Button>
+        </div>
+      )}
     </div>
   )
 }

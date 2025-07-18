@@ -26,7 +26,8 @@ const PaintingStyleEditableMenuItem: React.FC<PaintingStyleEditableMenuItemProps
     appliedRowStyles, 
     appliedFontSettings, 
     handleSaveNewItem, 
-    handleDeleteItem 
+    handleDeleteItem,
+    isPreviewMode 
   } = useMenuEditor()
 
   const ref = useRef<HTMLDivElement>(null)
@@ -142,9 +143,11 @@ const PaintingStyleEditableMenuItem: React.FC<PaintingStyleEditableMenuItemProps
       style={{ opacity: isDragging ? 0.5 : 1 }}
       className="flex items-center bg-white p-4 rounded-lg shadow-sm"
     >
-      <div className="cursor-move pr-4">
-        <GripVertical className="text-gray-400" />
-      </div>
+      {!isPreviewMode && (
+        <div className="cursor-move pr-4">
+          <GripVertical className="text-gray-400" />
+        </div>
+      )}
       <div className="flex-grow">
         <h3
           className="text-lg font-bold text-[#3a3a3a]"
@@ -176,10 +179,12 @@ const PaintingStyleEditableMenuItem: React.FC<PaintingStyleEditableMenuItemProps
       >
         {item.price}
       </div>
-      <div className="flex gap-1 ml-4">
-        <Button onClick={() => setIsEditing(true)} variant="ghost" size="icon"><Edit className="w-4 h-4" /></Button>
-        <Button onClick={() => handleDeleteItem(item.id)} variant="ghost" size="icon"><Trash2 className="w-4 h-4 text-red-600" /></Button>
-      </div>
+      {!isPreviewMode && (
+        <div className="flex gap-1 ml-4">
+          <Button onClick={() => setIsEditing(true)} variant="ghost" size="icon"><Edit className="w-4 h-4" /></Button>
+          <Button onClick={() => handleDeleteItem(item.id)} variant="ghost" size="icon"><Trash2 className="w-4 h-4 text-red-600" /></Button>
+        </div>
+      )}
     </div>
   )
 }

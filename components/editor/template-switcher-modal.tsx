@@ -22,6 +22,11 @@ const templates = [
     name: 'Classic Vintage',
     previewUrl: '/previews/painting-preview.png', // Placeholder for vintage style
   },
+  {
+    id: 'modern',
+    name: 'Modern Style',
+    previewUrl: '/previews/modern-preview.png',
+  },
 ]
 
 export function TemplateSwitcherModal() {

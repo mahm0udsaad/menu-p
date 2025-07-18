@@ -13,6 +13,7 @@ import PageBackgroundModal from '@/components/editor/page-background-modal'
 import { TemplateSwitcherModal } from './template-switcher-modal'
 import PaintingStylePreview from './templates/painting-style/PaintingStylePreview'
 import VintagePreview from './templates/vintage/VintagePreview'
+import ModernPreview from './templates/modern/ModernPreview'
 
 interface ProfessionalCafeMenuPreviewProps {
   restaurant: Restaurant
@@ -91,6 +92,8 @@ const MenuContent: React.FC = () => {
         return <PaintingStylePreview />;
       case 'vintage':
         return <VintagePreview />;
+      case 'modern':
+        return <ModernPreview />;
       case 'classic':
       default:
         return <ClassicMenuContent />;

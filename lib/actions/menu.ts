@@ -147,6 +147,56 @@ export async function getDashboardData() {
   }
 }
 
+export async function getMenuDataForTemplate(restaurantId: string) {
+  if (!restaurantId) {
+    console.error('getMenuDataForTemplate: restaurantId is required');
+    return null;
+  }
+  
+  const supabase = createClient();
+
+  try {
+    const { data: restaurant, error } = await supabase
+      .from('restaurants')
+      .select(
+        `
+        *,
+        categories:menu_categories (
+          *,
+          menu_items (
+            *
+          )
+        )
+      `
+      )
+      .eq('id', restaurantId)
+      .single();
+
+    if (error) {
+      console.error(`Error fetching menu data for template (restaurantId: ${restaurantId}):`, error);
+      throw error;
+    }
+    
+    if (!restaurant) {
+      return null;
+    }
+
+    // Sort categories and menu items by display_order
+    const sortedCategories = restaurant.categories
+      .map(category => ({
+        ...category,
+        menu_items: category.menu_items.sort((a, b) => a.display_order - b.display_order),
+      }))
+      .sort((a, b) => a.display_order - b.display_order);
+      
+    return { ...restaurant, categories: sortedCategories };
+
+  } catch (error) {
+    console.error('Unexpected error in getMenuDataForTemplate:', error);
+    return null;
+  }
+}
+
 export async function addMenuItem(prevState: MenuItemFormState, formData: FormData): Promise<MenuItemFormState> {
   const supabase = createClient()
 

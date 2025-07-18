@@ -155,6 +155,15 @@ export default function PdfPreviewModal({
             currentLanguage,
           }
           break
+        case 'modern':
+          PdfComponent = CafeMenuPDF
+          props = {
+            ...props,
+            appliedFontSettings,
+            appliedPageBackgroundSettings,
+            appliedRowStyles,
+          }
+          break
         default:
           PdfComponent = CafeMenuPDF
           props = {
