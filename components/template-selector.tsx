@@ -14,6 +14,7 @@ interface Template {
   category: string
   layout_config: any
   preview_image_url: string | null
+  previewImageUrl?: string
 }
 
 interface TemplateSelectorProps {
@@ -113,7 +114,7 @@ export default function TemplateSelector({
                 
                 {/* Template Image - Full Coverage */}
                 <Image 
-                  src={template.preview_image_url || "/placeholder.svg?height=400&width=300"}
+                  src={template.previewImageUrl || template.preview_image_url || "/placeholder.svg?height=400&width=300"}
                   alt={template.name}
                   fill
                   className="object-cover object-center transition-transform duration-300 group-hover:scale-105"
@@ -213,7 +214,7 @@ export default function TemplateSelector({
               <div className="max-w-2xl mx-auto">
                 <div className="aspect-[3/4] w-full max-w-md mx-auto rounded-xl overflow-hidden shadow-xl border border-red-200">
                   <Image
-                    src={previewTemplate.preview_image_url || "/placeholder.svg?height=600&width=450"}
+                    src={previewTemplate.previewImageUrl || previewTemplate.preview_image_url || "/placeholder.svg?height=600&width=450"}
                     alt={previewTemplate.name}
                     width={450}
                     height={600}

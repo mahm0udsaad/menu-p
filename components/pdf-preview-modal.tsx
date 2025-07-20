@@ -3,12 +3,9 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import React, { useState, useEffect } from "react"
 import { pdf } from "@react-pdf/renderer"
-import { CafeMenuPDF } from "@/components/pdf/cafe-menu-pdf"
-import { PaintingStylePdf } from "@/components/pdf/templates/painting-style/PaintingStylePdf"
-import { VintagePdf } from "@/components/pdf/templates/vintage/VintagePdf"
-import { ModernPdf } from "@/components/pdf/templates/modern/ModernPdf"
 import { Loader2 } from "lucide-react"
 import type { RowStyleSettings, TemplateId } from "@/contexts/menu-editor-context"
+import { clientTemplateRegistry } from "@/lib/client-template-registry"
 
 interface MenuItem {
   id: string
@@ -137,43 +134,32 @@ export default function PdfPreviewModal({
         }))
       }))
 
-      let PdfComponent: React.ElementType
+      // Normalize template ID and load component dynamically
+      const normalizedTemplateId = await clientTemplateRegistry.normalizeTemplateId(selectedTemplate)
+      const PdfComponent = await clientTemplateRegistry.loadTemplateComponent(normalizedTemplateId)
+      
+      // Base props for all templates
       let props: any = {
         restaurant: restaurantForPdf,
         categories: categoriesForPdf,
       }
 
-      switch (selectedTemplate) {
-        case 'painting':
-          PdfComponent = PaintingStylePdf
-          break
-        case 'vintage':
-          PdfComponent = VintagePdf
-          props = {
-            ...props,
-            appliedPageBackgroundSettings,
-            appliedRowStyles,
-            currentLanguage,
-          }
-          break
-        case 'modern':
-          PdfComponent = ModernPdf
-          props = {
-            ...props,
-            appliedFontSettings,
-            appliedPageBackgroundSettings,
-            appliedRowStyles,
-            currentLanguage,
-          }
-          break
-        default:
-          PdfComponent = CafeMenuPDF
-          props = {
-            ...props,
-            appliedFontSettings,
-            appliedPageBackgroundSettings,
-            appliedRowStyles,
-          }
+      // Add template-specific props based on template features
+      const templateMetadata = await clientTemplateRegistry.getTemplateMetadata(normalizedTemplateId)
+      if (templateMetadata) {
+        // Add common props that most templates need
+        if (appliedFontSettings) {
+          props.appliedFontSettings = appliedFontSettings
+        }
+        if (appliedPageBackgroundSettings) {
+          props.appliedPageBackgroundSettings = appliedPageBackgroundSettings
+        }
+        if (appliedRowStyles) {
+          props.appliedRowStyles = appliedRowStyles
+        }
+        if (currentLanguage) {
+          props.currentLanguage = currentLanguage
+        }
       }
       
       // Generate PDF blob

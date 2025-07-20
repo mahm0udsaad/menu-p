@@ -21,7 +21,6 @@ import { SUPPORTED_LANGUAGES } from "@/lib/utils/translation-constants"
 import { useMenuEditor } from "@/contexts/menu-editor-context"
 import { saveMenuTranslation,  deleteMenuTranslation } from "@/lib/actions/menu-translation"
 import ReusableFloatingControls from "@/components/ui/reusable-floating-controls"
-import ConfirmationModal from "@/components/ui/confirmation-modal"
 import { PublishingProgressBox } from "./PublishingProgressBox"
 import ModalManager from "./modal-manager"
 
@@ -770,11 +769,80 @@ export default function LiveMenuEditor({
 
         {/* Menu Preview */}
         <div className="flex-1 min-h-0 overflow-hidden">
-          <ProfessionalCafeMenuPreview
-            restaurant={restaurant}
-            categories={categories}
-            onRefresh={() => {}}
-          />
+          {(() => {
+            switch (selectedTemplate as any) {
+              case 'fast-food': {
+                const FastFoodMenuPreview = require("@/components/templates/fast-food-menu-preview").FastFoodMenuPreview;
+                return <FastFoodMenuPreview key={selectedTemplate} />;
+              }
+              case 'elegant-cocktail': {
+                const ElegantCocktailMenuPreview = require("@/components/templates/elegant-cocktail-menu-preview").ElegantCocktailMenuPreview;
+                return <ElegantCocktailMenuPreview key={selectedTemplate} />;
+              }
+              case 'sweet-treats': {
+                const SweetTreatsMenuPreview = require("@/components/templates/sweet-treats-menu-preview").SweetTreatsMenuPreview;
+                return <SweetTreatsMenuPreview key={selectedTemplate} />;
+              }
+              case 'luxury-menu': {
+                const LuxuryMenuPreview = require("@/components/templates/luxury-menu-preview").LuxuryMenuPreview;
+                return <LuxuryMenuPreview key={selectedTemplate} menu={categories} onUpdateMenu={() => {}} />;
+              }
+              case 'simple-coffee': {
+                const SimpleCoffeePreview = require("@/components/templates/simple-coffee-menu-preview").SimpleCoffeeMenuPreview;
+                return <SimpleCoffeePreview key={selectedTemplate} />;
+              }
+              case 'borcelle-coffee': {
+                const BorcelleCoffeePreview = require("@/components/templates/borcelle-coffee-menu-preview").BorcelleCoffeeMenuPreview;
+                return <BorcelleCoffeePreview key={selectedTemplate} />;
+              }
+              case 'chalkboard-coffee': {
+                const ChalkboardCoffeePreview = require("@/components/templates/chalkboard-coffee-menu-preview").ChalkboardCoffeeMenuPreview;
+                return <ChalkboardCoffeePreview key={selectedTemplate} />;
+              }
+              case 'botanical-cafe': {
+                const BotanicalCafePreview = require("@/components/templates/botanical-cafe-menu-preview").BotanicalCafeMenuPreview;
+                return <BotanicalCafePreview key={selectedTemplate} />;
+              }
+              case 'cocktail-menu': {
+                const CocktailMenuPreview = require("@/components/templates/cocktail-menu-preview").CocktailMenuPreview;
+                return <CocktailMenuPreview key={selectedTemplate} />;
+              }
+              case 'vintage-bakery': {
+                const VintageBakeryPreview = require("@/components/templates/vintage-bakery-menu-preview").VintageBakeryMenuPreview;
+                return <VintageBakeryPreview key={selectedTemplate} />;
+              }
+              case 'vintage-coffee': {
+                const VintageCoffeePreview = require("@/components/templates/vintage-coffee-menu-preview").VintageCoffeeMenuPreview;
+                return <VintageCoffeePreview key={selectedTemplate} />;
+              }
+              case 'interactive-menu': {
+                const InteractiveMenuPreview = require("@/components/templates/interactive-menu-preview").InteractiveMenuPreview;
+                return <InteractiveMenuPreview key={selectedTemplate} menu={categories} onUpdateMenu={() => {}} />;
+              }
+              case 'modern-coffee': {
+                const ModernCoffeePreview = require("@/components/editor/templates/modern-coffee/ModernCoffeePreview").default;
+                return <ModernCoffeePreview key={selectedTemplate} />;
+              }
+              case 'painting': {
+                const PaintingStylePreview = require("@/components/editor/templates/painting-style/PaintingStylePreview").default;
+                return <PaintingStylePreview />;
+              }
+              case 'vintage': {
+                const VintagePreview = require("@/components/editor/templates/vintage/VintagePreview").default;
+                return <VintagePreview />;
+              }
+              case 'modern': {
+                const ModernPreview = require("@/components/editor/templates/modern/ModernPreview").default;
+                return <ModernPreview />;
+              }
+              case 'classic':
+              case 'cafe':
+              default: {
+                const ClassicMenuPreview = require("@/components/editor/professional-cafe-menu-preview-refactored").default;
+                return <ClassicMenuPreview />;
+              }
+            }
+          })()}
         </div>
         {!isPreviewMode && <ReusableFloatingControls />}
       </div>

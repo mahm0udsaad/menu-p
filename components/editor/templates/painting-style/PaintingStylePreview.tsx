@@ -1,6 +1,8 @@
 "use client"
 
 import React from "react"
+import { DndProvider } from 'react-dnd'
+import { HTML5Backend } from 'react-dnd-html5-backend'
 import { useMenuEditor, type MenuCategory, type RowStyleSettings, type SimplifiedFontSettings } from "@/contexts/menu-editor-context"
 import PaintingStyleMenuSection from "./PaintingStyleMenuSection"
 import { Button } from "@/components/ui/button"
@@ -75,5 +77,9 @@ const PaintingStyleMenuContent: React.FC = () => {
 }
 
 export default function PaintingStylePreview() {
-    return <PaintingStyleMenuContent />
+    return (
+      <DndProvider backend={HTML5Backend}>
+        <PaintingStyleMenuContent />
+      </DndProvider>
+    )
 } 

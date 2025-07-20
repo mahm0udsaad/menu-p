@@ -21,12 +21,39 @@ export class HTMLTemplateGenerator {
     switch (templateId) {
       case 'modern':
         return this.generateModernTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+      case 'modern-coffee':
+        return this.generateModernCoffeeTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
       case 'painting':
         return this.generatePaintingTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
       case 'vintage':
         return this.generateVintageTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
       case 'classic':
       case 'cafe':
+        return this.generateCafeTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+      case 'fast-food':
+        return this.generateFastFoodTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+      case 'elegant-cocktail':
+        return this.generateElegantCocktailTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+      case 'sweet-treats':
+        return this.generateSweetTreatsTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+      case 'simple-coffee':
+        return this.generateSimpleCoffeeTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+      case 'borcelle-coffee':
+        return this.generateBorcelleCoffeeTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+      case 'luxury-menu':
+        return this.generateLuxuryMenuTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+      case 'chalkboard-coffee':
+        return this.generateChalkboardCoffeeTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+      case 'botanical-cafe':
+        return this.generateBotanicalCafeTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+      case 'cocktail-menu':
+        return this.generateCocktailMenuTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+      case 'vintage-bakery':
+        return this.generateVintageBakeryTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+      case 'vintage-coffee':
+        return this.generateVintageCoffeeTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+      case 'interactive-menu':
+        return this.generateInteractiveMenuTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
       default:
         return this.generateCafeTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
     }
@@ -309,6 +336,138 @@ export class HTMLTemplateGenerator {
   }
   
   /**
+   * Generate Modern Coffee template HTML - matches ModernPreview.tsx exactly
+   */
+  private static generateModernCoffeeTemplate(restaurant: any, categories: any[], currency: string, isRTL: boolean, customizations: any, pageBackgroundStyle: string): string {
+    // Get font settings exactly like ModernPreview
+    const fontSettings = customizations?.fontSettings || {}
+    const isArabic = !isRTL || true // Default to Arabic styling
+    const activeFontSettings = isArabic 
+      ? fontSettings.arabic || { font: 'Arial', weight: 'normal' }
+      : fontSettings.english || { font: 'Arial', weight: 'normal' }
+    
+    const fontName = activeFontSettings.font.replace(/\s/g, '_')
+
+    // Filter valid items exactly like in the preview
+    const getValidItems = (items: any[]) => {
+      return items.filter(item => 
+        item && 
+        item.name && 
+        item.is_available && 
+        item.price !== null && 
+        item.price !== undefined &&
+        !isNaN(Number(item.price))
+      )
+    }
+
+    // Format price exactly like in the preview
+    const formatPrice = (price: number | null): string => {
+      if (price === null || price === undefined) return ''
+      try {
+        const numPrice = Number(price)
+        if (isNaN(numPrice)) return '0'
+        return isRTL ? `${currency} ${numPrice.toFixed(2)}` : `${numPrice.toFixed(2)} ${currency}`
+      } catch {
+        return `${price} ${currency}`
+      }
+    }
+
+    // Use menu-bg.jpeg background exactly like ModernPreview
+    const backgroundStyle = `
+      background-image: url('/assets/menu-bg.jpeg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    `
+
+    return `
+      <div 
+        id="modern-preview" 
+        style="min-height: 1123px; padding: 2rem; position: relative; ${backgroundStyle}" 
+        dir="${isRTL ? 'rtl' : 'ltr'}"
+      >
+        <!-- Modern Container with semi-transparent overlay - exactly like ModernPreview -->
+        <div style="position: relative; width: 100%; min-height: 100%; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(4px); border-radius: 0.5rem; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); max-width: 42rem; margin: 0 auto;">
+          
+          <!-- Simple Header - exactly like ModernPreview -->
+          <header style="text-align: center; padding: 2rem; border-bottom: 2px solid #e5e7eb;">
+            <div style="display: inline-block; margin-bottom: 1rem;">
+              <img
+                src="${restaurant?.logo_url || '/assets/menu-header.png'}"
+                alt="Logo"
+                style="width: 4rem; height: 4rem; margin: 0 auto; object-fit: cover; border-radius: 50%;"
+              />
+            </div>
+            
+            <h1 style="font-size: 3.75rem; font-weight: 700; margin-bottom: 0.5rem; color: #1f2937; letter-spacing: 0.1em; font-family: ${fontName}, Arial, sans-serif; font-weight: ${activeFontSettings.weight};">
+              ${isArabic ? 'قائمة الطعام' : 'MENU'}
+            </h1>
+          </header>
+
+          <!-- Categories - exactly like ModernPreview -->
+          <div style="padding: 2rem; display: flex; flex-direction: column; gap: 2.5rem;">
+            ${categories.map((category) => {
+              const validItems = getValidItems(category.menu_items || [])
+              
+              if (validItems.length === 0) return ''
+
+              return `
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                  <!-- Category Title - exactly like ModernPreview -->
+                  <h2 style="font-size: 1.25rem; font-weight: 600; color: #1f2937; letter-spacing: 0.1em; text-transform: uppercase; text-align: center; border-bottom: 1px solid #d1d5db; padding-bottom: 0.5rem; font-family: ${fontName}, Arial, sans-serif; font-weight: ${activeFontSettings.weight};">
+                    ${category.name}
+                  </h2>
+                  
+                  <!-- Menu Items - exactly like ModernPreview -->
+                  <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    ${validItems.map((item) => `
+                      <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 1rem; background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(4px); border-radius: 0.5rem; border: 1px solid rgba(229, 231, 235, 0.6); box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); page-break-inside: avoid; break-inside: avoid;">
+                        <div style="flex: 1; min-width: 0;">
+                          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem;">
+                            <div style="flex: 1; min-width: 0;">
+                              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                <h3 style="font-weight: 600; color: #111827; font-size: 1rem; line-height: 1.25; font-family: ${fontName}, Arial, sans-serif; font-weight: ${activeFontSettings.weight};">
+                                  ${item.name}
+                                </h3>
+                                ${item.is_featured ? `
+                                  <span style="background: #fef3c7; color: #92400e; font-size: 0.75rem; padding: 0.125rem 0.5rem; border-radius: 9999px; flex-shrink: 0;">
+                                    ⭐
+                                  </span>
+                                ` : ''}
+                              </div>
+                              ${item.description ? `
+                                <p style="color: #6b7280; font-size: 0.875rem; line-height: 1.25; margin-bottom: 0.5rem;">
+                                  ${item.description}
+                                </p>
+                              ` : ''}
+                              ${item.dietary_info && item.dietary_info.length > 0 ? `
+                                <div style="display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.5rem;">
+                                                                     ${item.dietary_info.map((info: string) => `
+                                    <span style="background: #dcfce7; color: #166534; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 500;">
+                                      ${info}
+                                    </span>
+                                  `).join('')}
+                                </div>
+                              ` : ''}
+                            </div>
+                            <div style="font-size: 1.125rem; font-weight: 700; color: #059669; white-space: nowrap; margin-left: 1rem;">
+                              ${formatPrice(item.price)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              `
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    `
+  }
+  
+  /**
    * Generate Painting template HTML
    */
   private static generatePaintingTemplate(restaurant: any, categories: any[], currency: string, isRTL: boolean, customizations: any, pageBackgroundStyle: string): string {
@@ -415,6 +574,90 @@ export class HTMLTemplateGenerator {
         </div>
       </div>
     `
+  }
+  
+  /**
+   * Generate Fast Food template HTML
+   */
+  private static generateFastFoodTemplate(restaurant: any, categories: any[], currency: string, isRTL: boolean, customizations: any, pageBackgroundStyle: string): string {
+    return this.generateCafeTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+  }
+
+  /**
+   * Generate Elegant Cocktail template HTML
+   */
+  private static generateElegantCocktailTemplate(restaurant: any, categories: any[], currency: string, isRTL: boolean, customizations: any, pageBackgroundStyle: string): string {
+    return this.generateCafeTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+  }
+
+  /**
+   * Generate Sweet Treats template HTML
+   */
+  private static generateSweetTreatsTemplate(restaurant: any, categories: any[], currency: string, isRTL: boolean, customizations: any, pageBackgroundStyle: string): string {
+    return this.generateCafeTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+  }
+
+  /**
+   * Generate Simple Coffee template HTML
+   */
+  private static generateSimpleCoffeeTemplate(restaurant: any, categories: any[], currency: string, isRTL: boolean, customizations: any, pageBackgroundStyle: string): string {
+    return this.generateCafeTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+  }
+
+  /**
+   * Generate Borcelle Coffee template HTML
+   */
+  private static generateBorcelleCoffeeTemplate(restaurant: any, categories: any[], currency: string, isRTL: boolean, customizations: any, pageBackgroundStyle: string): string {
+    return this.generateCafeTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+  }
+
+  /**
+   * Generate Luxury Menu template HTML
+   */
+  private static generateLuxuryMenuTemplate(restaurant: any, categories: any[], currency: string, isRTL: boolean, customizations: any, pageBackgroundStyle: string): string {
+    return this.generateCafeTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+  }
+
+  /**
+   * Generate Chalkboard Coffee template HTML
+   */
+  private static generateChalkboardCoffeeTemplate(restaurant: any, categories: any[], currency: string, isRTL: boolean, customizations: any, pageBackgroundStyle: string): string {
+    return this.generateCafeTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+  }
+
+  /**
+   * Generate Botanical Cafe template HTML
+   */
+  private static generateBotanicalCafeTemplate(restaurant: any, categories: any[], currency: string, isRTL: boolean, customizations: any, pageBackgroundStyle: string): string {
+    return this.generateCafeTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+  }
+
+  /**
+   * Generate Cocktail Menu template HTML
+   */
+  private static generateCocktailMenuTemplate(restaurant: any, categories: any[], currency: string, isRTL: boolean, customizations: any, pageBackgroundStyle: string): string {
+    return this.generateCafeTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+  }
+
+  /**
+   * Generate Vintage Bakery template HTML
+   */
+  private static generateVintageBakeryTemplate(restaurant: any, categories: any[], currency: string, isRTL: boolean, customizations: any, pageBackgroundStyle: string): string {
+    return this.generateCafeTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+  }
+
+  /**
+   * Generate Vintage Coffee template HTML
+   */
+  private static generateVintageCoffeeTemplate(restaurant: any, categories: any[], currency: string, isRTL: boolean, customizations: any, pageBackgroundStyle: string): string {
+    return this.generateCafeTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+  }
+
+  /**
+   * Generate Interactive Menu template HTML
+   */
+  private static generateInteractiveMenuTemplate(restaurant: any, categories: any[], currency: string, isRTL: boolean, customizations: any, pageBackgroundStyle: string): string {
+    return this.generateCafeTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
   }
   
   /**

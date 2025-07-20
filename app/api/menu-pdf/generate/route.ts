@@ -20,8 +20,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Menu ID is required" }, { status: 400 })
     }
 
-    // Validate template ID
-    const normalizedTemplateId = PDFTemplateFactory.normalizeTemplateId(templateId)
+    // Validate template ID using the new async factory
+    const normalizedTemplateId = await PDFTemplateFactory.normalizeTemplateId(templateId)
     console.log(`🎨 Generating PDF for menu ${menuId} with template '${normalizedTemplateId}'`)
 
     const supabase = createClient()
@@ -79,9 +79,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`🎯 Generating new PDF with React Server Components...`)
+    console.log(`🎯 Generating new PDF with dynamic template loading...`)
 
-    // Generate PDF using React Server Components
+    // Generate PDF using the new async renderer
     const renderOptions = {
       templateId: normalizedTemplateId,
       restaurant,
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
       format,
     }
 
-    // Step 1: Render React component to HTML
+    // Step 1: Render template to HTML (now async)
     const htmlContent = await PDFReactRenderer.renderTemplate(renderOptions)
 
     // Step 2: Generate PDF from HTML using Playwright
@@ -173,15 +173,24 @@ export async function POST(request: NextRequest) {
 // GET endpoint to retrieve available templates
 export async function GET() {
   try {
-    const templates = PDFTemplateFactory.getAllTemplates()
+    // Use the new async factory to get templates
+    const templates = await PDFTemplateFactory.getAllTemplates()
+    const categories = await PDFTemplateFactory.getCategories()
     
     return NextResponse.json({
       templates: templates.map(template => ({
         id: template.id,
         name: template.name,
-        description: template.description
+        description: template.description,
+        category: template.category,
+        features: template.features
       })),
-      defaultTemplate: 'classic'
+      categories: categories.map(category => ({
+        id: category.name.toLowerCase().replace(/\s+/g, '-'),
+        name: category.name,
+        description: category.description
+      })),
+      defaultTemplate: await PDFTemplateFactory.normalizeTemplateId()
     })
   } catch (error) {
     console.error("Error fetching templates:", error)

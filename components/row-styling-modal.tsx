@@ -61,7 +61,11 @@ export default function RowStylingModal({ isOpen, onClose, onSave, currentSettin
   useEffect(() => {
     setSettings(s => ({
       ...currentSettings,
-      borderRadius: Math.max(1, currentSettings.borderRadius || 1)
+      borderRadius: Math.max(1, currentSettings.borderRadius || 1),
+      borderTop: currentSettings.borderTop || { enabled: false, color: '#e5e7eb', width: 1 },
+      borderBottom: currentSettings.borderBottom || { enabled: false, color: '#e5e7eb', width: 1 },
+      borderLeft: currentSettings.borderLeft || { enabled: false, color: '#e5e7eb', width: 1 },
+      borderRight: currentSettings.borderRight || { enabled: false, color: '#e5e7eb', width: 1 }
     }));
   }, [currentSettings])
 
@@ -128,21 +132,23 @@ export default function RowStylingModal({ isOpen, onClose, onSave, currentSettin
     }
     
     const { borderTop, borderBottom, borderLeft, borderRight, borderRadius } = settings
-    if (borderTop.enabled) style.borderTop = `${borderTop.width}px solid ${borderTop.color}`
-    if (borderBottom.enabled) style.borderBottom = `${borderBottom.width}px solid ${borderBottom.color}`
-    if (borderLeft.enabled) style.borderLeft = `${borderLeft.width}px solid ${borderLeft.color}`
-    if (borderRight.enabled) style.borderRight = `${borderRight.width}px solid ${borderRight.color}`
+    if (borderTop?.enabled) style.borderTop = `${borderTop.width}px solid ${borderTop.color}`
+    if (borderBottom?.enabled) style.borderBottom = `${borderBottom.width}px solid ${borderBottom.color}`
+    if (borderLeft?.enabled) style.borderLeft = `${borderLeft.width}px solid ${borderLeft.color}`
+    if (borderRight?.enabled) style.borderRight = `${borderRight.width}px solid ${borderRight.color}`
     
-    style.borderRadius = `${borderRadius}px`
+    style.borderRadius = `${borderRadius || 1}px`
 
     return style
   }, [settings])
   
   const handleBorderChange = (side: BorderSide, newValues: Partial<BorderSetting>) => {
+    const defaultBorder: BorderSetting = { enabled: false, color: '#e5e7eb', width: 1 }
     setSettings(prev => ({
       ...prev,
       [side]: {
-        ...prev[side],
+        ...defaultBorder,
+        ...(prev[side] || {}),
         ...newValues
       }
     }))
@@ -366,12 +372,12 @@ export default function RowStylingModal({ isOpen, onClose, onSave, currentSettin
                             </Label>
                             <Switch
                               id={`${side}-toggle`}
-                              checked={settings[side].enabled}
+                              checked={settings[side]?.enabled || false}
                               onCheckedChange={(checked) => handleBorderChange(side, { enabled: checked })}
                             />
                           </div>
 
-                          {settings[side].enabled && (
+                          {settings[side]?.enabled && (
                             <div className="space-y-3 pt-3 border-t">
                               <div className="space-y-1.5">
                                 <Label className="text-xs">لون الإطار</Label>

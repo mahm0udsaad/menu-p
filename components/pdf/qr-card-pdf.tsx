@@ -1,293 +1,67 @@
-import { Document, Page, Text, View, StyleSheet, Image, Font } from "@react-pdf/renderer"
+"use client"
 
-// Register local Arabic fonts from public/fonts
-Font.register({
-  family: 'Cairo',
-  fonts: [
-    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Cairo/static/Cairo-Regular.ttf', fontWeight: 'normal' },
-    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Cairo/static/Cairo-Bold.ttf', fontWeight: 'bold' },
-    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Cairo/static/Cairo-Light.ttf', fontWeight: 300 },
-    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Cairo/static/Cairo-Medium.ttf', fontWeight: 500 },
-    { src: '/fonts/AR/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Cairo/static/Cairo-SemiBold.ttf', fontWeight: 600 },
-  ]
-});
+import React from 'react';
 
-Font.register({
-  family: 'NotoKufiArabic',
-  fonts: [
-    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Rubik-Regular.ttf', fontWeight: 'normal' },
-    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Rubik-Regular.ttf', fontWeight: 'bold' },
-    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Rubik-Regular.ttf', fontWeight: 300 },
-    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Rubik-Regular.ttf', fontWeight: 500 },
-    { src: '/fonts/Cairo,Noto_Kufi_Arabic,Open_Sans,Roboto/Rubik-Regular.ttf', fontWeight: 600 },
-  ]
-});
-
-// Helper function to detect text direction (RTL for Arabic)
-const getTextDirection = (text: string) => {
-  const arabicPattern = /[\u0600-\u06FF]/
-  return arabicPattern.test(text) ? 'rtl' : 'ltr'
+interface QRCardPDFProps {
+  restaurantName: string
+  qrCodeUrl: string
+  menuUrl: string
+  logoUrl?: string
 }
 
-// Define interfaces for QR card data
-interface Restaurant {
-  id: string
-  name: string
-  logo_url?: string
-  color_palette?: {
-    primary: string
-    secondary: string
-    accent: string
-  }
-}
-
-interface QRCardOptions {
-  customText: string
-  cardBgColor: string
-  textColor: string
-  qrCodeSize: number
-  showBorder: boolean
-  borderColor: string
-  logoPosition: 'none' | 'top' | 'middle' | 'both'
-}
-
-// Styles matching the React preview exactly
-const styles = StyleSheet.create({
-  page: {
-    fontFamily: "Cairo",
-    backgroundColor: "#ffffff",
-    padding: 20,
-    fontSize: 12,
-    width: 100 * 2.83465, // 100mm to points
-    height: 150 * 2.83465, // 150mm to points
-  },
-  // Outer container with background color (like React's outer div)
-  outerContainer: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 12,
-    padding: 20,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  // Inner white card container (like React's white div)
-  innerCardContainer: {
-    backgroundColor: "#ffffff",
-    padding: 16,
-    borderRadius: 8,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    maxWidth: 200,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  cardWithBorder: {
-    borderWidth: 2,
-    borderStyle: "solid",
-  },
-  // Logo at top
-  topLogo: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    objectFit: "cover",
-    marginBottom: 8,
-  },
-  topLogoText: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    backgroundColor: "#10b981",
-    color: "#ffffff",
-    fontSize: 14,
-    fontWeight: "bold",
-    textAlign: "center",
-    lineHeight: 60,
-    fontFamily: "Cairo",
-    marginBottom: 8,
-  },
-  // QR Code container
-  qrContainer: {
-    position: "relative",
-    marginBottom: 8,
-  },
-  qrCode: {
-    width: 160,
-    height: 160,
-  },
-  // Logo overlay on QR code (middle position)
-  qrLogoOverlay: {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    marginTop: -20,
-    marginLeft: -20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#ffffff",
-    borderWidth: 2,
-    borderColor: "#ffffff",
-  },
-  qrLogoImage: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    objectFit: "cover",
-    margin: 2,
-  },
-  // Restaurant name
-  restaurantNameRTL: {
-    fontSize: 14,
-    fontWeight: "500",
-    textAlign: "center",
-    fontFamily: "NotoKufiArabic",
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  restaurantNameLTR: {
-    fontSize: 14,
-    fontWeight: "500",
-    textAlign: "center",
-    fontFamily: "Cairo",
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  // Custom text
-  customTextRTL: {
-    fontSize: 12,
-    textAlign: "center",
-    fontFamily: "NotoKufiArabic",
-    marginTop: 4,
-    lineHeight: 1.3,
-  },
-  customTextLTR: {
-    fontSize: 12,
-    textAlign: "center",
-    fontFamily: "Cairo",
-    marginTop: 4,
-    lineHeight: 1.3,
-  },
-})
-
-export const QRCardPDF = ({ 
-  restaurant, 
-  qrCodeUrl, 
-  qrCodeDataUrl,
-  options
-}: { 
-  restaurant: Restaurant; 
-  qrCodeUrl: string;
-  qrCodeDataUrl: string;
-  options: QRCardOptions;
-}) => {
-  // Safety checks
-  if (!restaurant || !restaurant.name) {
-    return (
-      <Document>
-        <Page size={[100 * 2.83465, 150 * 2.83465]} style={styles.page}>
-          <View style={styles.outerContainer}>
-            <Text style={styles.restaurantNameLTR}>خطأ: بيانات المطعم غير متوفرة</Text>    
-          </View>
-        </Page>
-      </Document>
-    )
-  }
-
-  if (!qrCodeDataUrl) {
-    return (
-      <Document>
-        <Page size={[100 * 2.83465, 150 * 2.83465]} style={styles.page}>
-          <View style={styles.outerContainer}>
-            <Text style={styles.restaurantNameLTR}>خطأ: كود QR غير متوفر</Text>      
-          </View>
-        </Page>
-      </Document>
-    )
-  }
-
-  // Detect text directions
-  const restaurantNameIsRTL = getTextDirection(restaurant.name) === 'rtl'
-  const customTextIsRTL = getTextDirection(options.customText) === 'rtl'
-
+export function QRCardPDF({ restaurantName, qrCodeUrl, menuUrl, logoUrl }: QRCardPDFProps) {
   return (
-    <Document>
-      <Page size={[100 * 2.83465, 150 * 2.83465]} style={styles.page}>
-        {/* Outer container with background color */}
-        <View 
-          style={[
-            styles.outerContainer,
-            { backgroundColor: options.cardBgColor }
-          ]}
-        >
-          {/* Inner white card container */}
-          <View 
-            style={[
-              styles.innerCardContainer,
-              ...(options.showBorder ? [styles.cardWithBorder, { borderColor: options.borderColor }] : [])
-            ]}
-          >
-            {/* Top logo if enabled */}
-            {(options.logoPosition === 'top' || options.logoPosition === 'both') && restaurant.logo_url && (
-              <Image src={restaurant.logo_url} style={styles.topLogo} />
-            )}
-            {(options.logoPosition === 'top' || options.logoPosition === 'both') && !restaurant.logo_url && (
-              <View style={styles.topLogoText}>
-                <Text style={{...styles.topLogoText, lineHeight: undefined, paddingTop: 20}}>
-                  {restaurant.name.slice(0, 2)}
-                </Text>
-              </View>
-            )}
-            
-            {/* QR Code section */}
-            <View style={styles.qrContainer}>
-              <Image src={qrCodeDataUrl} style={styles.qrCode} />
-              
-              {/* Logo overlay on QR code (middle position) */}
-              {(options.logoPosition === 'middle' || options.logoPosition === 'both') && (
-                <View style={styles.qrLogoOverlay}>
-                  {restaurant.logo_url ? (
-                    <Image src={restaurant.logo_url} style={styles.qrLogoImage} />
-                  ) : (
-                    <View style={{...styles.qrLogoImage, backgroundColor: "#EF4444", justifyContent: "center", alignItems: "center"}}>
-                      <Text style={{color: "#FFFFFF", fontSize: 12, fontWeight: "bold", textAlign: "center"}}>
-                        {restaurant.name.slice(0, 2)}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              )}
-            </View>
+    <div className="qr-card-pdf min-h-[1123px] p-8 relative bg-white">
+      <div className="max-w-4xl mx-auto text-center">
+        {/* Header */}
+        <header className="mb-16">
+          {logoUrl && (
+            <div className="mb-6">
+              <img 
+                src={logoUrl} 
+                alt={restaurantName} 
+                className="w-24 h-24 mx-auto object-contain rounded-full shadow-lg"
+              />
+            </div>
+          )}
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            {restaurantName}
+          </h1>
+          <p className="text-xl text-gray-600">
+            Scan to view our menu
+          </p>
+        </header>
 
-            {/* Restaurant name */}
-            <Text 
-              style={[
-                restaurantNameIsRTL ? styles.restaurantNameRTL : styles.restaurantNameLTR,
-                { color: options.textColor }
-              ]}
-            >
-              {restaurant.name}
-            </Text>
+        {/* QR Code */}
+        <div className="mb-16">
+          <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-gray-200 inline-block">
+            <img 
+              src={qrCodeUrl} 
+              alt="QR Code" 
+              className="w-64 h-64 mx-auto"
+            />
+          </div>
+        </div>
 
-            {/* Custom text */}
-            <Text 
-              style={[
-                customTextIsRTL ? styles.customTextRTL : styles.customTextLTR,
-                { color: options.textColor }
-              ]}
-            >
-              {options.customText}
-            </Text>
-          </View>
-        </View>
-      </Page>
-    </Document>
-  )
+        {/* Instructions */}
+        <div className="mb-16">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            How to use:
+          </h2>
+          <div className="space-y-4 text-lg text-gray-700">
+            <p>1. Open your camera app</p>
+            <p>2. Point it at the QR code</p>
+            <p>3. Tap the notification to view our menu</p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center">
+          <p className="text-sm text-gray-500">
+            Menu URL: {menuUrl}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 } 

@@ -60,7 +60,25 @@ export interface Restaurant {
   page_background_url?: string | null
 }
 
-export type TemplateId = 'classic' | 'painting' | 'vintage' | 'modern';
+export type TemplateId = 
+  | 'classic' 
+  | 'cafe' 
+  | 'modern' 
+  | 'painting' 
+  | 'vintage' 
+  | 'modern-coffee'
+  | 'fast-food'
+  | 'elegant-cocktail'
+  | 'sweet-treats'
+  | 'luxury-menu'
+  | 'simple-coffee'
+  | 'borcelle-coffee'
+  | 'chalkboard-coffee'
+  | 'botanical-cafe'
+  | 'cocktail-menu'
+  | 'vintage-bakery'
+  | 'vintage-coffee'
+  | 'interactive-menu'
 
 export interface SimplifiedFontSettings {
   arabic: { font: string; weight: string }

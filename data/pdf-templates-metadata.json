@@ -1,0 +1,662 @@
+{
+  "templates": {
+    "classic": {
+      "id": "classic",
+      "name": "Classic Style",
+      "description": "Traditional menu layout with clean design and professional appearance",
+      "componentPath": "./templates/ModernPDFTemplate",
+      "previewComponentPath": "../components/editor/templates/classic-preview",
+      "category": "professional",
+      "previewImageUrl": "/previews/classic-preview.png",
+      "features": [
+        "header",
+        "sections",
+        "footer",
+        "images"
+      ],
+      "defaultSettings": {
+        "fontSettings": {
+          "arabic": {
+            "font": "Cairo",
+            "weight": "normal"
+          },
+          "english": {
+            "font": "Roboto",
+            "weight": "normal"
+          }
+        },
+        "colorPalette": {
+          "primary": "#065f46",
+          "secondary": "#6b7280",
+          "accent": "#f59e0b"
+        }
+      }
+    },
+    "cafe": {
+      "id": "cafe",
+      "name": "Cafe Style",
+      "description": "Professional cafe menu with header, sections, and footer",
+      "componentPath": "./templates/ModernPDFTemplate",
+      "previewComponentPath": "../components/editor/templates/cafe-preview",
+      "category": "cafe",
+      "previewImageUrl": "/previews/cafe-preview.png",
+      "features": [
+        "header",
+        "sections",
+        "footer",
+        "images",
+        "featured-items"
+      ],
+      "defaultSettings": {
+        "fontSettings": {
+          "arabic": {
+            "font": "Cairo",
+            "weight": "normal"
+          },
+          "english": {
+            "font": "Roboto",
+            "weight": "normal"
+          }
+        },
+        "colorPalette": {
+          "primary": "#065f46",
+          "secondary": "#6b7280",
+          "accent": "#f59e0b"
+        }
+      }
+    },
+    "modern": {
+      "id": "modern",
+      "name": "Modern Style",
+      "description": "Contemporary design with bold typography and clean lines",
+      "componentPath": "./templates/ModernPDFTemplate",
+      "previewComponentPath": "../components/editor/templates/modern-preview",
+      "category": "modern",
+      "previewImageUrl": "/previews/modern-preview.png",
+      "features": [
+        "header",
+        "sections",
+        "footer",
+        "images",
+        "featured-items",
+        "gradients"
+      ],
+      "defaultSettings": {
+        "fontSettings": {
+          "arabic": {
+            "font": "Cairo",
+            "weight": "bold"
+          },
+          "english": {
+            "font": "Roboto",
+            "weight": "bold"
+          }
+        },
+        "colorPalette": {
+          "primary": "#1f2937",
+          "secondary": "#6b7280",
+          "accent": "#3b82f6"
+        }
+      }
+    },
+    "painting": {
+      "id": "painting",
+      "name": "Painting Style",
+      "description": "Artistic template with golden accents and cream background",
+      "componentPath": "./templates/PaintingStylePDFTemplate",
+      "previewComponentPath": "../components/editor/templates/painting-preview",
+      "category": "artistic",
+      "previewImageUrl": "/previews/painting-preview.png",
+      "features": [
+        "header",
+        "sections",
+        "footer",
+        "images",
+        "artistic-elements"
+      ],
+      "defaultSettings": {
+        "fontSettings": {
+          "arabic": {
+            "font": "Amiri",
+            "weight": "normal"
+          },
+          "english": {
+            "font": "Playfair Display",
+            "weight": "normal"
+          }
+        },
+        "colorPalette": {
+          "primary": "#d4af37",
+          "secondary": "#8b7355",
+          "accent": "#f4e4bc"
+        }
+      }
+    },
+    "vintage": {
+      "id": "vintage",
+      "name": "Vintage Style",
+      "description": "Classic vintage design with serif fonts and elegant styling",
+      "componentPath": "./templates/VintagePDFTemplate",
+      "previewComponentPath": "../components/editor/templates/vintage-preview",
+      "category": "vintage",
+      "features": [
+        "header",
+        "sections",
+        "footer",
+        "images",
+        "vintage-elements"
+      ],
+      "defaultSettings": {
+        "fontSettings": {
+          "arabic": {
+            "font": "Amiri",
+            "weight": "normal"
+          },
+          "english": {
+            "font": "Georgia",
+            "weight": "normal"
+          }
+        },
+        "colorPalette": {
+          "primary": "#8b4513",
+          "secondary": "#654321",
+          "accent": "#deb887"
+        }
+      },
+      "previewImageUrl": "/previews/vintage-preview.png"
+    },
+    "modern-coffee": {
+      "id": "modern-coffee",
+      "name": "Modern Coffee Shop",
+      "description": "Warm orange tones with coffee elements and modern design",
+      "componentPath": "./templates/ModernCoffeePDFTemplate",
+      "previewComponentPath": "../components/editor/templates/modern-coffee-preview",
+      "category": "coffee",
+      "features": [
+        "header",
+        "sections",
+        "footer",
+        "images",
+        "coffee-elements"
+      ],
+      "defaultSettings": {
+        "fontSettings": {
+          "arabic": {
+            "font": "Cairo",
+            "weight": "normal"
+          },
+          "english": {
+            "font": "Roboto",
+            "weight": "normal"
+          }
+        },
+        "colorPalette": {
+          "primary": "#f97316",
+          "secondary": "#6b7280",
+          "accent": "#fbbf24"
+        }
+      },
+      "previewImageUrl": "/previews/modern-coffee-preview.png"
+    },
+    "fast-food": {
+      "id": "fast-food",
+      "name": "Fast Food Menu",
+      "description": "Bold red design with hand-drawn food illustrations",
+      "componentPath": "./templates/FastFoodPDFTemplate",
+      "previewComponentPath": "../components/templates/fast-food-menu-preview",
+      "category": "fast-food",
+      "features": [
+        "header",
+        "sections",
+        "footer",
+        "images",
+        "hand-drawn-illustrations",
+        "bold-colors"
+      ],
+      "defaultSettings": {
+        "fontSettings": {
+          "arabic": {
+            "font": "Cairo",
+            "weight": "bold"
+          },
+          "english": {
+            "font": "Roboto",
+            "weight": "bold"
+          }
+        },
+        "colorPalette": {
+          "primary": "#C41E3A",
+          "secondary": "#8B4513",
+          "accent": "#FFD700"
+        }
+      },
+      "previewImageUrl": "/previews/fast-food-preview.png"
+    },
+    "elegant-cocktail": {
+      "id": "elegant-cocktail",
+      "name": "Elegant Cocktail Menu",
+      "description": "Wood texture with sophisticated bottle illustrations",
+      "componentPath": "./templates/ElegantCocktailPDFTemplate",
+      "previewComponentPath": "../components/templates/elegant-cocktail-menu-preview",
+      "category": "bar",
+      "features": [
+        "header",
+        "sections",
+        "footer",
+        "images",
+        "wood-texture",
+        "sophisticated-design"
+      ],
+      "defaultSettings": {
+        "fontSettings": {
+          "arabic": {
+            "font": "Amiri",
+            "weight": "normal"
+          },
+          "english": {
+            "font": "Playfair Display",
+            "weight": "normal"
+          }
+        },
+        "colorPalette": {
+          "primary": "#8B4513",
+          "secondary": "#654321",
+          "accent": "#DAA520"
+        }
+      },
+      "previewImageUrl": "/previews/elegant-cocktail-preview.png"
+    },
+    "sweet-treats": {
+      "id": "sweet-treats",
+      "name": "Sweet Treats Menu",
+      "description": "Coral theme with script typography for desserts",
+      "componentPath": "./templates/SweetTreatsPDFTemplate",
+      "previewComponentPath": "../components/templates/sweet-treats-menu-preview",
+      "category": "bakery",
+      "features": [
+        "header",
+        "sections",
+        "footer",
+        "images",
+        "script-typography",
+        "coral-theme"
+      ],
+      "defaultSettings": {
+        "fontSettings": {
+          "arabic": {
+            "font": "Amiri",
+            "weight": "normal"
+          },
+          "english": {
+            "font": "Dancing Script",
+            "weight": "normal"
+          }
+        },
+        "colorPalette": {
+          "primary": "#FF7F50",
+          "secondary": "#FFB6C1",
+          "accent": "#FFD700"
+        }
+      },
+      "previewImageUrl": "/previews/sweet-treats-preview.png"
+    },
+    "simple-coffee": {
+      "id": "simple-coffee",
+      "name": "Simple Coffee Menu",
+      "description": "Clean grid layout with rounded borders and warm colors",
+      "componentPath": "./templates/SimpleCoffeePDFTemplate",
+      "previewComponentPath": "../components/templates/simple-coffee-preview",
+      "category": "cafe",
+      "features": [
+        "header",
+        "sections",
+        "footer",
+        "images",
+        "grid-layout",
+        "rounded-borders"
+      ],
+      "defaultSettings": {
+        "fontSettings": {
+          "arabic": {
+            "font": "Cairo",
+            "weight": "normal"
+          },
+          "english": {
+            "font": "Roboto",
+            "weight": "normal"
+          }
+        },
+        "colorPalette": {
+          "primary": "#8B4513",
+          "secondary": "#A0522D",
+          "accent": "#DEB887"
+        }
+      },
+      "previewImageUrl": "/previews/simple-coffee-preview.png"
+    },
+    "borcelle-coffee": {
+      "id": "borcelle-coffee",
+      "name": "Borcelle Coffee Shop",
+      "description": "Branded coffee menu with elegant typography and photo",
+      "componentPath": "./templates/BorcelleCoffeePDFTemplate",
+      "previewComponentPath": "../components/templates/borcelle-coffee-preview",
+      "category": "cafe",
+      "features": [
+        "header",
+        "sections",
+        "footer",
+        "images",
+        "branded-design",
+        "elegant-typography"
+      ],
+      "defaultSettings": {
+        "fontSettings": {
+          "arabic": {
+            "font": "Cairo",
+            "weight": "normal"
+          },
+          "english": {
+            "font": "Playfair Display",
+            "weight": "normal"
+          }
+        },
+        "colorPalette": {
+          "primary": "#2F4F4F",
+          "secondary": "#696969",
+          "accent": "#DAA520"
+        }
+      },
+      "previewImageUrl": "/previews/borcelle-coffee-preview.png"
+    },
+    "luxury-menu": {
+      "id": "luxury-menu",
+      "name": "Luxury Dark",
+      "description": "Premium black design with gold accents",
+      "componentPath": "./templates/LuxuryMenuPDFTemplate",
+      "previewComponentPath": "../components/templates/luxury-menu-preview",
+      "category": "premium",
+      "features": [
+        "header",
+        "sections",
+        "footer",
+        "images",
+        "dark-theme",
+        "gold-accents"
+      ],
+      "defaultSettings": {
+        "fontSettings": {
+          "arabic": {
+            "font": "Amiri",
+            "weight": "normal"
+          },
+          "english": {
+            "font": "Playfair Display",
+            "weight": "normal"
+          }
+        },
+        "colorPalette": {
+          "primary": "#000000",
+          "secondary": "#333333",
+          "accent": "#FFD700"
+        }
+      },
+      "previewImageUrl": "/previews/luxury-menu-preview.png"
+    },
+    "chalkboard-coffee": {
+      "id": "chalkboard-coffee",
+      "name": "Chalkboard Style",
+      "description": "Dark board with chalk drawings and typography",
+      "componentPath": "./templates/ChalkboardCoffeePDFTemplate",
+      "previewComponentPath": "../components/templates/chalkboard-coffee-preview",
+      "category": "casual",
+      "features": [
+        "header",
+        "sections",
+        "footer",
+        "images",
+        "chalk-drawings",
+        "dark-board"
+      ],
+      "defaultSettings": {
+        "fontSettings": {
+          "arabic": {
+            "font": "Cairo",
+            "weight": "normal"
+          },
+          "english": {
+            "font": "Chalkboard",
+            "weight": "normal"
+          }
+        },
+        "colorPalette": {
+          "primary": "#2F2F2F",
+          "secondary": "#4A4A4A",
+          "accent": "#FFFFFF"
+        }
+      },
+      "previewImageUrl": "/previews/chalkboard-coffee-preview.png"
+    },
+    "botanical-cafe": {
+      "id": "botanical-cafe",
+      "name": "Botanical Elegance",
+      "description": "Sophisticated design with botanical elements",
+      "componentPath": "./templates/BotanicalCafePDFTemplate",
+      "previewComponentPath": "../components/templates/botanical-cafe-preview",
+      "category": "elegant",
+      "features": [
+        "header",
+        "sections",
+        "footer",
+        "images",
+        "botanical-elements",
+        "sophisticated-design"
+      ],
+      "defaultSettings": {
+        "fontSettings": {
+          "arabic": {
+            "font": "Amiri",
+            "weight": "normal"
+          },
+          "english": {
+            "font": "Georgia",
+            "weight": "normal"
+          }
+        },
+        "colorPalette": {
+          "primary": "#228B22",
+          "secondary": "#556B2F",
+          "accent": "#90EE90"
+        }
+      },
+      "previewImageUrl": "/previews/botanical-cafe-preview.png"
+    },
+    "cocktail-menu": {
+      "id": "cocktail-menu",
+      "name": "Modern Cocktail Bar",
+      "description": "Sleek design with cocktail illustrations",
+      "componentPath": "./templates/CocktailMenuPDFTemplate",
+      "previewComponentPath": "../components/templates/cocktail-menu-preview",
+      "category": "bar",
+      "features": [
+        "header",
+        "sections",
+        "footer",
+        "images",
+        "cocktail-illustrations",
+        "sleek-design"
+      ],
+      "defaultSettings": {
+        "fontSettings": {
+          "arabic": {
+            "font": "Cairo",
+            "weight": "normal"
+          },
+          "english": {
+            "font": "Roboto",
+            "weight": "normal"
+          }
+        },
+        "colorPalette": {
+          "primary": "#1E3A8A",
+          "secondary": "#3B82F6",
+          "accent": "#F59E0B"
+        }
+      },
+      "previewImageUrl": "/previews/cocktail-menu-preview.png"
+    },
+    "vintage-bakery": {
+      "id": "vintage-bakery",
+      "name": "Vintage Bakery",
+      "description": "Hand-drawn dessert illustrations with vintage styling",
+      "componentPath": "./templates/VintageBakeryPDFTemplate",
+      "previewComponentPath": "../components/templates/vintage-bakery-preview",
+      "category": "bakery",
+      "features": [
+        "header",
+        "sections",
+        "footer",
+        "images",
+        "hand-drawn-illustrations",
+        "vintage-styling"
+      ],
+      "defaultSettings": {
+        "fontSettings": {
+          "arabic": {
+            "font": "Amiri",
+            "weight": "normal"
+          },
+          "english": {
+            "font": "Georgia",
+            "weight": "normal"
+          }
+        },
+        "colorPalette": {
+          "primary": "#8B4513",
+          "secondary": "#A0522D",
+          "accent": "#DEB887"
+        }
+      },
+      "previewImageUrl": "/previews/vintage-bakery-preview.png"
+    },
+    "vintage-coffee": {
+      "id": "vintage-coffee",
+      "name": "Vintage Coffee",
+      "description": "Hand-drawn coffee illustrations with vintage charm",
+      "componentPath": "./templates/VintageCoffeePDFTemplate",
+      "previewComponentPath": "../components/templates/vintage-coffee-preview",
+      "category": "cafe",
+      "features": [
+        "header",
+        "sections",
+        "footer",
+        "images",
+        "hand-drawn-illustrations",
+        "vintage-charm"
+      ],
+      "defaultSettings": {
+        "fontSettings": {
+          "arabic": {
+            "font": "Amiri",
+            "weight": "normal"
+          },
+          "english": {
+            "font": "Georgia",
+            "weight": "normal"
+          }
+        },
+        "colorPalette": {
+          "primary": "#8B4513",
+          "secondary": "#654321",
+          "accent": "#DEB887"
+        }
+      },
+      "previewImageUrl": "/previews/vintage-coffee-preview.png"
+    },
+    "interactive-menu": {
+      "id": "interactive-menu",
+      "name": "Interactive Menu",
+      "description": "Interactive design with modern animations and effects",
+      "componentPath": "./templates/InteractiveMenuPDFTemplate",
+      "previewComponentPath": "../components/templates/interactive-menu-preview",
+      "category": "modern",
+      "features": [
+        "header",
+        "sections",
+        "footer",
+        "images",
+        "interactive-elements",
+        "animations"
+      ],
+      "defaultSettings": {
+        "fontSettings": {
+          "arabic": {
+            "font": "Cairo",
+            "weight": "normal"
+          },
+          "english": {
+            "font": "Roboto",
+            "weight": "normal"
+          }
+        },
+        "colorPalette": {
+          "primary": "#3B82F6",
+          "secondary": "#6B7280",
+          "accent": "#10B981"
+        }
+      },
+      "previewImageUrl": "/previews/interactive-menu-preview.png"
+    }
+  },
+  "categories": {
+    "professional": {
+      "name": "Professional",
+      "description": "Clean and business-like designs"
+    },
+    "cafe": {
+      "name": "Cafe",
+      "description": "Warm and inviting cafe-style menus"
+    },
+    "modern": {
+      "name": "Modern",
+      "description": "Contemporary and trendy designs"
+    },
+    "artistic": {
+      "name": "Artistic",
+      "description": "Creative and visually striking designs"
+    },
+    "vintage": {
+      "name": "Vintage",
+      "description": "Classic and timeless designs"
+    },
+    "coffee": {
+      "name": "Coffee",
+      "description": "Specialized coffee shop designs"
+    },
+    "fast-food": {
+      "name": "Fast Food",
+      "description": "Bold and energetic designs for quick service"
+    },
+    "bar": {
+      "name": "Bar",
+      "description": "Sophisticated designs for bars and lounges"
+    },
+    "bakery": {
+      "name": "Bakery",
+      "description": "Sweet and inviting designs for bakeries"
+    },
+    "premium": {
+      "name": "Premium",
+      "description": "Luxury and high-end designs"
+    },
+    "casual": {
+      "name": "Casual",
+      "description": "Relaxed and approachable designs"
+    },
+    "elegant": {
+      "name": "Elegant",
+      "description": "Refined and sophisticated designs"
+    }
+  },
+  "defaultTemplate": "classic",
+  "version": "1.0.0"
+}

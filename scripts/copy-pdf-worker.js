@@ -1,23 +1,31 @@
 const fs = require('fs');
 const path = require('path');
 
-// Source and destination paths
-const sourceFile = path.join(__dirname, '..', 'node_modules', 'pdfjs-dist', 'build', 'pdf.worker.min.mjs');
-const destDir = path.join(__dirname, '..', 'public', 'static', 'worker');
-const destFile = path.join(destDir, 'pdf.worker.min.js');
+// Copy PDF worker files to public directory
+const sourceDir = path.join(__dirname, '..', 'node_modules', 'pdfjs-dist', 'build');
+const targetDir = path.join(__dirname, '..', 'public', 'static', 'worker');
 
-// Ensure destination directory exists
-if (!fs.existsSync(destDir)) {
-  fs.mkdirSync(destDir, { recursive: true });
+// Create target directory if it doesn't exist
+if (!fs.existsSync(targetDir)) {
+  fs.mkdirSync(targetDir, { recursive: true });
 }
 
-// Copy the worker file
-try {
-  fs.copyFileSync(sourceFile, destFile);
-  console.log('PDF.js worker copied successfully!');
-  console.log(`From: ${sourceFile}`);
-  console.log(`To: ${destFile}`);
-} catch (error) {
-  console.error('Error copying PDF.js worker:', error.message);
-  process.exit(1);
-} 
+// Copy PDF worker files
+const filesToCopy = [
+  'pdf.worker.min.js',
+  'pdf.worker.min.js.map'
+];
+
+filesToCopy.forEach(file => {
+  const sourcePath = path.join(sourceDir, file);
+  const targetPath = path.join(targetDir, file);
+  
+  if (fs.existsSync(sourcePath)) {
+    fs.copyFileSync(sourcePath, targetPath);
+    console.log(`✅ Copied ${file} to public/static/worker/`);
+  } else {
+    console.log(`⚠️  Warning: ${file} not found in ${sourceDir}`);
+  }
+});
+
+console.log('📄 PDF worker files copied successfully!'); 

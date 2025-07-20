@@ -1,4 +1,6 @@
 import { Browser, chromium, Page } from 'playwright-core';
+import path from 'path';
+import { envConfig } from '@/lib/config/env';
 
 interface PDFGenerationOptions {
   templateId: string;
@@ -18,415 +20,137 @@ interface PDFGenerationOptions {
   };
 }
 
-function escapeHTML(str: string | null | undefined): string {
-    if (str === null || str === undefined) {
-        return '';
-    }
-    return str.toString()
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
+import { generateHTMLContent } from "@/lib/html-generator";
 
-function formatPrice(price: number, currency: string, isRTL: boolean): string {
-  try {
-    const numPrice = Number(price);
-    if (isNaN(numPrice)) return '0';
-    
-    // Simple price formatting without external dependencies
-    const formattedPrice = `${numPrice.toFixed(2)} ${currency}`;
-    return isRTL ? `${currency} ${numPrice.toFixed(2)}` : formattedPrice;
-  } catch (error) {
-    console.error('Error formatting price:', error);
-    return `${price} ${currency}`;
-  }
-}
+// Shared browser instance for better performance
+let _browserInstance: Browser | null = null;
+let _browserInitPromise: Promise<Browser> | null = null;
 
-function generateSimplifiedHTML(data: any, customizations: any, language: string, templateId: string): string {
-  const { restaurant, categories } = data;
-  const isRTL = ['ar', 'fa', 'ur', 'he'].includes(language);
-  
-  // Validate data
-  if (!restaurant || !categories || !Array.isArray(categories)) {
-    throw new Error('Invalid restaurant or categories data');
+/**
+ * Get or create a shared Playwright browser instance
+ * This significantly improves performance by reusing the browser across multiple PDF generations
+ */
+async function getBrowserInstance(): Promise<Browser> {
+  if (_browserInstance) {
+    return _browserInstance;
   }
-  
-  // Generate simplified, robust HTML
-  let html = `
-    <div class="menu-container">
-      <header class="menu-header">
-      <h1 class="restaurant-name">${escapeHTML(restaurant.name)}</h1>
-        <div class="header-divider"></div>
-      </header>
-      
-      <main class="menu-content">
-  `;
-  
-  categories.forEach((category: any) => {
-    if (!category || !category.menu_items || !Array.isArray(category.menu_items) || category.menu_items.length === 0) return;
-    
-    html += `
-      <section class="menu-section">
-        <h2 class="section-title">${escapeHTML(category.name)}</h2>
-        ${category.description ? `<p class="section-description">${escapeHTML(category.description)}</p>` : ''}
-        
-        <div class="menu-items">
-    `;
-    
-    category.menu_items.forEach((item: any) => {
-      if (!item || !item.is_available || item.price === null || item.price === undefined) return;
-      
-      html += `
-        <div class="menu-item">
-          <div class="item-info">
-            <h3 class="item-name">${escapeHTML(item.name)}</h3>
-            ${item.description ? `<p class="item-description">${escapeHTML(item.description)}</p>` : ''}
-          </div>
-          <div class="item-price">
-            ${formatPrice(item.price, restaurant.currency || 'EGP', isRTL)}
-          </div>
-        </div>
-      `;
-    });
-    
-    html += `
-        </div>
-      </section>
-    `;
+
+  if (_browserInitPromise) {
+    return _browserInitPromise;
+  }
+
+  _browserInitPromise = chromium.launch({
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--no-first-run',
+      '--no-zygote',
+      '--single-process',
+      '--disable-web-security',
+      '--disable-features=VizDisplayCompositor',
+      '--disable-background-timer-throttling',
+      '--disable-backgrounding-occluded-windows',
+      '--disable-renderer-backgrounding',
+      '--disable-extensions',
+      '--disable-plugins',
+      '--disable-default-apps',
+      '--run-all-compositor-stages-before-draw'
+    ]
   });
-  
-      html += `
-      </main>
-      
-      <footer class="menu-footer">
-            <div class="footer-line"></div>
-            <p class="footer-text">
-              ${isRTL ? 'شكراً لاختياركم لنا' : 'Thank you for choosing us'}
-            </p>
-          </footer>
-      </div>
-    `;
-    
-    return html;
-}
 
-function getSimplifiedCSS(customizations: any, language: string): string {
-    const isRTL = ['ar', 'fa', 'ur', 'he'].includes(language);
-    
-  let css = `
-    /* Reset and base styles */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    /* Remove all animations for PDF */
-    *, *::before, *::after {
-      animation-duration: 0s !important;
-      animation-delay: 0s !important;
-      transition-duration: 0s !important;
-      transition-delay: 0s !important;
-    }
-    
-    /* Base body styles */
-    body { 
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Arial', sans-serif;
-      line-height: 1.6; 
-      color: #333; 
-      background: white; 
-      font-size: 14px;
-      padding: 20px;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    
-    /* Container */
-    .menu-container {
-      max-width: 800px;
-      margin: 0 auto; 
-      background: white; 
-    }
-    
-    /* Header */
-    .menu-header { 
-      text-align: center; 
-      margin-bottom: 30px; 
-      padding-bottom: 20px; 
-      border-bottom: 2px solid #e0e0e0;
-    }
-    
-    .restaurant-name { 
-      font-size: 28px;
-      font-weight: bold; 
-      color: #2c3e50;
-      margin-bottom: 10px; 
-    }
-    
-    .header-divider {
-      width: 60px;
-      height: 3px;
-      background: #3498db;
-      margin: 0 auto;
-    }
-    
-    /* Menu sections */
-    .menu-section {
-      margin-bottom: 30px;
-      page-break-inside: avoid;
-    }
-    
-    .section-title {
-      font-size: 20px;
-      font-weight: bold; 
-      color: #2c3e50;
-      margin-bottom: 8px;
-      padding-bottom: 5px; 
-      border-bottom: 1px solid #e0e0e0;
-    }
-    
-    .section-description {
-      font-size: 14px; 
-      color: #7f8c8d; 
-      margin-bottom: 15px;
-      font-style: italic; 
-    }
-    
-    /* Menu items */
-    .menu-items { 
-      display: flex; 
-      flex-direction: column; 
-      gap: 10px;
-    }
-    
-    .menu-item { 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: flex-start; 
-      padding: 12px; 
-      background: #f8f9fa;
-      border-radius: 6px;
-      page-break-inside: avoid;
-    }
-    
-    .item-info {
-      flex: 1; 
-      margin-right: 15px;
-    }
-    
-    .item-name { 
-      font-size: 16px;
-      font-weight: bold; 
-      color: #2c3e50; 
-      margin-bottom: 4px;
-    }
-    
-    .item-description { 
-      font-size: 13px;
-      color: #7f8c8d; 
-    }
-    
-    .item-price { 
-      font-size: 16px;
-      font-weight: bold; 
-      color: #27ae60; 
-      white-space: nowrap; 
-    }
-    
-    /* Footer */
-    .menu-footer {
-      text-align: center;
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid #e0e0e0;
-    }
-    
-    .footer-line {
-      width: 60px;
-      height: 2px;
-      background: #3498db;
-      margin: 0 auto 10px;
-    }
-    
-    .footer-text {
-      font-size: 13px;
-      color: #7f8c8d;
-      font-style: italic;
-    }
-    
-    /* RTL support */
-    ${isRTL ? `
-      body {
-        direction: rtl;
-        text-align: right;
-      }
-      
-      .item-info {
-        margin-right: 0;
-        margin-left: 15px;
-      }
-      
-      .menu-item {
-        flex-direction: row-reverse;
-      }
-    ` : `
-      body { 
-        direction: ltr;
-        text-align: left;
-      }
-    `}
-    
-    /* Print optimization */
-    @media print {
-      body {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-      
-      .menu-section,
-      .menu-item {
-        page-break-inside: avoid;
-      }
-    }
-  `;
-  
-  // Add custom styles if provided
-  if (customizations) {
-    try {
-      if (customizations.pageBackgroundSettings?.backgroundColor) {
-        css += `body { background-color: ${customizations.pageBackgroundSettings.backgroundColor}; }`;
-      }
-      
-      if (customizations.rowStyles) {
-        const row = customizations.rowStyles;
-        css += `
-          .menu-item { 
-            background-color: ${row.backgroundColor || '#f8f9fa'};
-            border-radius: ${row.borderRadius || 6}px;
-          }
-          .item-name { color: ${row.itemColor || '#2c3e50'}; }
-          .item-price { color: ${row.priceColor || '#27ae60'}; }
-          .item-description { color: ${row.descriptionColor || '#7f8c8d'}; }
-        `;
-      }
-    } catch (error) {
-      console.warn('Error applying customizations:', error);
-    }
-  }
-  
-  return css;
-}
-
-export function generateHTMLContent(options: PDFGenerationOptions): string {
   try {
-    const { data, language = 'ar', customizations } = options;
+    _browserInstance = await _browserInitPromise;
     
-    // Validate required data
-    if (!data || !data.restaurant || !data.categories) {
-      throw new Error('Invalid data provided for PDF generation');
+    // Handle browser disconnection
+    _browserInstance.on('disconnected', () => {
+      console.warn('⚠️ Playwright browser disconnected. Resetting instance.');
+      _browserInstance = null;
+      _browserInitPromise = null;
+    });
+
+    console.log('🚀 Playwright browser instance launched and cached');
+    return _browserInstance;
+  } catch (error) {
+    _browserInstance = null;
+    _browserInitPromise = null;
+    throw error;
+  }
+}
+
+/**
+ * Enhanced asset routing for Playwright
+ * Serves local static assets (fonts, images, CSS) directly from filesystem
+ */
+async function setupAssetRouting(page: Page): Promise<void> {
+  await page.route('**/*', (route) => {
+    const request = route.request();
+    const resourceType = request.resourceType();
+    const url = request.url();
+    
+    // Serve local static assets from filesystem
+    const baseUrl = envConfig.baseUrl;
+    
+    // Font files
+    if (url.includes('/fonts/') || url.includes('/public/fonts/')) {
+      const fontPath = url.replace(baseUrl, '').replace('/public', '');
+      const filePath = path.join(process.cwd(), 'public', fontPath);
+      route.fulfill({ path: filePath }).catch(() => {
+        console.warn(`⚠️ Font not found: ${filePath}`);
+        route.continue();
+      });
+      return;
     }
     
-    const isRTL = ['ar', 'fa', 'ur', 'he'].includes(language);
-    const menuHTML = generateSimplifiedHTML(data, customizations, language, options.templateId);
-    const customCSS = getSimplifiedCSS(customizations, language);
-  
-    const htmlContent = `
-    <!DOCTYPE html>
-    <html lang="${language}" dir="${isRTL ? 'rtl' : 'ltr'}">
-      <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <meta name="color-scheme" content="light">
-          <title>${escapeHTML(data.restaurant.name)} - Menu</title>
-        <style>
-          ${customCSS}
-        </style>
-      </head>
-      <body>
-          ${menuHTML}
-        </body>
-      </html>
-    `;
+    // Image assets
+    if (url.includes('/assets/') || url.includes('/public/assets/')) {
+      const assetPath = url.replace(baseUrl, '').replace('/public', '');
+      const filePath = path.join(process.cwd(), 'public', assetPath);
+      route.fulfill({ path: filePath }).catch(() => {
+        console.warn(`⚠️ Asset not found: ${filePath}`);
+        route.continue();
+      });
+      return;
+    }
     
-    console.log('✅ Simplified HTML content generated successfully, length:', htmlContent.length);
-    return htmlContent;
+    // Global CSS
+    if (url.includes('/globals.css') || url.endsWith('.css')) {
+      const cssPath = url.replace(baseUrl, '');
+      const filePath = path.join(process.cwd(), 'app', cssPath);
+      route.fulfill({ path: filePath }).catch(() => {
+        console.warn(`⚠️ CSS not found: ${filePath}`);
+        route.continue();
+      });
+      return;
+    }
     
-  } catch (error) {
-    console.error('❌ Error generating HTML content:', error);
-    
-    // Return a simple fallback HTML
-    return `
-      <!DOCTYPE html>
-      <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Menu Generation Error</title>
-          <style>
-            body { 
-              font-family: Arial, sans-serif; 
-              padding: 20px; 
-              text-align: center; 
-              color: #333;
-              background: white;
-            }
-            .error { 
-              color: #e74c3c; 
-              margin: 20px 0; 
-              padding: 20px;
-              border: 1px solid #e74c3c;
-              border-radius: 8px;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="error">
-            <h1>Menu Generation Error</h1>
-            <p>An error occurred while generating the menu. Please try again.</p>
-            <p>Error: ${error instanceof Error ? escapeHTML(error.message) : 'Unknown error'}</p>
-          </div>
-        </body>
-      </html>
-    `;
-  }
+    // Block analytics, ads, and websockets
+    if (
+      resourceType === 'websocket' ||
+      url.includes('analytics') ||
+      url.includes('ads') ||
+      url.includes('tracking') ||
+      url.includes('google-analytics') ||
+      url.includes('facebook.com') ||
+      url.includes('twitter.com')
+    ) {
+      route.abort();
+    } else {
+      route.continue();
+    }
+  });
 }
 
 export class PlaywrightPDFGenerator {
-  // Removed browser field as we now use per-call browser instances
-
-  // Removed initialize() method as we now use per-call browser instances
-
   async generatePDF(options: PDFGenerationOptions): Promise<Buffer> {
-    let browser: Browser | null = null;
     let page: Page | null = null;
     
     try {
-      console.log('🚀 Starting PDF generation with simplified approach...');
+      console.log('🚀 Starting PDF generation with shared browser...');
       
-      browser = await chromium.launch({
-        headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-gpu',
-          '--no-first-run',
-          '--no-zygote',
-          '--single-process',
-          '--disable-web-security',
-          '--disable-features=VizDisplayCompositor',
-          '--disable-background-timer-throttling',
-          '--disable-backgrounding-occluded-windows',
-          '--disable-renderer-backgrounding',
-          '--disable-extensions',
-          '--disable-plugins',
-          '--disable-default-apps',
-          '--run-all-compositor-stages-before-draw'
-        ]
-      });
-
+      const browser = await getBrowserInstance();
       const context = await browser.newContext({
         viewport: { width: 1200, height: 1600 },
         javaScriptEnabled: true,
@@ -434,33 +158,14 @@ export class PlaywrightPDFGenerator {
       
       page = await context.newPage();
 
-      // Minimal resource blocking - only block truly problematic resources
-      await page.route('**/*', (route) => {
-        const request = route.request();
-        const resourceType = request.resourceType();
-        const url = request.url();
-        
-        // Only block analytics, ads, and websockets
-        if (
-          resourceType === 'websocket' ||
-          url.includes('analytics') ||
-          url.includes('ads') ||
-          url.includes('tracking') ||
-          url.includes('google-analytics') ||
-          url.includes('facebook.com') ||
-          url.includes('twitter.com')
-        ) {
-          route.abort();
-        } else {
-          route.continue();
-        }
-      });
+      // Setup enhanced asset routing
+      await setupAssetRouting(page);
 
       // Set media type for better PDF generation
       await page.emulateMedia({ media: 'print' });
 
       // Generate HTML content
-        const htmlContent = generateHTMLContent(options);
+      const htmlContent = generateHTMLContent(options);
         
       if (!htmlContent || htmlContent.length < 100) {
         throw new Error('Generated HTML content is too short or empty');
@@ -469,9 +174,9 @@ export class PlaywrightPDFGenerator {
       console.log('📄 Setting HTML content...');
       
       // Set content with proper wait conditions
-        await page.setContent(htmlContent, { 
+      await page.setContent(htmlContent, { 
         waitUntil: 'domcontentloaded',
-        timeout: parseInt(process.env.PDF_GENERATION_TIMEOUT || '30000')
+        timeout: envConfig.pdfTimeout
       });
       
       console.log('⏱️ Waiting for content to stabilize...');
@@ -484,18 +189,18 @@ export class PlaywrightPDFGenerator {
       // Additional wait to ensure rendering is complete
       await page.waitForTimeout(2000);
 
-        console.log('📄 Generating PDF...');
+      console.log('📄 Generating PDF...');
       
-        const pdfBuffer = await page.pdf({
-          format: options.format || 'A4',
-          margin: options.margin || {
+      const pdfBuffer = await page.pdf({
+        format: options.format || 'A4',
+        margin: options.margin || {
           top: '15mm',
           right: '15mm',
           bottom: '15mm',
           left: '15mm'
-          },
-          printBackground: true,
-          preferCSSPageSize: false,
+        },
+        printBackground: true,
+        preferCSSPageSize: false,
         tagged: true,
         outline: false,
         displayHeaderFooter: false,
@@ -538,13 +243,7 @@ export class PlaywrightPDFGenerator {
           console.warn('⚠️ Warning: Error closing page:', closeError);
         }
       }
-      if (browser) {
-        try {
-          await browser.close();
-        } catch (closeError) {
-          console.warn('⚠️ Warning: Error closing browser:', closeError);
-        }
-      }
+      // Note: We don't close the browser here - it's reused
     }
   }
 
@@ -571,35 +270,12 @@ export class PlaywrightPDFGenerator {
   }
 
   public async generatePDFFromHTML(htmlContent: string, options: { format?: 'A4' | 'Letter', margin?: any }): Promise<Buffer> {
-    let browser: Browser | null = null;
     let page: Page | null = null;
 
     try {
-      console.log('🚀 Starting PDF generation from HTML with per-call browser...');
+      console.log('🚀 Starting PDF generation from HTML with shared browser...');
       
-      // Create a new browser instance for each PDF generation
-      browser = await chromium.launch({
-        headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-gpu',
-          '--no-first-run',
-          '--no-zygote',
-          '--single-process',
-          '--disable-web-security',
-          '--disable-features=VizDisplayCompositor',
-          '--disable-background-timer-throttling',
-          '--disable-backgrounding-occluded-windows',
-          '--disable-renderer-backgrounding',
-          '--disable-extensions',
-          '--disable-plugins',
-          '--disable-default-apps',
-          '--run-all-compositor-stages-before-draw'
-        ]
-      });
-
+      const browser = await getBrowserInstance();
       const context = await browser.newContext({
         viewport: { width: 1200, height: 1600 },
         javaScriptEnabled: true,
@@ -607,7 +283,13 @@ export class PlaywrightPDFGenerator {
 
       page = await context.newPage();
       
-      await page.setContent(htmlContent, { waitUntil: 'networkidle' });
+      // Setup enhanced asset routing
+      await setupAssetRouting(page);
+      
+      await page.setContent(htmlContent, { 
+        waitUntil: 'networkidle',
+        timeout: envConfig.pdfTimeout
+      });
 
       const pdfBuffer = await page.pdf({
         format: options.format || 'A4',
@@ -625,20 +307,12 @@ export class PlaywrightPDFGenerator {
         try {
           await page.close();
         } catch (closeError) {
-          console.warn('⚠️ Warning: Error closing page:', closeError);
+          console.warn('⚠️ Warning: Error closing page (from generatePDFFromHTML):', closeError);
         }
       }
-      if (browser) {
-        try {
-          await browser.close();
-        } catch (closeError) {
-          console.warn('⚠️ Warning: Error closing browser:', closeError);
-        }
-      }
+      // Note: We don't close the browser here - it's reused
     }
   }
-
-  // Removed isBrowserInitialized() method as we now use per-call browser instances
 }
 
 interface GeneratePDFFromDataOptions {
@@ -656,7 +330,6 @@ interface GeneratePDFFromDataOptions {
 export async function generatePDFFromMenuData(options: GeneratePDFFromDataOptions): Promise<Buffer> {
   const { htmlContent, format = 'A4', margin } = options;
   
-  // Create a new generator instance for each call (no singleton pattern)
   const generator = new PlaywrightPDFGenerator();
   
   try {
@@ -670,8 +343,33 @@ export async function generatePDFFromMenuData(options: GeneratePDFFromDataOption
   }
 }
 
-// Removed singleton pattern as we now use per-call browser instances for better reliability in serverless environments
-
+/**
+ * Cleanup function to close the shared browser instance
+ * Call this during application shutdown or when browser needs to be reset
+ */
 export async function cleanupPDFGenerator() {
-  console.log('PDF generator cleanup called (no action needed with per-call instances)');
+  if (_browserInstance) {
+    console.log('🔄 Closing shared Playwright browser instance...');
+    try {
+      await _browserInstance.close();
+      _browserInstance = null;
+      _browserInitPromise = null;
+      console.log('✅ Playwright browser instance closed successfully.');
+    } catch (error) {
+      console.error('❌ Error closing Playwright browser instance:', error);
+      // Reset state even if close fails
+      _browserInstance = null;
+      _browserInitPromise = null;
+    }
+  } else {
+    console.log('ℹ️ No browser instance to cleanup');
+  }
+}
+
+/**
+ * Force reset the browser instance (useful for debugging or memory management)
+ */
+export async function resetBrowserInstance() {
+  await cleanupPDFGenerator();
+  console.log('🔄 Browser instance reset complete');
 }
