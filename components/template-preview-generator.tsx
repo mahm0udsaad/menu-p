@@ -11,12 +11,12 @@ import { Progress } from "@/components/ui/progress"
 import { Download, Camera, RefreshCw, Eye, Palette, CheckCircle, AlertCircle, Settings } from "lucide-react"
 import { toPng } from 'html-to-image'
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import SimpleTemplatePreview from "./simple-template-preview"
+import TemplatePreviewRenderer from "./template-preview-renderer"
 
 // Sample restaurant data for template generation
 const sampleRestaurants = [
   {
-    id: "sample-1",
+    id: "00000000-0000-0000-0000-000000000001",
     name: "مقهى الحبة الذهبية",
     category: "cafe",
     logo_url: null,
@@ -29,7 +29,7 @@ const sampleRestaurants = [
     }
   },
   {
-    id: "sample-2", 
+    id: "00000000-0000-0000-0000-000000000002", 
     name: "مطعم الأصالة",
     category: "restaurant",
     logo_url: null,
@@ -42,7 +42,7 @@ const sampleRestaurants = [
     }
   },
   {
-    id: "sample-3",
+    id: "00000000-0000-0000-0000-000000000003",
     name: "بيسترو المدينة",
     category: "both",
     logo_url: null,
@@ -123,16 +123,16 @@ const sampleMenuData = [
   {
     id: "cat-3",
     name: "المشروبات",
-    description: "مشروبات ساخنة وباردة",
+    description: "مشروبات منعشة",
     menu_items: [
       {
         id: "item-5",
-        name: "قهوة عربية",
-        description: "قهوة عربية تقليدية مع الهيل",
+        name: "قهوة تركية",
+        description: "قهوة تركية تقليدية",
         price: 12.00,
         is_available: true,
         is_featured: true,
-        dietary_info: ["vegan", "gluten-free"],
+        dietary_info: ["vegan"],
         image_url: null,
         display_order: 1,
         category_id: "cat-3"
@@ -140,11 +140,11 @@ const sampleMenuData = [
       {
         id: "item-6",
         name: "شاي بالنعناع",
-        description: "شاي أخضر منعش بأوراق النعناع",
-        price: 10.00,
+        description: "شاي أخضر مع النعناع الطازج",
+        price: 8.00,
         is_available: true,
         is_featured: false,
-        dietary_info: ["vegan", "gluten-free"],
+        dietary_info: ["vegan"],
         image_url: null,
         display_order: 2,
         category_id: "cat-3"
@@ -199,20 +199,21 @@ export default function TemplatePreviewGenerator() {
 
   const fetchTemplates = async () => {
     try {
-      const response = await fetch('/api/templates/metadata')
+      // Fetch from the PDF templates metadata file
+      const response = await fetch('/data/pdf-templates-metadata.json')
       if (!response.ok) {
-        throw new Error('Failed to fetch template metadata')
+        throw new Error('Failed to fetch PDF template metadata')
       }
       
-      const registry: TemplateRegistry = await response.json()
-      const templateList = Object.values(registry.templates)
+      const registry = await response.json()
+      const templateList = Object.values(registry.templates) as TemplateMetadata[]
       setTemplates(templateList)
       
       if (templateList.length > 0) {
         setSelectedTemplate(templateList[0].id)
       }
     } catch (error) {
-      console.error('Error loading templates:', error)
+      console.error('Error loading PDF templates:', error)
     }
   }
 
@@ -224,21 +225,43 @@ export default function TemplatePreviewGenerator() {
   }
 
   const generateSinglePreview = async (templateId: string) => {
-    if (!templateRef.current) return null
-
     try {
+      // Ensure we have the template data
+      const templateData = templates.find(t => t.id === templateId)
+      if (!templateData) {
+        console.error(`❌ Template data not found for ${templateId}`)
+        return await generateFallbackPreview(templateId)
+      }
+      
       // Set the selected template to trigger re-render
       setSelectedTemplate(templateId)
       
       // Wait a bit for the component to re-render
-      await new Promise(resolve => setTimeout(resolve, 300))
+      await new Promise(resolve => setTimeout(resolve, 1000))
 
       // Check if the element is visible and has content
       const element = templateRef.current
-      if (!element || element.offsetWidth === 0 || element.offsetHeight === 0) {
-        console.error('Template element is not visible or has no dimensions')
-        return null
+      if (!element) {
+        console.error(`❌ Template element not found for ${templateId}`)
+        return await generateFallbackPreview(templateId)
       }
+      
+      // Wait a bit more for the template to fully render
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      // Check if the template has content (not just empty div)
+      const hasContent = element.children.length > 0 && element.innerHTML.trim().length > 100
+      if (!hasContent) {
+        console.error(`❌ Template element has no content for ${templateId}`)
+        return await generateFallbackPreview(templateId)
+      }
+      
+      if (element.offsetWidth === 0 || element.offsetHeight === 0) {
+        console.error(`❌ Template element has no dimensions for ${templateId}: ${element.offsetWidth}x${element.offsetHeight}`)
+        return await generateFallbackPreview(templateId)
+      }
+
+      console.log(`📸 Capturing preview for ${templateId} with dimensions ${element.offsetWidth}x${element.offsetHeight}`)
 
       const dataUrl = await toPng(element, {
         quality: imageQuality,
@@ -254,82 +277,158 @@ export default function TemplatePreviewGenerator() {
         }
       })
 
+      if (!dataUrl || dataUrl === 'data:,' || dataUrl.length < 100) {
+        console.error(`❌ Generated invalid data URL for ${templateId}`)
+        return await generateFallbackPreview(templateId)
+      }
+
+      console.log(`✅ Successfully generated preview for ${templateId}`)
       return dataUrl
     } catch (error) {
-      console.error('Error generating image for template:', templateId, error)
+      console.error(`❌ Error generating image for template ${templateId}:`, error)
       
       // Fallback: create a simple canvas-based preview
       try {
+        console.log(`🔄 Attempting fallback preview for ${templateId}`)
         return await generateFallbackPreview(templateId)
       } catch (fallbackError) {
-        console.error('Fallback preview generation also failed:', fallbackError)
+        console.error(`❌ Fallback preview generation also failed for ${templateId}:`, fallbackError)
         return null
       }
     }
   }
 
   const generateFallbackPreview = async (templateId: string) => {
-    // Create a canvas element
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return null
-
-    canvas.width = imageWidth
-    canvas.height = imageHeight
-
-    // Get template style
-    const template = templates.find(t => t.id === templateId)
-    if (!template) return null
-
-    // Simple fallback styling
-    const bgColor = templateId === 'modern' ? '#1f2937' : 
-                   templateId === 'painting' ? '#fef3c7' : 
-                   templateId === 'vintage' ? '#f5f5dc' : '#ffffff'
-    
-    const textColor = templateId === 'modern' ? '#ffffff' : '#000000'
-
-    // Fill background
-    ctx.fillStyle = bgColor
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-    // Add template name
-    ctx.fillStyle = textColor
-    ctx.font = 'bold 24px Arial'
-    ctx.textAlign = 'center'
-    ctx.fillText(template.name, canvas.width / 2, 50)
-
-    // Add description
-    ctx.font = '16px Arial'
-    ctx.fillText(template.description, canvas.width / 2, 80)
-
-    // Add restaurant name
-    ctx.font = '20px Arial'
-    ctx.fillText(selectedRestaurant.name, canvas.width / 2, 120)
-
-    return canvas.toDataURL('image/png', imageQuality)
+    try {
+      console.log(`🎨 Generating fallback preview for ${templateId}`)
+      
+      // Create a canvas element
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      
+      if (!ctx) {
+        console.error(`❌ Could not get canvas context for ${templateId}`)
+        return null
+      }
+      
+      canvas.width = imageWidth
+      canvas.height = imageHeight
+      
+      // Fill background with a gradient
+      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height)
+      gradient.addColorStop(0, '#f8fafc')
+      gradient.addColorStop(1, '#e2e8f0')
+      ctx.fillStyle = gradient
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      
+      // Add a border
+      ctx.strokeStyle = '#cbd5e1'
+      ctx.lineWidth = 2
+      ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2)
+      
+      // Add template name with better styling
+      ctx.fillStyle = '#334155'
+      ctx.font = 'bold 28px Arial'
+      ctx.textAlign = 'center'
+      ctx.fillText(`Template: ${templateId}`, canvas.width / 2, 80)
+      
+      // Add fallback message
+      ctx.font = '16px Arial'
+      ctx.fillStyle = '#64748b'
+      ctx.fillText('Preview generation failed', canvas.width / 2, 120)
+      ctx.fillText('Using fallback canvas preview', canvas.width / 2, 150)
+      
+      // Add timestamp
+      ctx.font = '12px Arial'
+      ctx.fillStyle = '#94a3b8'
+      ctx.fillText(`Generated: ${new Date().toLocaleString()}`, canvas.width / 2, canvas.height - 30)
+      
+      const dataUrl = canvas.toDataURL('image/png')
+      
+      if (!dataUrl || dataUrl === 'data:,' || dataUrl.length < 100) {
+        console.error(`❌ Fallback canvas generated invalid data URL for ${templateId}`)
+        return null
+      }
+      
+      console.log(`✅ Fallback preview generated for ${templateId}`)
+      return dataUrl
+    } catch (error) {
+      console.error(`❌ Error generating fallback preview for ${templateId}:`, error)
+      return null
+    }
   }
 
   const savePreviewToMetadata = async (templateId: string, imageDataUrl: string) => {
     try {
-      const response = await fetch('/api/templates/update-preview', {
+      console.log(`💾 Saving preview for ${templateId}...`)
+      
+      // Validate the data URL
+      if (!imageDataUrl || imageDataUrl === 'data:,' || imageDataUrl.length < 100) {
+        console.error(`❌ Invalid data URL for ${templateId}`)
+        return null
+      }
+      
+      // Convert data URL to blob
+      const response = await fetch(imageDataUrl)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch data URL: ${response.status}`)
+      }
+      
+      const blob = await response.blob()
+      if (blob.size === 0) {
+        throw new Error('Generated blob is empty')
+      }
+      
+      console.log(`📦 Blob size for ${templateId}: ${blob.size} bytes`)
+      
+      // Create FormData to send to server
+      const formData = new FormData()
+      formData.append('templateId', templateId)
+      formData.append('image', blob, `${templateId}-preview.png`)
+      
+      // Send to server to save in public/previews folder
+      const saveResponse = await fetch('/api/templates/save-preview', {
+        method: 'POST',
+        body: formData
+      })
+      
+      if (!saveResponse.ok) {
+        const errorText = await saveResponse.text()
+        throw new Error(`Failed to save preview image: ${saveResponse.status} - ${errorText}`)
+      }
+      
+      const result = await saveResponse.json()
+      
+      if (!result.imageUrl) {
+        throw new Error('Server did not return image URL')
+      }
+      
+      console.log(`✅ Image saved for ${templateId}: ${result.imageUrl}`)
+      
+      // Update metadata with the saved image URL
+      const updateResponse = await fetch('/api/templates/update-preview', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           templateId,
-          previewImageUrl: imageDataUrl
+          previewImageUrl: result.imageUrl
         })
       })
-
-      if (!response.ok) {
-        throw new Error('Failed to save preview to metadata')
+      
+      if (!updateResponse.ok) {
+        console.warn(`⚠️ Failed to update metadata for ${templateId}, but image was saved`)
+        const errorText = await updateResponse.text()
+        console.warn(`Metadata update error: ${updateResponse.status} - ${errorText}`)
+      } else {
+        console.log(`✅ Metadata updated for ${templateId}`)
       }
-
-      return true
+      
+      return result.imageUrl
     } catch (error) {
-      console.error('Error saving preview to metadata:', error)
-      return false
+      console.error(`❌ Error saving preview for ${templateId}:`, error)
+      return null
     }
   }
 
@@ -337,67 +436,98 @@ export default function TemplatePreviewGenerator() {
     setIsGeneratingAll(true)
     setProgress(0)
     setGenerationStatus({ success: [], failed: [], inProgress: [] })
-
-    const totalTemplates = templates.length
-    let completed = 0
-
-    for (const template of templates) {
-      setCurrentTemplate(template.name)
+    
+    const templateIds = templates.map(t => t.id)
+    const totalTemplates = templateIds.length
+    let successfulCount = 0
+    let failedCount = 0
+    
+    for (let i = 0; i < templateIds.length; i++) {
+      const templateId = templateIds[i]
+      setCurrentTemplate(templateId)
+      setProgress((i / totalTemplates) * 100)
+      
       setGenerationStatus(prev => ({
         ...prev,
-        inProgress: [...prev.inProgress, template.name]
+        inProgress: [...prev.inProgress, templateId]
       }))
-
-      // Generate preview for this template
-      console.log(`Generating preview for template: ${template.id}`)
-      const imageDataUrl = await generateSinglePreview(template.id)
       
-      if (imageDataUrl) {
-        console.log(`Successfully generated image for ${template.id}, saving to metadata...`)
-        // Save to metadata
-        const saved = await savePreviewToMetadata(template.id, imageDataUrl)
+      try {
+        console.log(`🔄 Generating preview for template: ${templateId}`)
+        let imageDataUrl = await generateSinglePreview(templateId)
         
-        if (saved) {
-          console.log(`Successfully saved metadata for ${template.id}`)
-          setGenerationStatus(prev => ({
-            ...prev,
-            success: [...prev.success, template.name],
-            inProgress: prev.inProgress.filter(name => name !== template.name)
-          }))
+        // Retry once if the first attempt fails
+        if (!imageDataUrl) {
+          console.log(`🔄 First attempt failed for ${templateId}, retrying...`)
+          await new Promise(resolve => setTimeout(resolve, 1000)) // Wait 1 second before retry
+          imageDataUrl = await generateSinglePreview(templateId)
+        }
+        
+        if (imageDataUrl) {
+          console.log(`✅ Generated image for ${templateId}, saving to metadata...`)
+          // Save the image to public/previews folder
+          const savedUrl = await savePreviewToMetadata(templateId, imageDataUrl)
+          
+          if (savedUrl) {
+            console.log(`✅ Successfully saved preview for ${templateId}: ${savedUrl}`)
+            successfulCount++
+            setGenerationStatus(prev => ({
+              ...prev,
+              success: [...prev.success, templateId],
+              inProgress: prev.inProgress.filter(id => id !== templateId)
+            }))
+          } else {
+            console.error(`❌ Failed to save preview for ${templateId}`)
+            failedCount++
+            setGenerationStatus(prev => ({
+              ...prev,
+              failed: [...prev.failed, templateId],
+              inProgress: prev.inProgress.filter(id => id !== templateId)
+            }))
+          }
         } else {
-          console.error(`Failed to save metadata for ${template.id}`)
+          console.error(`❌ Failed to generate image for ${templateId} after retry`)
+          failedCount++
           setGenerationStatus(prev => ({
             ...prev,
-            failed: [...prev.failed, template.name],
-            inProgress: prev.inProgress.filter(name => name !== template.name)
+            failed: [...prev.failed, templateId],
+            inProgress: prev.inProgress.filter(id => id !== templateId)
           }))
         }
-      } else {
-        console.error(`Failed to generate image for ${template.id}`)
+      } catch (error) {
+        console.error(`❌ Error generating preview for ${templateId}:`, error)
+        failedCount++
         setGenerationStatus(prev => ({
           ...prev,
-          failed: [...prev.failed, template.name],
-          inProgress: prev.inProgress.filter(name => name !== template.name)
+          failed: [...prev.failed, templateId],
+          inProgress: prev.inProgress.filter(id => id !== templateId)
         }))
       }
-
-      completed++
-      setProgress((completed / totalTemplates) * 100)
       
-      // Small delay to prevent overwhelming the browser
-      await new Promise(resolve => setTimeout(resolve, 100))
+      // Small delay between generations to prevent overwhelming the system
+      await new Promise(resolve => setTimeout(resolve, 300))
     }
-
+    
+    setProgress(100)
     setIsGeneratingAll(false)
     setCurrentTemplate("")
+    
+    // Log final results
+    console.log(`🎉 Preview generation completed!`)
+    console.log(`✅ Successful: ${successfulCount} templates`)
+    console.log(`❌ Failed: ${failedCount} templates`)
+    
+    if (successfulCount > 0) {
+      console.log(`💾 Successfully saved ${successfulCount} preview(s) to metadata`)
+    }
   }
 
   const generateSingleTemplatePreview = async () => {
     if (!selectedTemplate) return
-
+    
     setIsGenerating(true)
     setGeneratedImageUrl(null)
-
+    
     try {
       const imageDataUrl = await generateSinglePreview(selectedTemplate)
       
@@ -505,6 +635,19 @@ export default function TemplatePreviewGenerator() {
                 step={0.1}
               />
             </div>
+
+            {/* Show Preview Toggle */}
+            <div className="space-y-2">
+              <Label className="text-slate-300">Show Preview</Label>
+              <Button
+                variant={showPreview ? "default" : "outline"}
+                onClick={() => setShowPreview(!showPreview)}
+                className="w-full bg-slate-700/50 border-slate-600 text-white hover:bg-slate-600/50"
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                {showPreview ? "Hide" : "Show"} Preview
+              </Button>
+            </div>
           </div>
 
           {/* Action Buttons */}
@@ -515,11 +658,16 @@ export default function TemplatePreviewGenerator() {
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               {isGenerating ? (
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Generating...
+                </>
               ) : (
-                <Camera className="h-4 w-4 mr-2" />
+                <>
+                  <Camera className="h-4 w-4 mr-2" />
+                  Test Preview
+                </>
               )}
-              {isGenerating ? "Generating..." : "Generate Single Preview"}
             </Button>
 
             <Button
@@ -528,76 +676,35 @@ export default function TemplatePreviewGenerator() {
               className="bg-green-600 hover:bg-green-700 text-white"
             >
               {isGeneratingAll ? (
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Generating All...
+                </>
               ) : (
-                <Download className="h-4 w-4 mr-2" />
+                <>
+                  <Camera className="h-4 w-4 mr-2" />
+                  Generate All Previews
+                </>
               )}
-              {isGeneratingAll ? "Generating All..." : "Generate All Previews"}
             </Button>
-
-            <Button
-              onClick={() => setShowPreview(!showPreview)}
-              variant="outline"
-              className="border-slate-600 text-slate-300 hover:bg-slate-700"
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              {showPreview ? "Hide" : "Show"} Preview
-            </Button>
-
-            <Button
-              onClick={async () => {
-                console.log('Testing preview generation...')
-                const result = await generateSinglePreview(selectedTemplate || templates[0]?.id)
-                console.log('Test result:', result ? 'Success' : 'Failed')
-                if (result) {
-                  setGeneratedImageUrl(result)
-                }
-              }}
-              variant="outline"
-              className="border-yellow-600 text-yellow-300 hover:bg-yellow-700"
-            >
-              Test Preview
-            </Button>
-          </div>
-
-          {/* Current Settings Display */}
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary" className="bg-slate-700 text-slate-300">
-              Template: {selectedTemplateData?.name || "None"}
-            </Badge>
-            <Badge variant="secondary" className="bg-slate-700 text-slate-300">
-              Restaurant: {selectedRestaurant.name}
-            </Badge>
-            <Badge variant="secondary" className="bg-slate-700 text-slate-300">
-              Size: {imageWidth}x{imageHeight}
-            </Badge>
-            <Badge variant="secondary" className="bg-slate-700 text-slate-300">
-              Quality: {imageQuality}
-            </Badge>
           </div>
         </CardContent>
       </Card>
 
-      {/* Batch Generation Progress */}
+      {/* Progress Bar */}
       {isGeneratingAll && (
         <Card className="bg-slate-800/50 border-slate-700">
           <CardHeader>
-            <CardTitle className="text-white">Generating All Template Previews</CardTitle>
+            <CardTitle className="text-white">Generation Progress</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm text-slate-300">
-                <span>Progress</span>
-                <span>{Math.round(progress)}%</span>
-              </div>
-              <Progress value={progress} className="w-full" />
+            <Progress value={progress} className="w-full" />
+            <div className="text-center text-slate-300">
+              {currentTemplate && (
+                <div>Currently generating: <Badge variant="secondary">{currentTemplate}</Badge></div>
+              )}
+              <div>Progress: {Math.round(progress)}%</div>
             </div>
-            
-            {currentTemplate && (
-              <div className="text-center text-slate-300">
-                Currently generating: <span className="font-semibold">{currentTemplate}</span>
-              </div>
-            )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div className="text-green-400">
@@ -638,6 +745,11 @@ export default function TemplatePreviewGenerator() {
                 <AlertCircle className="h-4 w-4 text-red-500" />
                 <AlertDescription className="text-red-400">
                   Failed to generate {generationStatus.failed.length} preview(s): {generationStatus.failed.join(', ')}
+                  {generationStatus.success.length > 0 && (
+                    <div className="mt-2 text-sm">
+                      💡 {generationStatus.success.length} preview(s) were successfully generated and saved. You can continue using the application normally.
+                    </div>
+                  )}
                 </AlertDescription>
               </Alert>
             )}
@@ -646,8 +758,8 @@ export default function TemplatePreviewGenerator() {
       )}
 
       {/* Template Preview */}
-      {showPreview && selectedTemplateData && (
-        <Card className="bg-white">
+      {(showPreview || isGeneratingAll) && selectedTemplateData && (
+        <Card className={`bg-white ${isGeneratingAll ? 'hidden' : ''}`}>
           <CardHeader>
             <CardTitle className="text-center">Template Preview - {selectedTemplateData.name}</CardTitle>
           </CardHeader>
@@ -664,10 +776,8 @@ export default function TemplatePreviewGenerator() {
               }}
             >
               {selectedTemplateData && (
-                <SimpleTemplatePreview
+                <TemplatePreviewRenderer
                   templateId={selectedTemplateData.id}
-                  templateName={selectedTemplateData.name}
-                  templateDescription={selectedTemplateData.description}
                   restaurant={selectedRestaurant}
                   categories={sampleMenuData}
                 />

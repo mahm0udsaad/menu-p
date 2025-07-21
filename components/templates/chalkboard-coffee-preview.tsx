@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { DragDropContext, Droppable, Draggable, type DropResult } from "react-dnd"
+import { DragDropContext, Droppable, Draggable, type DropResult } from "react-beautiful-dnd"
 import { Plus, Edit, Trash2, GripVertical, FileText, Coffee } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -264,7 +264,7 @@ export function ChalkboardCoffeePreview({ menu, onUpdateMenu }: ChalkboardCoffee
             <Coffee className="w-8 h-8 text-white" />
             <div>
               <h1 className="text-2xl font-bold text-white">Chalkboard Menu Editor</h1>
-              <p className="text-white/80">{menu.restaurant.name}</p>
+              <p className="text-white/80">{menu.restaurant?.name || "Restaurant Name"}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">

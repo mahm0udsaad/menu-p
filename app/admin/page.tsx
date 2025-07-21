@@ -117,7 +117,7 @@ export default function AdminPage() {
           
           <MenuEditorProvider
             restaurant={{
-              id: "admin-sample",
+              id: "00000000-0000-0000-0000-000000000001",
               name: "مقهى الحبة الذهبية",
               category: "cafe",
               logo_url: null,

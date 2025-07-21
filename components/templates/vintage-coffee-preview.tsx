@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { DragDropContext, Droppable, Draggable, type DropResult } from "react-dnd"
+import { DragDropContext, Droppable, Draggable, type DropResult } from "react-beautiful-dnd"
 import { Plus, Edit, Trash2, GripVertical, FileText, Coffee } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"

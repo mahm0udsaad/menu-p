@@ -116,7 +116,7 @@ export function MenuPreview({ menu }: MenuPreviewProps) {
         {/* Footer */}
         <div className="mt-16 pt-8 border-t border-black">
           <div className="flex justify-between items-center text-sm">
-            <div className="font-bold">{menu.restaurant.name || "YOUR LOGO"}</div>
+            <div className="font-bold">{menu.restaurant?.name || "YOUR LOGO"}</div>
             <div className="text-center">
               {menu.restaurant.address && <div>{menu.restaurant.address}</div>}
               {menu.restaurant.phoneNumber && <div>{menu.restaurant.phoneNumber}</div>}

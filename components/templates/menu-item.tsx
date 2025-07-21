@@ -1,6 +1,6 @@
 "use client"
 
-import { Draggable } from "react-dnd"
+import { Draggable } from "react-beautiful-dnd"
 import { GripVertical, Edit, Trash2, Star, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"

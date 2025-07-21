@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
+import { readFile, writeFile } from 'fs/promises'
+import { join } from 'path'
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,41 +8,41 @@ export async function POST(request: NextRequest) {
 
     if (!templateId || !previewImageUrl) {
       return NextResponse.json(
-        { error: 'Missing templateId or previewImageUrl' },
+        { error: 'Template ID and preview image URL are required' },
         { status: 400 }
       )
     }
 
-    // Read the current metadata file
-    const metadataPath = path.join(process.cwd(), 'data', 'pdf-templates-metadata.json')
-    const metadataContent = fs.readFileSync(metadataPath, 'utf-8')
+    // Read the PDF templates metadata file
+    const metadataPath = join(process.cwd(), 'data', 'pdf-templates-metadata.json')
+    const metadataContent = await readFile(metadataPath, 'utf-8')
     const metadata = JSON.parse(metadataContent)
 
-    // Check if template exists
-    if (!metadata.templates[templateId]) {
+    // Update the specific template's preview image URL
+    if (metadata.templates[templateId]) {
+      metadata.templates[templateId].previewImageUrl = previewImageUrl
+      
+      // Write the updated metadata back to the file
+      await writeFile(metadataPath, JSON.stringify(metadata, null, 2))
+      
+      console.log(`✅ Updated preview image for template ${templateId}: ${previewImageUrl}`)
+      
+      return NextResponse.json({
+        success: true,
+        templateId,
+        previewImageUrl
+      })
+    } else {
       return NextResponse.json(
-        { error: `Template ${templateId} not found` },
+        { error: `Template ${templateId} not found in metadata` },
         { status: 404 }
       )
     }
 
-    // Update the template with the preview image URL
-    metadata.templates[templateId].previewImageUrl = previewImageUrl
-
-    // Write the updated metadata back to the file
-    fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2), 'utf-8')
-
-    return NextResponse.json({
-      success: true,
-      message: `Preview image updated for template ${templateId}`,
-      templateId,
-      previewImageUrl
-    })
-
   } catch (error) {
-    console.error('Error updating template preview:', error)
+    console.error('Error updating PDF template preview:', error)
     return NextResponse.json(
-      { error: 'Failed to update template preview' },
+      { error: 'Failed to update PDF template preview' },
       { status: 500 }
     )
   }

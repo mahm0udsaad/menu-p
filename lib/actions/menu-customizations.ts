@@ -44,7 +44,55 @@ export async function getMenuCustomizations(restaurantId: string) {
   try {
     const supabase = createClient()
     
-    // First try to get existing customizations
+    // Check if this is a sample restaurant (for admin template generation)
+    const isSampleRestaurant = [
+      '00000000-0000-0000-0000-000000000001',
+      '00000000-0000-0000-0000-000000000002',
+      '00000000-0000-0000-0000-000000000003'
+    ].includes(restaurantId)
+    
+    // For sample restaurants, return default customizations without database interaction
+    if (isSampleRestaurant) {
+      const defaultCustomizations = {
+        id: `sample-${restaurantId}`,
+        restaurant_id: restaurantId,
+        page_background_settings: {
+          backgroundColor: '#ffffff',
+          backgroundImage: null,
+          backgroundType: 'solid',
+          gradientFrom: '#ffffff',
+          gradientTo: '#f3f4f6',
+          gradientDirection: 'to-b'
+        },
+        font_settings: {
+          arabic: { font: 'cairo', weight: 'normal' },
+          english: { font: 'roboto', weight: 'normal' }
+        },
+        row_styles: {
+          backgroundColor: 'transparent',
+          backgroundImage: null,
+          backgroundType: 'solid',
+          itemColor: '#1f2937',
+          descriptionColor: '#6b7280',
+          priceColor: '#dc2626',
+          textShadow: false
+        },
+        footer_settings: {
+          borderTop: { enabled: false, color: '', width: 0 },
+          borderBottom: { enabled: false, color: '', width: 0 },
+          borderLeft: { enabled: false, color: '', width: 0 },
+          borderRight: { enabled: false, color: '', width: 0 }
+        },
+        element_styles: {},
+        theme_settings: {},
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+      
+      return { success: true, data: defaultCustomizations }
+    }
+    
+    // For real restaurants, try to get existing customizations
     const { data: existing, error: fetchError } = await supabase
       .from('menu_customizations')
       .select('*')

@@ -14,7 +14,7 @@ import ProfessionalCafeMenuPreview from "./editor/professional-cafe-menu-preview
 // Sample restaurant data for template generation
 const sampleRestaurants = [
   {
-    id: "sample-1",
+    id: "00000000-0000-0000-0000-000000000001",
     name: "مقهى الحبة الذهبية",
     category: "cafe",
     logo_url: null,
@@ -27,7 +27,7 @@ const sampleRestaurants = [
     }
   },
   {
-    id: "sample-2", 
+    id: "00000000-0000-0000-0000-000000000002", 
     name: "مطعم الأصالة",
     category: "restaurant",
     logo_url: null,
@@ -40,7 +40,7 @@ const sampleRestaurants = [
     }
   },
   {
-    id: "sample-3",
+    id: "00000000-0000-0000-0000-000000000003",
     name: "بيسترو المدينة",
     category: "both",
     logo_url: null,

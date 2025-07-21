@@ -15,6 +15,7 @@ interface TemplateMetadata {
   category: string
   features: string[]
   defaultSettings: any
+  previewImageUrl: string
 }
 
 interface TemplateRegistry {
@@ -49,7 +50,7 @@ export function TemplateSwitcherModal() {
         const templateList: Template[] = Object.values(registry.templates).map((template) => ({
           id: template.id,
           name: template.name,
-          previewUrl: `/placeholder.svg?height=300&width=400&text=${encodeURIComponent(template.name)}`,
+          previewUrl: template.previewImageUrl,
         }))
         
         setTemplates(templateList)

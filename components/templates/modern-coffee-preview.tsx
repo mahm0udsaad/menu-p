@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, memo } from "react"
-import { DragDropContext, Droppable, Draggable, type DropResult } from "react-dnd"
+import { DragDropContext, Droppable, Draggable, type DropResult } from "react-beautiful-dnd"
 import { Plus, Edit, Trash2, GripVertical, FileText, Coffee } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -263,7 +263,6 @@ export const ModernCoffeePreview: React.FC<ModernCoffeePreviewProps> = memo(({ m
   )
 
   return (
-    return (
     <div className="bg-gradient-to-br from-orange-100 via-amber-50 to-orange-200 min-h-screen relative overflow-hidden">
       {/* Decorative Elements */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-orange-400 to-transparent rounded-full opacity-30 -translate-y-32 translate-x-32"></div>
@@ -276,7 +275,7 @@ export const ModernCoffeePreview: React.FC<ModernCoffeePreviewProps> = memo(({ m
             <Coffee className="w-8 h-8 text-orange-600" />
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Coffee Menu Editor</h1>
-              <p className="text-gray-600">{menu.restaurant.name}</p>
+              <p className="text-gray-600">{menu.restaurant?.name || "Restaurant Name"}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -316,44 +315,6 @@ export const ModernCoffeePreview: React.FC<ModernCoffeePreviewProps> = memo(({ m
             </div>
 
             {/* Menu Header */}
-            {/* Decorative Elements */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-orange-400 to-transparent rounded-full opacity-30 -translate-y-32 translate-x-32"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-amber-400 to-transparent rounded-full opacity-20 translate-y-48 -translate-x-48"></div>
-
-      <div className="p-8 relative z-10">
-        <div className="max-w-4xl mx-auto">
-          {/* Coffee Bean Decorations */}
-          <div className="absolute left-8 top-32 w-32 h-32 opacity-20">
-            <div className="w-full h-full bg-amber-800 rounded-full relative">
-              <div className="absolute inset-2 bg-amber-900 rounded-full"></div>
-              <div className="absolute top-1/2 left-1/2 w-1 h-16 bg-amber-600 transform -translate-x-1/2 -translate-y-1/2 rotate-12"></div>
-            </div>
-          </div>
-          <div className="absolute left-16 bottom-32 w-24 h-24 opacity-15">
-            <div className="w-full h-full bg-amber-800 rounded-full relative">
-              <div className="absolute inset-2 bg-amber-900 rounded-full"></div>
-              <div className="absolute top-1/2 left-1/2 w-1 h-12 bg-amber-600 transform -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
-            </div>
-          </div>
-
-          {/* Menu Header */}
-          <div className="p-8 relative z-10">
-        <div className="max-w-4xl mx-auto">
-          {/* Coffee Bean Decorations */}
-          <div className="absolute left-8 top-32 w-32 h-32 opacity-20">
-            <div className="w-full h-full bg-amber-800 rounded-full relative">
-              <div className="absolute inset-2 bg-amber-900 rounded-full"></div>
-              <div className="absolute top-1/2 left-1/2 w-1 h-16 bg-amber-600 transform -translate-x-1/2 -translate-y-1/2 rotate-12"></div>
-            </div>
-          </div>
-          <div className="absolute left-16 bottom-32 w-24 h-24 opacity-15">
-            <div className="w-full h-full bg-amber-800 rounded-full relative">
-              <div className="absolute inset-2 bg-amber-900 rounded-full"></div>
-              <div className="absolute top-1/2 left-1/2 w-1 h-12 bg-amber-600 transform -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
-            </div>
-          </div>
-
-          {/* Menu Header */}
           <div className="text-left mb-12 relative">
             <div className="mb-8">
               <h1 className="text-4xl font-bold text-gray-900 mb-2 tracking-wide">

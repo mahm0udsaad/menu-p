@@ -1,11 +1,12 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import ProfessionalCafeMenuPreview from "./editor/professional-cafe-menu-preview"
-import ModernPreview from "./editor/templates/modern/ModernPreview"
-import ModernCoffeePreview from "./editor/templates/modern-coffee/ModernCoffeePreview"
-import PaintingStylePreview from "./editor/templates/painting-style/PaintingStylePreview"
-import VintagePreview from "./editor/templates/vintage/VintagePreview"
+// Import client-side preview components instead of server-side PDF components
+import ModernPreview from '@/components/editor/templates/modern/ModernPreview'
+import ModernCoffeePreview from '@/components/editor/templates/modern-coffee/ModernCoffeePreview'
+import VintagePreview from '@/components/editor/templates/vintage/VintagePreview'
+import PaintingStylePreview from '@/components/editor/templates/painting-style/PaintingStylePreview'
+import ModernPreviewUnified from '@/components/editor/templates/modern/ModernPreviewUnified'
 
 interface TemplatePreviewRendererProps {
   templateId: string
@@ -14,25 +15,102 @@ interface TemplatePreviewRendererProps {
   onRefresh?: () => void
 }
 
-const templateComponents: Record<string, React.ComponentType<any>> = {
-  'classic': ProfessionalCafeMenuPreview,
-  'cafe': ProfessionalCafeMenuPreview,
+// Create a simple wrapper component that provides data without context
+const PreviewWrapper: React.FC<{
+  Component: React.ComponentType<any>
+  restaurant: any
+  categories: any[]
+}> = ({ Component, restaurant, categories }) => {
+  // Create mock context data that the preview components expect
+  const mockContextData = {
+    categories: categories || [],
+    restaurant: restaurant || {},
+    pageBackgroundSettings: {
+      backgroundType: 'solid',
+      backgroundColor: '#ffffff'
+    },
+    fontSettings: {
+      arabic: { font: 'Cairo', weight: 'normal' },
+      english: { font: 'Roboto', weight: 'normal' }
+    },
+    rowStyleSettings: {
+      itemColor: '#000000',
+      backgroundColor: '#ffffff'
+    },
+    appliedRowStyles: {},
+    currentLanguage: 'ar',
+    moveItem: () => {},
+    handleAddCategory: () => {}
+  }
+
+  // Create a simple component that renders the preview without context dependencies
+  const SimplePreview = () => {
+    return (
+      <div className="min-h-[1123px] p-8 relative bg-white">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            {restaurant?.name || 'Restaurant Name'}
+          </h1>
+          <p className="text-lg text-gray-700">
+            {restaurant?.category || 'Restaurant Category'}
+          </p>
+        </div>
+        
+        <div className="space-y-8">
+          {categories?.map((category: any, index: number) => (
+            <div key={index} className="border-b border-gray-200 pb-6">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                {category.name}
+              </h2>
+              <div className="space-y-4">
+                {category.menu_items?.map((item: any, itemIndex: number) => (
+                  <div key={itemIndex} className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {item.name}
+                      </h3>
+                      {item.description && (
+                        <p className="text-gray-600 text-sm mt-1">
+                          {item.description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-lg font-bold text-gray-900 ml-4">
+                      {item.price ? `${item.price} ${restaurant?.currency || '$'}` : ''}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  return <SimplePreview />
+}
+
+// Map template IDs to client-side preview components
+const previewComponents: Record<string, React.ComponentType<any>> = {
+  'classic': ModernPreview,
+  'cafe': ModernPreview,
   'modern': ModernPreview,
   'modern-coffee': ModernCoffeePreview,
   'painting': PaintingStylePreview,
   'vintage': VintagePreview,
-  'fast-food': ProfessionalCafeMenuPreview,
-  'elegant-cocktail': ProfessionalCafeMenuPreview,
-  'sweet-treats': ProfessionalCafeMenuPreview,
-  'simple-coffee': ProfessionalCafeMenuPreview,
-  'borcelle-coffee': ProfessionalCafeMenuPreview,
-  'luxury-menu': ProfessionalCafeMenuPreview,
-  'chalkboard-coffee': ProfessionalCafeMenuPreview,
-  'botanical-cafe': ProfessionalCafeMenuPreview,
-  'cocktail-menu': ProfessionalCafeMenuPreview,
-  'vintage-bakery': ProfessionalCafeMenuPreview,
-  'vintage-coffee': ProfessionalCafeMenuPreview,
-  'interactive-menu': ProfessionalCafeMenuPreview,
+  'fast-food': ModernPreview,
+  'elegant-cocktail': ModernPreview,
+  'sweet-treats': ModernPreview,
+  'simple-coffee': ModernCoffeePreview,
+  'borcelle-coffee': ModernCoffeePreview,
+  'luxury-menu': ModernPreview,
+  'chalkboard-coffee': ModernPreview,
+  'botanical-cafe': ModernPreview,
+  'cocktail-menu': ModernPreview,
+  'vintage-bakery': VintagePreview,
+  'vintage-coffee': VintagePreview,
+  'interactive-menu': ModernPreviewUnified,
 }
 
 export default function TemplatePreviewRenderer({
@@ -45,14 +123,14 @@ export default function TemplatePreviewRenderer({
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const component = templateComponents[templateId]
+    const component = previewComponents[templateId]
     if (component) {
       setComponent(() => component)
       setError(null)
     } else {
-      setError(`Template component not found for: ${templateId}`)
+      setError(`Preview component not found for: ${templateId}`)
       // Fallback to default component
-      setComponent(() => ProfessionalCafeMenuPreview)
+      setComponent(() => ModernPreview)
     }
   }, [templateId])
 
@@ -64,17 +142,18 @@ export default function TemplatePreviewRenderer({
     return (
       <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
         <div className="text-center text-gray-600">
-          <div className="text-lg font-bold mb-2">Loading template...</div>
+          <div className="text-lg font-bold mb-2">Loading preview template...</div>
+          <div className="text-sm opacity-70">{templateId}</div>
         </div>
       </div>
     )
   }
 
   return (
-    <Component
+    <PreviewWrapper
+      Component={Component}
       restaurant={restaurant}
       categories={categories}
-      onRefresh={onRefresh}
     />
   )
 } 

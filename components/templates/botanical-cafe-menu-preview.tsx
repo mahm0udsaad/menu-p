@@ -72,7 +72,7 @@ export function BotanicalCafeMenuPreview() {
               {/* Menu Items */}
               <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-8 border border-green-200">
                 <div className="space-y-6">
-                  {category.items.map((item) => (
+                  {category.menu_items.map((item) => (
                     <div key={item.id} className="flex justify-between items-start">
                       <div className="flex-1">
                         <h4 className="text-xl font-semibold text-green-900 mb-1">{item.name}</h4>
@@ -82,8 +82,7 @@ export function BotanicalCafeMenuPreview() {
                       </div>
                       <div className="ml-6 flex-shrink-0">
                         <span className="text-2xl font-bold text-green-800">
-                          {item.currency}
-                          {item.price}
+                          ${item.price?.toFixed(0)}
                         </span>
                       </div>
                     </div>

@@ -1,12 +1,40 @@
 "use client"
 
 import { useState } from "react"
-import { DragDropContext, Droppable, Draggable, type DropResult } from "react-dnd"
+import { DragDropContext, Droppable, Draggable, type DropResult } from "react-beautiful-dnd"
 import { Plus, Edit, Trash2, GripVertical, FileText, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { InlineItemForm } from "./inline-item-form"
-import type { Menu, MenuCategory, MenuItem } from "@/types/menu"
+
+interface MenuItem {
+  id: string
+  name: string
+  description: string | null
+  price: number | null
+  is_available: boolean
+  is_featured: boolean
+  isTemporary?: boolean
+}
+
+interface MenuCategory {
+  id: string
+  name: string
+  description: string
+  menu_items: MenuItem[]
+  isSpecial: boolean
+}
+
+interface Menu {
+  id: string
+  name: string
+  description: string | null
+  categories: MenuCategory[]
+  restaurant?: any
+  designSettings?: any
+  customizations?: any
+}
+
 import { useMenuEditor } from "@/contexts/menu-editor-context"
 
 interface LuxuryMenuPreviewProps {
@@ -22,6 +50,9 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
 
   const { isPreviewMode } = useMenuEditor()
 
+  // Ensure menu.categories is always an array
+  const categories = menu.categories || []
+
   const generateId = () => `id_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
   const addCategory = () => {
@@ -30,12 +61,12 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
       id: newCategoryId,
       name: "NEW CATEGORY",
       description: "",
-      items: [],
+      menu_items: [],
       isSpecial: false,
     }
     onUpdateMenu({
       ...menu,
-      categories: [...menu.categories, newCategory],
+      categories: [...categories, newCategory],
     })
 
     setTimeout(() => {
@@ -46,7 +77,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
   const updateCategory = (categoryId: string, updates: Partial<MenuCategory>) => {
     onUpdateMenu({
       ...menu,
-      categories: menu.categories.map((cat) => (cat.id === categoryId ? { ...cat, ...updates } : cat)),
+      categories: categories.map((cat: MenuCategory) => (cat.id === categoryId ? { ...cat, ...updates } : cat)),
     })
   }
 
@@ -54,7 +85,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
     if (window.confirm("Are you sure you want to delete this category and all its items?")) {
       onUpdateMenu({
         ...menu,
-        categories: menu.categories.filter((cat) => cat.id !== categoryId),
+        categories: categories.filter((cat: MenuCategory) => cat.id !== categoryId),
       })
     }
   }
@@ -71,11 +102,11 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
     if (itemId) {
       onUpdateMenu({
         ...menu,
-        categories: menu.categories.map((cat) =>
+        categories: categories.map((cat: MenuCategory) =>
           cat.id === categoryId
             ? {
                 ...cat,
-                items: cat.items.map((item) => (item.id === itemId ? { ...item, ...itemData } : item)),
+                menu_items: cat.menu_items.map((item: MenuItem) => (item.id === itemId ? { ...item, ...itemData } : item)),
               }
             : cat,
         ),
@@ -88,8 +119,8 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
       }
       onUpdateMenu({
         ...menu,
-        categories: menu.categories.map((cat) =>
-          cat.id === categoryId ? { ...cat, items: [...cat.items, newItem] } : cat,
+        categories: menu.categories.map((cat: MenuCategory) =>
+          cat.id === categoryId ? { ...cat, menu_items: [...cat.menu_items, newItem] } : cat,
         ),
       })
       setAddingItemToCategoryId(null)
@@ -100,8 +131,8 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
     if (window.confirm("Are you sure you want to delete this item?")) {
       onUpdateMenu({
         ...menu,
-        categories: menu.categories.map((cat) =>
-          cat.id === categoryId ? { ...cat, items: cat.items.filter((item) => item.id !== itemId) } : cat,
+        categories: menu.categories.map((cat: MenuCategory) =>
+          cat.id === categoryId ? { ...cat, menu_items: cat.menu_items.filter((item: MenuItem) => item.id !== itemId) } : cat,
         ),
       })
     }
@@ -114,7 +145,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
     if (destination.droppableId === source.droppableId && destination.index === source.index) return
 
     if (type === "CATEGORY") {
-      const newCategories = Array.from(menu.categories)
+      const newCategories = Array.from(categories)
       const [reorderedCategory] = newCategories.splice(source.index, 1)
       newCategories.splice(destination.index, 0, reorderedCategory)
 
@@ -127,36 +158,36 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
       const destinationCategoryId = destination.droppableId
 
       if (sourceCategoryId === destinationCategoryId) {
-        const category = menu.categories.find((cat) => cat.id === sourceCategoryId)
+        const category = categories.find((cat: MenuCategory) => cat.id === sourceCategoryId)
         if (!category) return
 
-        const newItems = Array.from(category.items)
+        const newItems = Array.from(category.menu_items)
         const [reorderedItem] = newItems.splice(source.index, 1)
         newItems.splice(destination.index, 0, reorderedItem)
 
         onUpdateMenu({
           ...menu,
-          categories: menu.categories.map((cat) => (cat.id === sourceCategoryId ? { ...cat, items: newItems } : cat)),
+          categories: categories.map((cat: MenuCategory) => (cat.id === sourceCategoryId ? { ...cat, menu_items: newItems } : cat)),
         })
       } else {
-        const sourceCategory = menu.categories.find((cat) => cat.id === sourceCategoryId)
-        const destinationCategory = menu.categories.find((cat) => cat.id === destinationCategoryId)
+        const sourceCategory = menu.categories.find((cat: MenuCategory) => cat.id === sourceCategoryId)
+        const destinationCategory = menu.categories.find((cat: MenuCategory) => cat.id === destinationCategoryId)
 
         if (!sourceCategory || !destinationCategory) return
 
-        const sourceItems = Array.from(sourceCategory.items)
-        const destinationItems = Array.from(destinationCategory.items)
+        const sourceItems = Array.from(sourceCategory.menu_items)
+        const destinationItems = Array.from(destinationCategory.menu_items)
         const [movedItem] = sourceItems.splice(source.index, 1)
         destinationItems.splice(destination.index, 0, movedItem)
 
         onUpdateMenu({
           ...menu,
-          categories: menu.categories.map((cat) => {
+          categories: menu.categories.map((cat: MenuCategory) => {
             if (cat.id === sourceCategoryId) {
-              return { ...cat, items: sourceItems }
+              return { ...cat, menu_items: sourceItems }
             }
             if (cat.id === destinationCategoryId) {
-              return { ...cat, items: destinationItems }
+              return { ...cat, menu_items: destinationItems }
             }
             return cat
           }),
@@ -196,31 +227,8 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
 
   return (
     <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 min-h-screen">
-      {/* Header with controls */}
-      <div className="bg-black/50 backdrop-blur-sm border-b border-yellow-600/20 p-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-yellow-400">Luxury Menu Editor</h1>
-            <p className="text-yellow-200/80">{menu.restaurant.name}</p>
-          </div>
-          <div className="flex items-center gap-3">
-            {isPreviewMode && (
-              <Button
-                onClick={addCategory}
-                variant="outline"
-                className="border-yellow-600 text-yellow-400 hover:bg-yellow-600/10 bg-transparent"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Category
-              </Button>
-            )}
-            <Button onClick={generatePDF} className="bg-yellow-600 hover:bg-yellow-700 text-black font-semibold">
-              <FileText className="w-4 h-4 mr-2" />
-              Generate PDF
-            </Button>
-          </div>
-        </div>
-      </div>
+ 
+ 
 
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="relative p-8">
@@ -258,7 +266,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                 <Droppable droppableId="left-column" type="CATEGORY">
                   {(provided) => (
                     <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-12">
-                      {menu.categories.slice(0, Math.ceil(menu.categories.length / 2)).map((category, index) => (
+                      {(menu.categories || []).slice(0, Math.ceil((menu.categories || []).length / 2)).map((category: MenuCategory, index: number) => (
                         <Draggable key={category.id} draggableId={category.id} index={index}>
                           {(provided, snapshot) => (
                             <div
@@ -354,7 +362,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                         snapshot.isDraggingOver ? "bg-yellow-600/10 rounded p-2" : ""
                                       }`}
                                     >
-                                      {category.items.map((item, itemIndex) => (
+                                      {category.menu_items.map((item: MenuItem, itemIndex: number) => (
                                         <Draggable key={item.id} draggableId={item.id} index={itemIndex}>
                                           {(provided, snapshot) => (
                                             <div
@@ -424,7 +432,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                                   {editingItemId === item.id ? (
                                                     <input
                                                       type="number"
-                                                      value={item.price}
+                                                      value={item.price || ''}
                                                       onChange={(e) =>
                                                         saveItem(
                                                           category.id,
@@ -437,7 +445,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                                     />
                                                   ) : (
                                                     <div className="text-xl font-serif font-bold text-yellow-400">
-                                                      {item.price.toFixed(0)}
+                                                      {item.price?.toFixed(0)}
                                                     </div>
                                                   )}
                                                   <div
@@ -478,7 +486,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                           isSpecialCategory={true}
                                         />
                                       )}
-                                      {category.items.length === 0 && addingItemToCategoryId !== category.id && (
+                                      {category.menu_items.length === 0 && addingItemToCategoryId !== category.id && (
                                         <div
                                           className={`text-center py-6 transition-opacity duration-300 ${isPreviewMode ? "opacity-100" : "opacity-0 pointer-events-none"}`}
                                         >
@@ -524,11 +532,11 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                 <Droppable droppableId="right-column" type="CATEGORY">
                   {(provided) => (
                     <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-12">
-                      {menu.categories.slice(Math.ceil(menu.categories.length / 2)).map((category, index) => (
+                      {(menu.categories || []).slice(Math.ceil((menu.categories || []).length / 2)).map((category: MenuCategory, index: number) => (
                         <Draggable
                           key={category.id}
                           draggableId={category.id}
-                          index={index + Math.ceil(menu.categories.length / 2)}
+                                                      index={index + Math.ceil((menu.categories || []).length / 2)}
                         >
                           {(provided, snapshot) => (
                             <div
@@ -624,7 +632,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                         snapshot.isDraggingOver ? "bg-yellow-600/10 rounded p-2" : ""
                                       }`}
                                     >
-                                      {category.items.map((item, itemIndex) => (
+                                      {category.menu_items.map((item: MenuItem, itemIndex: number) => (
                                         <Draggable key={item.id} draggableId={item.id} index={itemIndex}>
                                           {(provided, snapshot) => (
                                             <div
@@ -694,7 +702,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                                   {editingItemId === item.id ? (
                                                     <input
                                                       type="number"
-                                                      value={item.price}
+                                                      value={item.price || ''}
                                                       onChange={(e) =>
                                                         saveItem(
                                                           category.id,
@@ -707,7 +715,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                                     />
                                                   ) : (
                                                     <div className="text-xl font-serif font-bold text-yellow-400">
-                                                      {item.price.toFixed(0)}
+                                                      {item.price?.toFixed(0)}
                                                     </div>
                                                   )}
                                                   <div
@@ -748,7 +756,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                           isSpecialCategory={true}
                                         />
                                       )}
-                                      {category.items.length === 0 && addingItemToCategoryId !== category.id && (
+                                      {category.menu_items.length === 0 && addingItemToCategoryId !== category.id && (
                                         <div
                                           className={`text-center py-6 transition-opacity duration-300 ${isPreviewMode ? "opacity-100" : "opacity-0 pointer-events-none"}`}
                                         >
