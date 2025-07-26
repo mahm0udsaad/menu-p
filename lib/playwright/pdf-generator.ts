@@ -1,4 +1,4 @@
-import { Browser, chromium, Page } from 'playwright-core';
+import { Browser, chromium, Page, BrowserContext } from 'playwright-core';
 import path from 'path';
 import { envConfig } from '@/lib/config/env';
 
@@ -20,27 +20,103 @@ interface PDFGenerationOptions {
   };
 }
 
+interface GeneratePDFFromDataOptions {
+  htmlContent: string;
+  format?: 'A4' | 'Letter';
+  language?: string;
+  margin?: {
+    top?: string;
+    right?: string;
+    bottom?: string;
+    left?: string;
+  };
+}
+
 import { generateHTMLContent } from "@/lib/html-generator";
 
-// Shared browser instance for better performance
+// Enhanced browser management with better error handling
 let _browserInstance: Browser | null = null;
 let _browserInitPromise: Promise<Browser> | null = null;
+let _browserContext: BrowserContext | null = null;
+let _connectionAttempts = 0;
+const MAX_CONNECTION_ATTEMPTS = 3;
+const BROWSER_RESET_TIMEOUT = 5000; // 5 seconds
 
 /**
- * Get or create a shared Playwright browser instance
- * This significantly improves performance by reusing the browser across multiple PDF generations
+ * Browser health check to ensure it's still responsive
+ */
+async function isBrowserHealthy(browser: Browser): Promise<boolean> {
+  try {
+    // Test if browser is still responsive
+    const contexts = browser.contexts();
+    return browser.isConnected() && contexts !== undefined;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Force cleanup of browser resources
+ */
+async function forceCleanupBrowser(): Promise<void> {
+  console.log('🧹 Force cleaning up browser resources...');
+  
+  try {
+    if (_browserContext) {
+      await _browserContext.close().catch(() => {});
+      _browserContext = null;
+    }
+  } catch {}
+
+  try {
+    if (_browserInstance) {
+      await _browserInstance.close().catch(() => {});
+      _browserInstance = null;
+    }
+  } catch {}
+
+  _browserInitPromise = null;
+  _connectionAttempts = 0;
+  
+  console.log('✅ Browser cleanup completed');
+}
+
+/**
+ * Get or create a fresh browser instance with better error handling
  */
 async function getBrowserInstance(): Promise<Browser> {
-  if (_browserInstance) {
+  // Check if current browser is healthy
+  if (_browserInstance && await isBrowserHealthy(_browserInstance)) {
     return _browserInstance;
   }
 
-  if (_browserInitPromise) {
-    return _browserInitPromise;
+  // If browser is unhealthy, force cleanup
+  if (_browserInstance) {
+    console.log('⚠️ Browser instance is unhealthy, forcing cleanup...');
+    await forceCleanupBrowser();
   }
+
+  // If we're already initializing, wait for it
+  if (_browserInitPromise) {
+    try {
+      return await _browserInitPromise;
+    } catch {
+      // If initialization failed, reset and try again
+      _browserInitPromise = null;
+    }
+  }
+
+  // Check connection attempts
+  if (_connectionAttempts >= MAX_CONNECTION_ATTEMPTS) {
+    throw new Error(`Failed to establish browser connection after ${MAX_CONNECTION_ATTEMPTS} attempts`);
+  }
+
+  _connectionAttempts++;
+  console.log(`🚀 Launching browser instance (attempt ${_connectionAttempts}/${MAX_CONNECTION_ATTEMPTS})...`);
 
   _browserInitPromise = chromium.launch({
     headless: true,
+    timeout: 30000, // 30 second timeout
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
@@ -57,23 +133,38 @@ async function getBrowserInstance(): Promise<Browser> {
       '--disable-extensions',
       '--disable-plugins',
       '--disable-default-apps',
-      '--run-all-compositor-stages-before-draw'
+      '--run-all-compositor-stages-before-draw',
+      '--disable-ipc-flooding-protection',
+      '--disable-background-networking',
+      '--disable-default-apps',
+      '--disable-sync',
+      '--metrics-recording-only',
+      '--no-default-browser-check',
+      '--no-pings',
+      '--password-store=basic',
+      '--use-mock-keychain',
+      '--disable-component-update'
     ]
   });
 
   try {
     _browserInstance = await _browserInitPromise;
     
-    // Handle browser disconnection
+    // Setup disconnect handler
     _browserInstance.on('disconnected', () => {
-      console.warn('⚠️ Playwright browser disconnected. Resetting instance.');
+      console.warn('⚠️ Playwright browser disconnected unexpectedly');
       _browserInstance = null;
+      _browserContext = null;
       _browserInitPromise = null;
     });
 
-    console.log('🚀 Playwright browser instance launched and cached');
+    // Reset connection attempts on success
+    _connectionAttempts = 0;
+    
+    console.log('✅ Playwright browser instance launched successfully');
     return _browserInstance;
   } catch (error) {
+    console.error('❌ Failed to launch browser:', error);
     _browserInstance = null;
     _browserInitPromise = null;
     throw error;
@@ -81,8 +172,40 @@ async function getBrowserInstance(): Promise<Browser> {
 }
 
 /**
- * Enhanced asset routing for Playwright
- * Serves local static assets (fonts, images, CSS) directly from filesystem
+ * Get or create a browser context with better lifecycle management
+ */
+async function getBrowserContext(): Promise<BrowserContext> {
+  const browser = await getBrowserInstance();
+  
+  // Check if current context is still valid
+  if (_browserContext && !_browserContext.pages().length) {
+    try {
+      // Test context by creating a test page
+      const testPage = await _browserContext.newPage();
+      await testPage.close();
+      return _browserContext;
+    } catch {
+      // Context is invalid, close it
+      try {
+        await _browserContext.close();
+      } catch {}
+      _browserContext = null;
+    }
+  }
+
+  // Create new context
+  console.log('🔄 Creating new browser context...');
+  _browserContext = await browser.newContext({
+    viewport: { width: 1200, height: 1600 },
+    javaScriptEnabled: true,
+    ignoreHTTPSErrors: true,
+  });
+
+  return _browserContext;
+}
+
+/**
+ * Enhanced asset routing with better error handling
  */
 async function setupAssetRouting(page: Page): Promise<void> {
   await page.route('**/*', (route) => {
@@ -90,72 +213,102 @@ async function setupAssetRouting(page: Page): Promise<void> {
     const resourceType = request.resourceType();
     const url = request.url();
     
-    // Serve local static assets from filesystem
-    const baseUrl = envConfig.baseUrl;
-    
-    // Font files
-    if (url.includes('/fonts/') || url.includes('/public/fonts/')) {
-      const fontPath = url.replace(baseUrl, '').replace('/public', '');
-      const filePath = path.join(process.cwd(), 'public', fontPath);
-      route.fulfill({ path: filePath }).catch(() => {
-        console.warn(`⚠️ Font not found: ${filePath}`);
-        route.continue();
-      });
-      return;
-    }
-    
-    // Image assets
-    if (url.includes('/assets/') || url.includes('/public/assets/')) {
-      const assetPath = url.replace(baseUrl, '').replace('/public', '');
-      const filePath = path.join(process.cwd(), 'public', assetPath);
-      route.fulfill({ path: filePath }).catch(() => {
-        console.warn(`⚠️ Asset not found: ${filePath}`);
-        route.continue();
-      });
-      return;
-    }
-    
-    // Global CSS
-    if (url.includes('/globals.css') || url.endsWith('.css')) {
-      const cssPath = url.replace(baseUrl, '');
-      const filePath = path.join(process.cwd(), 'app', cssPath);
-      route.fulfill({ path: filePath }).catch(() => {
-        console.warn(`⚠️ CSS not found: ${filePath}`);
-        route.continue();
-      });
-      return;
-    }
-    
-    // Block analytics, ads, and websockets
-    if (
-      resourceType === 'websocket' ||
-      url.includes('analytics') ||
-      url.includes('ads') ||
-      url.includes('tracking') ||
-      url.includes('google-analytics') ||
-      url.includes('facebook.com') ||
-      url.includes('twitter.com')
-    ) {
-      route.abort();
-    } else {
-      route.continue();
+    try {
+      // Serve local static assets from filesystem
+      const baseUrl = envConfig.baseUrl;
+      
+      // Font files
+      if (url.includes('/fonts/') || url.includes('/public/fonts/')) {
+        const fontPath = url.replace(baseUrl, '').replace('/public', '');
+        const filePath = path.join(process.cwd(), 'public', fontPath);
+        route.fulfill({ path: filePath }).catch(() => {
+          console.warn(`⚠️ Font not found: ${filePath}`);
+          route.continue().catch(() => {});
+        });
+        return;
+      }
+      
+      // Image assets
+      if (url.includes('/assets/') || url.includes('/public/assets/')) {
+        const assetPath = url.replace(baseUrl, '').replace('/public', '');
+        const filePath = path.join(process.cwd(), 'public', assetPath);
+        route.fulfill({ path: filePath }).catch(() => {
+          console.warn(`⚠️ Asset not found: ${filePath}`);
+          route.continue().catch(() => {});
+        });
+        return;
+      }
+      
+      // Global CSS
+      if (url.includes('/globals.css') || url.endsWith('.css')) {
+        const cssPath = url.replace(baseUrl, '');
+        const filePath = path.join(process.cwd(), 'app', cssPath);
+        route.fulfill({ path: filePath }).catch(() => {
+          console.warn(`⚠️ CSS not found: ${filePath}`);
+          route.continue().catch(() => {});
+        });
+        return;
+      }
+      
+      // Block problematic resources
+      if (
+        resourceType === 'websocket' ||
+        url.includes('analytics') ||
+        url.includes('ads') ||
+        url.includes('tracking') ||
+        url.includes('google-analytics') ||
+        url.includes('facebook.com') ||
+        url.includes('twitter.com')
+      ) {
+        route.abort().catch(() => {});
+      } else {
+        route.continue().catch(() => {});
+      }
+    } catch (error) {
+      // Fallback to continue if routing fails
+      route.continue().catch(() => {});
     }
   });
 }
 
 export class PlaywrightPDFGenerator {
+  
   async generatePDF(options: PDFGenerationOptions): Promise<Buffer> {
+    return this.generatePDFWithRetry(options, 2);
+  }
+
+  async generatePDFWithRetry(options: PDFGenerationOptions, maxRetries: number = 2): Promise<Buffer> {
+    let lastError: Error;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 PDF generation attempt ${attempt}/${maxRetries}`);
+        return await this.generatePDFInternal(options);
+      } catch (error) {
+        lastError = error as Error;
+        console.warn(`⚠️ Attempt ${attempt} failed:`, error instanceof Error ? error.message : 'Unknown error');
+        
+        // Force cleanup on error
+        await forceCleanupBrowser();
+        
+        if (attempt < maxRetries) {
+          const delay = Math.pow(2, attempt) * 1000;
+          console.log(`⏳ Retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+    
+    throw lastError!;
+  }
+
+  private async generatePDFInternal(options: PDFGenerationOptions): Promise<Buffer> {
     let page: Page | null = null;
     
     try {
-      console.log('🚀 Starting PDF generation with shared browser...');
+      console.log('🚀 Starting PDF generation with enhanced browser management...');
       
-      const browser = await getBrowserInstance();
-      const context = await browser.newContext({
-        viewport: { width: 1200, height: 1600 },
-        javaScriptEnabled: true,
-      });
-      
+      const context = await getBrowserContext();
       page = await context.newPage();
 
       // Setup enhanced asset routing
@@ -173,18 +326,19 @@ export class PlaywrightPDFGenerator {
       
       console.log('📄 Setting HTML content...');
       
-      // Set content with proper wait conditions
+      // Set content with proper wait conditions and timeout
       await page.setContent(htmlContent, { 
         waitUntil: 'domcontentloaded',
-        timeout: envConfig.pdfTimeout
+        timeout: envConfig.pdfTimeout || 30000
       });
       
       console.log('⏱️ Waiting for content to stabilize...');
       
-      // Wait for content to fully load
-      await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
-        console.warn('⚠️ Network idle timeout, proceeding anyway');
-      });
+      // Wait for content to fully load with timeout handling
+      await Promise.race([
+        page.waitForLoadState('networkidle', { timeout: 10000 }),
+        new Promise(resolve => setTimeout(resolve, 10000))
+      ]);
       
       // Additional wait to ensure rendering is complete
       await page.waitForTimeout(2000);
@@ -206,31 +360,7 @@ export class PlaywrightPDFGenerator {
         displayHeaderFooter: false,
       });
 
-      if (!pdfBuffer || pdfBuffer.length === 0) {
-        throw new Error('PDF generation returned empty buffer');
-      }
-
-      // Enhanced PDF validation
-      const pdfBytes = Buffer.from(pdfBuffer);
-      const pdfHeader = pdfBytes.toString('ascii', 0, 4);
-      
-      if (pdfHeader !== '%PDF') {
-        throw new Error(`Generated file is not a valid PDF. Header: ${pdfHeader}`);
-      }
-
-      // Check for PDF trailer
-      const pdfString = pdfBytes.toString('ascii');
-      if (!pdfString.includes('%%EOF')) {
-        throw new Error('Generated PDF is incomplete - missing EOF marker');
-      }
-
-      // Check minimum size for valid PDF
-      if (pdfBuffer.length < 1000) {
-        throw new Error(`Generated PDF is too small: ${pdfBuffer.length} bytes`);
-      }
-
-      console.log('✅ PDF generated successfully, size:', pdfBuffer.length, 'bytes');
-      return pdfBuffer;
+      return this.validatePDFBuffer(pdfBuffer);
 
     } catch (error) {
       console.error('❌ PDF generation failed:', error);
@@ -243,20 +373,26 @@ export class PlaywrightPDFGenerator {
           console.warn('⚠️ Warning: Error closing page:', closeError);
         }
       }
-      // Note: We don't close the browser here - it's reused
     }
   }
 
-  async generatePDFWithRetry(options: PDFGenerationOptions, maxRetries: number = 3): Promise<Buffer> {
+  public async generatePDFFromHTML(htmlContent: string, options: { format?: 'A4' | 'Letter', margin?: any }): Promise<Buffer> {
+    return this.generatePDFFromHTMLWithRetry(htmlContent, options, 2);
+  }
+
+  async generatePDFFromHTMLWithRetry(htmlContent: string, options: { format?: 'A4' | 'Letter', margin?: any }, maxRetries: number = 2): Promise<Buffer> {
     let lastError: Error;
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`🔄 PDF generation attempt ${attempt}/${maxRetries}`);
-        return await this.generatePDF(options);
+        console.log(`🔄 PDF from HTML generation attempt ${attempt}/${maxRetries}`);
+        return await this.generatePDFFromHTMLInternal(htmlContent, options);
       } catch (error) {
         lastError = error as Error;
-        console.warn(`⚠️ Attempt ${attempt} failed:`, error instanceof Error ? error.message : 'Unknown error');
+        console.warn(`⚠️ HTML PDF attempt ${attempt} failed:`, error instanceof Error ? error.message : 'Unknown error');
+        
+        // Force cleanup on error
+        await forceCleanupBrowser();
         
         if (attempt < maxRetries) {
           const delay = Math.pow(2, attempt) * 1000;
@@ -269,27 +405,29 @@ export class PlaywrightPDFGenerator {
     throw lastError!;
   }
 
-  public async generatePDFFromHTML(htmlContent: string, options: { format?: 'A4' | 'Letter', margin?: any }): Promise<Buffer> {
+  private async generatePDFFromHTMLInternal(htmlContent: string, options: { format?: 'A4' | 'Letter', margin?: any }): Promise<Buffer> {
     let page: Page | null = null;
 
     try {
-      console.log('🚀 Starting PDF generation from HTML with shared browser...');
+      console.log('🚀 Starting PDF generation from HTML with enhanced browser management...');
       
-      const browser = await getBrowserInstance();
-      const context = await browser.newContext({
-        viewport: { width: 1200, height: 1600 },
-        javaScriptEnabled: true,
-      });
-
+      const context = await getBrowserContext();
       page = await context.newPage();
       
       // Setup enhanced asset routing
       await setupAssetRouting(page);
       
+      // Set content with timeout handling
       await page.setContent(htmlContent, { 
-        waitUntil: 'networkidle',
-        timeout: envConfig.pdfTimeout
+        waitUntil: 'domcontentloaded',
+        timeout: envConfig.pdfTimeout || 30000
       });
+
+      // Wait for network idle with fallback
+      await Promise.race([
+        page.waitForLoadState('networkidle', { timeout: 10000 }),
+        new Promise(resolve => setTimeout(resolve, 10000))
+      ]);
 
       const pdfBuffer = await page.pdf({
         format: options.format || 'A4',
@@ -297,8 +435,7 @@ export class PlaywrightPDFGenerator {
         margin: options.margin || { top: '0px', right: '0px', bottom: '0px', left: '0px' },
       });
 
-      console.log(`✅ PDF generated successfully from HTML, size: ${pdfBuffer.length} bytes`);
-      return pdfBuffer;
+      return this.validatePDFBuffer(pdfBuffer);
     } catch (error) {
       console.error('Error generating PDF from HTML content:', error);
       throw error;
@@ -310,21 +447,36 @@ export class PlaywrightPDFGenerator {
           console.warn('⚠️ Warning: Error closing page (from generatePDFFromHTML):', closeError);
         }
       }
-      // Note: We don't close the browser here - it's reused
     }
   }
-}
 
-interface GeneratePDFFromDataOptions {
-  htmlContent: string;
-  format?: 'A4' | 'Letter';
-  language?: string;
-  margin?: {
-    top?: string;
-    right?: string;
-    bottom?: string;
-    left?: string;
-  };
+  private validatePDFBuffer(pdfBuffer: Buffer): Buffer {
+    if (!pdfBuffer || pdfBuffer.length === 0) {
+      throw new Error('PDF generation returned empty buffer');
+    }
+
+    // Enhanced PDF validation
+    const pdfBytes = Buffer.from(pdfBuffer);
+    const pdfHeader = pdfBytes.toString('ascii', 0, 4);
+    
+    if (pdfHeader !== '%PDF') {
+      throw new Error(`Generated file is not a valid PDF. Header: ${pdfHeader}`);
+    }
+
+    // Check for PDF trailer
+    const pdfString = pdfBytes.toString('ascii');
+    if (!pdfString.includes('%%EOF')) {
+      throw new Error('Generated PDF is incomplete - missing EOF marker');
+    }
+
+    // Check minimum size for valid PDF
+    if (pdfBuffer.length < 1000) {
+      throw new Error(`Generated PDF is too small: ${pdfBuffer.length} bytes`);
+    }
+
+    console.log('✅ PDF generated successfully, size:', pdfBuffer.length, 'bytes');
+    return pdfBuffer;
+  }
 }
 
 export async function generatePDFFromMenuData(options: GeneratePDFFromDataOptions): Promise<Buffer> {
@@ -344,32 +496,52 @@ export async function generatePDFFromMenuData(options: GeneratePDFFromDataOption
 }
 
 /**
- * Cleanup function to close the shared browser instance
- * Call this during application shutdown or when browser needs to be reset
+ * Enhanced cleanup function with timeout
  */
-export async function cleanupPDFGenerator() {
-  if (_browserInstance) {
-    console.log('🔄 Closing shared Playwright browser instance...');
-    try {
-      await _browserInstance.close();
-      _browserInstance = null;
-      _browserInitPromise = null;
-      console.log('✅ Playwright browser instance closed successfully.');
-    } catch (error) {
-      console.error('❌ Error closing Playwright browser instance:', error);
-      // Reset state even if close fails
-      _browserInstance = null;
-      _browserInitPromise = null;
-    }
-  } else {
-    console.log('ℹ️ No browser instance to cleanup');
+export async function cleanupPDFGenerator(): Promise<void> {
+  console.log('🔄 Starting PDF generator cleanup...');
+  
+  const cleanupPromise = forceCleanupBrowser();
+  const timeoutPromise = new Promise<void>((resolve) => {
+    setTimeout(() => {
+      console.log('⏰ Cleanup timeout reached, forcing completion');
+      resolve();
+    }, BROWSER_RESET_TIMEOUT);
+  });
+
+  try {
+    await Promise.race([cleanupPromise, timeoutPromise]);
+    console.log('✅ PDF generator cleanup completed');
+  } catch (error) {
+    console.error('❌ Error during cleanup:', error);
+    // Force reset even if cleanup fails
+    _browserInstance = null;
+    _browserContext = null;
+    _browserInitPromise = null;
+    _connectionAttempts = 0;
   }
 }
 
 /**
- * Force reset the browser instance (useful for debugging or memory management)
+ * Force reset with timeout
  */
-export async function resetBrowserInstance() {
+export async function resetBrowserInstance(): Promise<void> {
+  console.log('🔄 Resetting browser instance...');
   await cleanupPDFGenerator();
-  console.log('🔄 Browser instance reset complete');
+  console.log('✅ Browser instance reset complete');
+}
+
+/**
+ * Health check for the current browser instance
+ */
+export async function checkBrowserHealth(): Promise<{ healthy: boolean; details: string }> {
+  if (!_browserInstance) {
+    return { healthy: false, details: 'No browser instance' };
+  }
+
+  const isHealthy = await isBrowserHealthy(_browserInstance);
+  return { 
+    healthy: isHealthy, 
+    details: isHealthy ? 'Browser is healthy' : 'Browser is disconnected or unresponsive'
+  };
 }

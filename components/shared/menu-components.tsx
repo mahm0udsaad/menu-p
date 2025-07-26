@@ -423,4 +423,4 @@ export const sharedUtils = {
       !isNaN(Number(item.price))
     )
   }
-} 
+}
