@@ -1,5 +1,26 @@
 import { escapeHTML, formatPrice, getSimplifiedCSS } from "@/lib/utils/html-helpers";
 
+function getFontLinks(language: string): string {
+  const systemFonts = language === 'ar'
+    ? '"Segoe UI", "Tahoma", "Arial Unicode MS", sans-serif'
+    : '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif';
+
+  return `
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&family=Inter:wght@300;400;600;700&display=swap');
+      body { font-family: ${systemFonts}; }
+      .font-loaded { font-family: ${language === 'ar' ? "'Cairo'" : "'Inter'"}, ${systemFonts}; }
+    </style>
+    <script>
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&family=Inter:wght@300;400;600;700&display=swap';
+      document.head.appendChild(link);
+      link.onload = () => { document.body.classList.add('font-loaded'); };
+    </script>
+  `;
+}
+
 export function generateSimplifiedHTML(data: any, customizations: any, language: string, templateId: string): string {
   const { restaurant, categories } = data;
   const isRTL = ['ar', 'fa', 'ur', 'he'].includes(language);
@@ -92,6 +113,7 @@ export function generateHTMLContent(options: any): string {
         <style>
           ${customCSS}
         </style>
+        ${getFontLinks(language)}
       </head>
       <body>
           ${menuHTML}

@@ -367,18 +367,9 @@ export default function LiveMenuEditor({
 
       // Map template names for the Playwright PDF generator
       const getPlaywrightTemplate = (template: string | null) => {
-        switch (template) {
-          case 'classic':
-            return 'cafe';
-          case 'painting':
-            return 'painting';
-          case 'vintage':
-            return 'vintage';
-          case 'modern':
-            return 'modern';
-          default:
-            return 'cafe'; // Default fallback
-        }
+        if (!template) return 'cafe';
+        if (template === 'classic') return 'cafe';
+        return template;
       };
       
       const templateForPlaywright = getPlaywrightTemplate(selectedTemplate);

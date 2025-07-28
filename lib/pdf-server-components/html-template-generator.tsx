@@ -580,7 +580,35 @@ export class HTMLTemplateGenerator {
    * Generate Fast Food template HTML
    */
   private static generateFastFoodTemplate(restaurant: any, categories: any[], currency: string, isRTL: boolean, customizations: any, pageBackgroundStyle: string): string {
-    return this.generateCafeTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+    const isEmpty = categories.length === 0
+    const header = `
+      <header style="text-align:center;padding:2rem;background:linear-gradient(90deg,#fef3c7,#fca5a5);border-bottom:4px dashed #dc2626;">
+        <h1 style="font-size:3rem;color:#dc2626;font-weight:900;letter-spacing:0.1em;">${restaurant.name}</h1>
+      </header>
+    `
+
+    const itemsHTML = categories.map(cat => `
+      <section style="margin-bottom:2rem;">
+        <h2 style="color:#b91c1c;font-size:1.5rem;margin-bottom:0.5rem;border-bottom:2px solid #f87171;">${cat.name}</h2>
+        <div>
+          ${cat.menu_items.filter((i:any)=>i.is_available).map((item:any)=>`
+            <div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px dashed #fca5a5;">
+              <span>${item.name}</span>
+              <span>${item.price ? item.price.toFixed(2)+' '+currency : ''}</span>
+            </div>
+          `).join('')}
+        </div>
+      </section>
+    `).join('')
+
+    const content = `
+      ${header}
+      <main style="padding:1.5rem;">
+        ${isEmpty ? '<p style="text-align:center;color:#6b7280;">No items</p>' : itemsHTML}
+      </main>
+    `
+
+    return this.wrapInHTMLDocument(content, pageBackgroundStyle, isRTL)
   }
 
   /**

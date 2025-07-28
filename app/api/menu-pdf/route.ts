@@ -82,6 +82,7 @@ export async function POST(req: NextRequest) {
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
+        '--disable-webgl',
         '--headless',
         '--no-first-run',
         '--disable-extensions',
@@ -96,6 +97,7 @@ export async function POST(req: NextRequest) {
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
+        '--disable-webgl',
         '--no-first-run',
         '--no-zygote',
         '--single-process',
@@ -246,10 +248,14 @@ export async function POST(req: NextRequest) {
     console.log('📄 Setting HTML content...');
 
     // Set content with proper wait conditions
-    await page.setContent(cleanHtml, { 
+    await page.setContent(cleanHtml, {
       waitUntil: 'domcontentloaded',
               timeout: parseInt(process.env.PDF_GENERATION_TIMEOUT || '30000')
     });
+
+    try {
+      await page.evaluate(() => document.fonts.ready);
+    } catch {}
 
     console.log('⏱️ Waiting for content to stabilize...');
     
