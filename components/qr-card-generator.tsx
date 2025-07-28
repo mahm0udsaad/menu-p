@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition, useEffect } from "react"
+import React, { useState, useTransition, useEffect } from "react"
 import { QRCodeCanvas } from "qrcode.react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -15,7 +15,8 @@ import Image from "next/image"
 // Add new imports for Select components
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { pdf } from "@react-pdf/renderer"
-import { QRCardPDF } from "@/components/pdf/qr-card-pdf"
+import { qrCardTemplates, QrCardTemplateId } from "@/components/qr-card-templates"
+import { fontOptions, resolveFontFamily } from "@/lib/font-config"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { toast } from "sonner"
 
@@ -66,6 +67,8 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
   const [showBorder, setShowBorder] = useState(false) // Default no border
   const [borderColor, setBorderColor] = useState("#000000") // Default black border
   const [cardName, setCardName] = useState("QR Card")
+  const [selectedTemplate, setSelectedTemplate] = useState<QrCardTemplateId>('classic')
+  const [selectedFont, setSelectedFont] = useState<string>('cairo')
   const [isPending, startTransition] = useTransition()
   const [state, formAction] = useActionState(generateAndSaveQrCardPdf, null)
   // Add menu selection state
@@ -171,17 +174,22 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
           qrCodeSize,
           showBorder,
           borderColor,
-          logoPosition: logoPosition as 'none' | 'top' | 'middle' | 'both'
+          logoPosition: logoPosition as 'none' | 'top' | 'middle' | 'both',
+          fontFamily: selectedFont,
+          templateId: selectedTemplate
         }
 
         // Generate PDF using React PDF (client-side)
         const pdfBlob = await pdf(
-          QRCardPDF({
-            restaurant: restaurantData,
-            qrCodeUrl: qrUrl,
-            qrCodeDataUrl,
-            options
-          })
+          React.createElement(
+            qrCardTemplates.find(t => t.id === selectedTemplate)?.Component || qrCardTemplates[0].Component,
+            {
+              restaurant: restaurantData,
+              qrCodeUrl: qrUrl,
+              qrCodeDataUrl,
+              options
+            }
+          )
         ).toBlob()
 
         // Create FormData to send to server action
@@ -199,6 +207,8 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
           showBorder,
           borderColor,
           logoPosition,
+          fontFamily: selectedFont,
+          templateId: selectedTemplate,
           restaurantName: restaurant.name,
           restaurantLogoUrl: restaurant.logo_url
         }))
@@ -269,14 +279,46 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
             <Label htmlFor="customText" className="text-slate-300 text-sm">
               نص مخصص للبطاقة
             </Label>
-            <Textarea
-              id="customText"
-              value={customText}
-              onChange={(e) => setCustomText(e.target.value)}
-              placeholder="اكتب نصًا هنا ليظهر على بطاقة QR الخاصة بك..."
-              className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 transition-all duration-200 min-h-[80px] text-sm"
-            />
+          <Textarea
+            id="customText"
+            value={customText}
+            onChange={(e) => setCustomText(e.target.value)}
+            placeholder="اكتب نصًا هنا ليظهر على بطاقة QR الخاصة بك..."
+            className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 transition-all duration-200 min-h-[80px] text-sm"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div className="space-y-2">
+            <Label className="text-slate-300 text-sm">القالب</Label>
+            <Select value={selectedTemplate} onValueChange={(v: QrCardTemplateId) => setSelectedTemplate(v)}>
+              <SelectTrigger className="w-full bg-slate-700/50 border-slate-600 text-white rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-700 text-white">
+                {qrCardTemplates.map(t => (
+                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+
+          <div className="space-y-2">
+            <Label className="text-slate-300 text-sm">الخط</Label>
+            <Select value={selectedFont} onValueChange={setSelectedFont}>
+              <SelectTrigger className="w-full bg-slate-700/50 border-slate-600 text-white rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-700 text-white">
+                {fontOptions.map(f => (
+                  <SelectItem key={f.id} value={f.id} style={{ fontFamily: resolveFontFamily(f.id) }}>
+                    {f.arabicName || f.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
           {/* Design Controls */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
@@ -406,9 +448,10 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
             <h3 className="text-white font-semibold text-base sm:text-lg">معاينة البطاقة</h3>
             <div
               className="mx-auto w-full max-w-sm aspect-[3/4] rounded-xl shadow-lg flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden"
-              style={{ 
+              style={{
                 backgroundColor: cardBgColor,
-                border: showBorder ? `2px solid ${borderColor}` : 'none'
+                border: showBorder ? `2px solid ${borderColor}` : 'none',
+                fontFamily: resolveFontFamily(selectedFont)
               }}
             >
               {/* Logo at Top */}
@@ -461,17 +504,17 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
               </div>
 
               {/* Restaurant Name */}
-              <h2 
+              <h2
                 className="font-bold text-center mb-2 text-base sm:text-lg leading-tight"
-                style={{ color: textColor }}
+                style={{ color: textColor, fontFamily: resolveFontFamily(selectedFont) }}
               >
                 {restaurant.name}
               </h2>
 
               {/* Custom Text */}
-              <p 
+              <p
                 className="text-center text-xs sm:text-sm leading-relaxed px-2"
-                style={{ color: textColor }}
+                style={{ color: textColor, fontFamily: resolveFontFamily(selectedFont) }}
               >
                 {customText}
               </p>
