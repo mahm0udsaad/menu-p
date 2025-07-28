@@ -122,6 +122,7 @@ async function getBrowserInstance(): Promise<Browser> {
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
       '--disable-gpu',
+      '--disable-webgl',
       '--no-first-run',
       '--no-zygote',
       '--single-process',
@@ -327,10 +328,18 @@ export class PlaywrightPDFGenerator {
       console.log('📄 Setting HTML content...');
       
       // Set content with proper wait conditions and timeout
-      await page.setContent(htmlContent, { 
+      await page.setContent(htmlContent, {
         waitUntil: 'domcontentloaded',
         timeout: envConfig.pdfTimeout || 30000
       });
+
+      try {
+        await page.evaluate(() => document.fonts.ready);
+      } catch {}
+
+      try {
+        await page.evaluate(() => document.fonts.ready);
+      } catch {}
       
       console.log('⏱️ Waiting for content to stabilize...');
       
@@ -423,6 +432,9 @@ export class PlaywrightPDFGenerator {
         timeout: envConfig.pdfTimeout || 30000
       });
 
+      try {
+        await page.evaluate(() => document.fonts.ready);
+      } catch {}
       // Wait for network idle with fallback
       await Promise.race([
         page.waitForLoadState('networkidle', { timeout: 10000 }),
