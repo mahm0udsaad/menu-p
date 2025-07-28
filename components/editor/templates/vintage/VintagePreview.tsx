@@ -1,9 +1,11 @@
-import React from 'react';
-import { useMenuEditor } from '@/contexts/menu-editor-context';
-import VintageMenuSection from './VintageMenuSection';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import React from "react";
+import { useMenuEditor } from "@/contexts/menu-editor-context";
+import VintageMenuSection from "./VintageMenuSection";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 const VintagePreview = () => {
   const {
@@ -14,24 +16,25 @@ const VintagePreview = () => {
     rowStyleSettings,
     appliedRowStyles,
     currentLanguage,
+    handleAddCategory,
   } = useMenuEditor();
 
   const getPageBackgroundStyle = () => {
     if (!pageBackgroundSettings) {
-      return { backgroundColor: '#fdfaf3' };
+      return { backgroundColor: "#fdfaf3" };
     }
     switch (pageBackgroundSettings.backgroundType) {
-      case 'gradient':
+      case "gradient":
         return {
           background: `linear-gradient(to bottom right, ${pageBackgroundSettings.gradientFrom}, ${pageBackgroundSettings.gradientTo})`,
         };
-      case 'image':
+      case "image":
         return {
           backgroundImage: `url(${pageBackgroundSettings.backgroundImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundSize: "cover",
+          backgroundPosition: "center",
         };
-      case 'solid':
+      case "solid":
       default:
         return { backgroundColor: pageBackgroundSettings.backgroundColor };
     }
@@ -41,13 +44,15 @@ const VintagePreview = () => {
   const leftColumnCategories = categories.slice(0, middleIndex);
   const rightColumnCategories = categories.slice(middleIndex);
 
-  const isArabic = currentLanguage === 'ar';
-  const activeFontSettings = isArabic ? fontSettings.arabic : fontSettings.english;
-  
-  const fontName = activeFontSettings.font.replace(/\s/g, '_');
-  const headerFontName = isArabic ? 'Cairo' : 'Amiri';
-  
-  const currencySymbol = restaurant?.currency || '$';
+  const isArabic = currentLanguage === "ar";
+  const activeFontSettings = isArabic
+    ? fontSettings.arabic
+    : fontSettings.english;
+
+  const fontName = activeFontSettings.font.replace(/\s/g, "_");
+  const headerFontName = isArabic ? "Cairo" : "Amiri";
+
+  const currencySymbol = restaurant?.currency || "$";
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -59,9 +64,9 @@ const VintagePreview = () => {
             ...getPageBackgroundStyle(),
             fontFamily: fontName,
             fontWeight: activeFontSettings.weight,
-            color: rowStyleSettings.itemColor || '#3a2d25',
+            color: rowStyleSettings.itemColor || "#3a2d25",
           }}
-          dir={isArabic ? 'rtl' : 'ltr'}
+          dir={isArabic ? "rtl" : "ltr"}
         >
           <header className="text-center mb-12">
             {restaurant?.logo_url ? (
@@ -81,14 +86,16 @@ const VintagePreview = () => {
               className="text-5xl uppercase"
               style={{
                 fontFamily: headerFontName,
-                color: '#3a2d25',
+                color: "#3a2d25",
               }}
             >
-              {restaurant?.name || 'Your Restaurant'}
+              {restaurant?.name || "Your Restaurant"}
             </h1>
           </header>
 
-          <div className={`flex justify-between ${isArabic ? 'flex-row-reverse' : 'flex-row'}`}>
+          <div
+            className={`flex justify-between ${isArabic ? "flex-row-reverse" : "flex-row"}`}
+          >
             <div className="w-[48%]">
               {leftColumnCategories.map((category, index) => (
                 <VintageMenuSection
@@ -110,10 +117,22 @@ const VintagePreview = () => {
               ))}
             </div>
           </div>
+
+          {/* Add Category Button */}
+          <div className="mt-8 text-center">
+            <Button
+              onClick={handleAddCategory}
+              variant="outline"
+              className="border-dashed"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {isArabic ? "إضافة قسم جديد" : "Add Category"}
+            </Button>
+          </div>
         </div>
       </ScrollArea>
     </DndProvider>
   );
 };
 
-export default VintagePreview; 
+export default VintagePreview;
