@@ -811,7 +811,7 @@ export default function LiveMenuEditor({
                 return <InteractiveMenuPreview key={selectedTemplate} menu={categories} onUpdateMenu={() => {}} />;
               }
               case 'modern-coffee': {
-                const ModernCoffeePreview = require("@/components/editor/templates/modern-coffee/ModernCoffeePreview").default;
+                const ModernCoffeePreview = require("@/components/editor/templates/modern-coffee/ModernCoffeePreviewUnified").default;
                 return <ModernCoffeePreview key={selectedTemplate} />;
               }
               case 'painting': {
