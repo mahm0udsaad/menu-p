@@ -145,9 +145,11 @@ export class ClientTemplateRegistryService {
     // Map server component names to client component names
     const componentMapping: Record<string, string> = {
       'ModernPDFTemplate': 'ModernTemplate',
+      'ModernPDFTemplateUnified': 'ModernTemplate',
       'PaintingStylePDFTemplate': 'PaintingTemplate',
       'VintagePDFTemplate': 'VintageTemplate',
       'ModernCoffeePDFTemplate': 'ModernCoffeeTemplate',
+      'ModernCoffeePDFTemplateUnified': 'ModernCoffeeTemplate',
       'CafePDFTemplate': 'CafeTemplate',
       'FastFoodPDFTemplate': 'FastFoodTemplate',
       'ElegantCocktailPDFTemplate': 'ElegantCocktailTemplate',
