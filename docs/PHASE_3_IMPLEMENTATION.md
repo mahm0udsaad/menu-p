@@ -200,7 +200,7 @@ reports.forEach((report, index) => {
 ### 1. Using the Migration Utility
 
 ```bash
-npm run migrate-template
+pnpm run migrate-template
 ```
 
 This will guide you through:
@@ -241,10 +241,10 @@ This will guide you through:
 
 ```bash
 # Test consistency
-npm run test:consistency
+pnpm run test:consistency
 
 # Test PDF generation
-npm run test:pdf
+pnpm run test:pdf
 
 # Test preview rendering
 # Open menu editor and verify preview
@@ -322,7 +322,7 @@ npm run test:pdf
 
 ### Debug Tools
 
-1. **Consistency validator**: Run `npm run test:consistency`
+1. **Consistency validator**: Run `pnpm run test:consistency`
 2. **HTML comparison**: Use browser dev tools to compare HTML
 3. **Component inspection**: Use React DevTools to inspect component props
 4. **PDF inspection**: Use PDF viewers to examine generated PDFs

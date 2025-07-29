@@ -1,17 +1,15 @@
 "use client"
 
 import React, { useState, useTransition, useEffect } from "react"
-import { QRCodeCanvas } from "qrcode.react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input" // Added Input for color pickers
 import { Switch } from "@/components/ui/switch" // Added Switch for toggle
-import { Loader2, Download, Printer, LinkIcon, Check } from "lucide-react"
+import { Loader2, Download, LinkIcon, Check } from "lucide-react"
 import { generateAndSaveQrCardPdf } from "@/lib/actions/qr-card-actions" // New server action
 import { useActionState } from "react"
-import Image from "next/image"
 // Add new imports for Select components
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { pdf } from "@react-pdf/renderer"
@@ -76,7 +74,19 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
   const [selectedMenuId, setSelectedMenuId] = useState<string>("")
   const [selectedMenuUrl, setSelectedMenuUrl] = useState<string>(menuPublicUrl)
   const [loadingMenus, setLoadingMenus] = useState(false)
+  const [previewQrDataUrl, setPreviewQrDataUrl] = useState<string | null>(null)
   const supabase = createClientComponentClient()
+
+  const restaurantData = {
+    id: restaurant.id,
+    name: restaurant.name,
+    logo_url: restaurant.logo_url || undefined,
+    color_palette: {
+      primary: '#10b981',
+      secondary: '#059669',
+      accent: '#34d399'
+    }
+  }
 
   // Define predefined color options
   const colorOptions = [
@@ -128,6 +138,20 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
       setLoadingMenus(false)
     }
   }
+
+  // Generate QR code preview whenever relevant settings change
+  useEffect(() => {
+    const updatePreview = async () => {
+      try {
+        const dataUrl = await generateQrCodeDataUrl(selectedMenuUrl || menuPublicUrl, qrCodeSize)
+        setPreviewQrDataUrl(dataUrl)
+      } catch (err) {
+        setPreviewQrDataUrl(null)
+      }
+    }
+
+    updatePreview()
+  }, [selectedMenuUrl, menuPublicUrl, qrCodeSize, cardBgColor, textColor, logoPosition, showBorder, borderColor, selectedTemplate, selectedFont, customText])
 
   const handleMenuSelection = (menuId: string) => {
     setSelectedMenuId(menuId)
@@ -446,78 +470,32 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
           {/* Preview Section */}
           <div className="space-y-3 sm:space-y-4">
             <h3 className="text-white font-semibold text-base sm:text-lg">معاينة البطاقة</h3>
-            <div
-              className="mx-auto w-full max-w-sm aspect-[3/4] rounded-xl shadow-lg flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden"
-              style={{
-                backgroundColor: cardBgColor,
-                border: showBorder ? `2px solid ${borderColor}` : 'none',
-                fontFamily: resolveFontFamily(selectedFont)
-              }}
-            >
-              {/* Logo at Top */}
-              {(logoPosition === 'top' || logoPosition === 'both') && (
-                <div className="mb-3 sm:mb-4">
-                  {restaurant.logo_url ? (
-                    <Image
-                      src={restaurant.logo_url}
-                      alt={restaurant.name}
-                      width={60}
-                      height={60}
-                      className="rounded-lg object-cover sm:w-[80px] sm:h-[80px]"
-                    />
-                  ) : (
-                    <div className="w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] bg-gradient-to-r from-red-500 to-rose-500 rounded-lg flex items-center justify-center text-white font-bold text-lg sm:text-xl">
-                      {restaurant.name.slice(0, 2)}
-                    </div>
-                  )}
+            <div className="mx-auto w-full max-w-sm aspect-[3/4] rounded-xl overflow-hidden shadow-lg">
+              {previewQrDataUrl ? (
+                React.createElement(
+                  qrCardTemplates.find(t => t.id === selectedTemplate)?.Component || qrCardTemplates[0].Component,
+                  {
+                    restaurant: restaurantData,
+                    qrCodeDataUrl: previewQrDataUrl,
+                    qrCodeUrl: selectedMenuUrl || menuPublicUrl,
+                    options: {
+                      customText,
+                      cardBgColor,
+                      textColor,
+                      qrCodeSize,
+                      showBorder,
+                      borderColor,
+                      logoPosition: logoPosition as 'none' | 'top' | 'middle' | 'both',
+                      fontFamily: selectedFont,
+                      templateId: selectedTemplate
+                    }
+                  }
+                )
+              ) : (
+                <div className="flex items-center justify-center h-full bg-slate-200 text-slate-500">
+                  <Loader2 className="w-4 h-4 animate-spin" />
                 </div>
               )}
-
-              {/* QR Code Container */}
-              <div className="relative mb-3 sm:mb-4">
-              <QRCodeCanvas
-                value={selectedMenuUrl || menuPublicUrl}
-                  size={Math.min(qrCodeSize * 0.6, 150)} 
-                  className="sm:scale-110"
-                />
-                
-                {/* Logo in Middle of QR Code */}
-                {(logoPosition === 'middle' || logoPosition === 'both') && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="bg-white rounded-full p-1 sm:p-2">
-                      {restaurant.logo_url ? (
-                        <Image
-                          src={restaurant.logo_url}
-                          alt={restaurant.name}
-                          width={24}
-                          height={24}
-                          className="rounded-full object-cover sm:w-[32px] sm:h-[32px]"
-                        />
-                      ) : (
-                        <div className="w-[24px] h-[24px] sm:w-[32px] sm:h-[32px] bg-gradient-to-r from-red-500 to-rose-500 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm">
-                          {restaurant.name.slice(0, 2)}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Restaurant Name */}
-              <h2
-                className="font-bold text-center mb-2 text-base sm:text-lg leading-tight"
-                style={{ color: textColor, fontFamily: resolveFontFamily(selectedFont) }}
-              >
-                {restaurant.name}
-              </h2>
-
-              {/* Custom Text */}
-              <p
-                className="text-center text-xs sm:text-sm leading-relaxed px-2"
-                style={{ color: textColor, fontFamily: resolveFontFamily(selectedFont) }}
-              >
-                {customText}
-              </p>
             </div>
           </div>
 
