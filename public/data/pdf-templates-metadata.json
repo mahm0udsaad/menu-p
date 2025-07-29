@@ -169,8 +169,8 @@
       "id": "modern-coffee",
       "name": "Modern Coffee Shop",
       "description": "Warm orange tones with coffee elements and modern design",
-      "componentPath": "./templates/ModernCoffeePDFTemplate",
-      "previewComponentPath": "../components/editor/templates/modern-coffee-preview",
+      "componentPath": "./templates/ModernCoffeePDFTemplateUnified",
+      "previewComponentPath": "../components/editor/templates/modern-coffee/ModernCoffeePreviewUnified",
       "category": "coffee",
       "features": [
         "header",

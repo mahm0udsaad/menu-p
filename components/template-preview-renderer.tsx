@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 // Import client-side preview components instead of server-side PDF components
 import ModernPreview from '@/components/editor/templates/modern/ModernPreview'
-import ModernCoffeePreview from '@/components/editor/templates/modern-coffee/ModernCoffeePreview'
+import ModernCoffeePreviewUnified from '@/components/editor/templates/modern-coffee/ModernCoffeePreviewUnified'
 import VintagePreview from '@/components/editor/templates/vintage/VintagePreview'
 import PaintingStylePreview from '@/components/editor/templates/painting-style/PaintingStylePreview'
 import ModernPreviewUnified from '@/components/editor/templates/modern/ModernPreviewUnified'
@@ -96,14 +96,14 @@ const previewComponents: Record<string, React.ComponentType<any>> = {
   'classic': ModernPreview,
   'cafe': ModernPreview,
   'modern': ModernPreview,
-  'modern-coffee': ModernCoffeePreview,
+  'modern-coffee': ModernCoffeePreviewUnified,
   'painting': PaintingStylePreview,
   'vintage': VintagePreview,
   'fast-food': ModernPreview,
   'elegant-cocktail': ModernPreview,
   'sweet-treats': ModernPreview,
-  'simple-coffee': ModernCoffeePreview,
-  'borcelle-coffee': ModernCoffeePreview,
+  'simple-coffee': ModernCoffeePreviewUnified,
+  'borcelle-coffee': ModernCoffeePreviewUnified,
   'luxury-menu': ModernPreview,
   'chalkboard-coffee': ModernPreview,
   'botanical-cafe': ModernPreview,
