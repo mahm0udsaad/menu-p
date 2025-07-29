@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
 
     try {
       // Step 1: Render template to HTML (with timeout)
-      const renderPromise = PDFReactRenderer.renderTemplate(renderOptions)
+      const renderPromise = PDFReactRenderer.renderTemplateWithReact(renderOptions)
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('Template rendering timeout')), 30000)
       })
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
         console.log('🔄 Attempting browser reset and retry...')
         await resetBrowserInstance()
         
-        const retryHtmlContent = await PDFReactRenderer.renderTemplate(renderOptions)
+        const retryHtmlContent = await PDFReactRenderer.renderTemplateWithReact(renderOptions)
         pdfBuffer = await generatePDFFromMenuData({
           htmlContent: retryHtmlContent,
           format: format as 'A4' | 'Letter',
