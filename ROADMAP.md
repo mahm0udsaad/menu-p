@@ -9,7 +9,7 @@ This document outlines a detailed, actionable plan to transition the application
 These tasks are essential for a stable and maintainable application.
 
 - **Task: Eliminate Build Errors**
-  - **Details:** Modify `next.config.mjs` to set `ignoreDuringBuilds` for both `eslint` and `typescript` to `false`. Run `npm run lint` and `npm run build` and resolve all reported errors.
+  - **Details:** Modify `next.config.mjs` to set `ignoreDuringBuilds` for both `eslint` and `typescript` to `false`. Run `pnpm run lint` and `pnpm run build` and resolve all reported errors.
   - **Reasoning:** Ensures code quality, prevents runtime errors, and is a prerequisite for any reliable production deployment.
 
 - **Task: Comprehensive Error Handling**

@@ -16,15 +16,15 @@ This document provides a technical, step-by-step guide for an AI developer to im
     *   Change `ignoreDuringBuilds: true` to `ignoreDuringBuilds: false` for both.
 
 2.  **Identify Errors:**
-    *   Run the command `npm run lint` in the terminal. This will list all ESLint errors (styling, best practices).
-    *   Run the command `npm run build`. This will fail, but it will report all TypeScript type-checking errors.
+    *   Run the command `pnpm run lint` in the terminal. This will list all ESLint errors (styling, best practices).
+    *   Run the command `pnpm run build`. This will fail, but it will report all TypeScript type-checking errors.
 
 3.  **Fix Errors Systematically:**
     *   **TypeScript Errors (`*.ts`, `*.tsx`):** These are the most critical. Common errors will include:
         *   `Property '...' does not exist on type '...'`: This often happens with objects that are not strictly typed. Ensure all data fetched from Supabase or passed between components has a defined TypeScript `interface` or `type`.
         *   `Argument of type '...' is not assignable to parameter of type '...'`: Check that the data you are passing to functions or components matches their defined types.
         *   `Object is possibly 'null' or 'undefined'`: Use optional chaining (`?.`) or add checks to ensure an object is not null before accessing its properties (e.g., `if (user) { ... }`).
-    *   **ESLint Errors:** These are often related to code style, unused variables, or missing dependencies in `useEffect` hooks. Many can be fixed automatically by running `npm run lint -- --fix`.
+    *   **ESLint Errors:** These are often related to code style, unused variables, or missing dependencies in `useEffect` hooks. Many can be fixed automatically by running `pnpm run lint -- --fix`.
 
 ---
 
