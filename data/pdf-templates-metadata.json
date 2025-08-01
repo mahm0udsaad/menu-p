@@ -4,8 +4,8 @@
       "id": "classic",
       "name": "Classic Style",
       "description": "Traditional menu layout with clean design and professional appearance",
-      "componentPath": "./templates/ModernPDFTemplate",
-      "previewComponentPath": "../components/editor/templates/classic-preview",
+      "componentPath": "components/templates/classic-preview",
+      "previewComponentPath": "components/templates/classic-preview",
       "category": "professional",
       "previewImageUrl": "/previews/classic-preview.png",
       "features": [
@@ -36,8 +36,8 @@
       "id": "cafe",
       "name": "Cafe Style",
       "description": "Professional cafe menu with header, sections, and footer",
-      "componentPath": "./templates/ModernPDFTemplate",
-      "previewComponentPath": "../components/editor/templates/cafe-preview",
+      "componentPath": "components/templates/cafe-preview",
+      "previewComponentPath": "components/templates/cafe-preview",
       "category": "cafe",
       "previewImageUrl": "/previews/cafe-preview.png",
       "features": [
@@ -69,8 +69,8 @@
       "id": "modern",
       "name": "Modern Style",
       "description": "Contemporary design with bold typography and clean lines",
-      "componentPath": "./templates/ModernPDFTemplate",
-      "previewComponentPath": "../components/editor/templates/modern-preview",
+      "componentPath": "components/templates/modern-preview",
+      "previewComponentPath": "components/templates/modern-preview",
       "category": "modern",
       "previewImageUrl": "/previews/modern-preview.png",
       "features": [
@@ -103,8 +103,8 @@
       "id": "painting",
       "name": "Painting Style",
       "description": "Artistic template with golden accents and cream background",
-      "componentPath": "./templates/PaintingStylePDFTemplate",
-      "previewComponentPath": "../components/editor/templates/painting-preview",
+      "componentPath": "components/templates/painting-preview",
+      "previewComponentPath": "components/templates/painting-preview",
       "category": "artistic",
       "previewImageUrl": "/previews/painting-preview.png",
       "features": [
@@ -136,8 +136,8 @@
       "id": "vintage",
       "name": "Vintage Style",
       "description": "Classic vintage design with serif fonts and elegant styling",
-      "componentPath": "./templates/VintagePDFTemplate",
-      "previewComponentPath": "../components/editor/templates/vintage-preview",
+      "componentPath": "components/templates/vintage-preview",
+      "previewComponentPath": "components/templates/vintage-preview",
       "category": "vintage",
       "previewImageUrl": "/previews/vintage-preview.png",
       "features": [
@@ -169,8 +169,8 @@
       "id": "modern-coffee",
       "name": "Modern Coffee Shop",
       "description": "Warm orange tones with coffee elements and modern design",
-      "componentPath": "./templates/ModernCoffeePDFTemplateUnified",
-      "previewComponentPath": "../components/editor/templates/modern-coffee/ModernCoffeePreviewUnified",
+      "componentPath": "components/templates/modern-coffee-preview",
+      "previewComponentPath": "components/templates/modern-coffee-preview",
       "category": "coffee",
       "features": [
         "header",
@@ -202,7 +202,7 @@
       "id": "fast-food",
       "name": "Fast Food Menu",
       "description": "Bold red design with hand-drawn food illustrations",
-      "componentPath": "./templates/FastFoodPDFTemplate",
+      "componentPath": "../../components/templates/fast-food-menu-preview",
       "previewComponentPath": "../components/templates/fast-food-menu-preview",
       "category": "fast-food",
       "features": [
@@ -236,7 +236,7 @@
       "id": "elegant-cocktail",
       "name": "Elegant Cocktail Menu",
       "description": "Wood texture with sophisticated bottle illustrations",
-      "componentPath": "./templates/ElegantCocktailPDFTemplate",
+      "componentPath": "../../components/templates/elegant-cocktail-menu-preview",
       "previewComponentPath": "../components/templates/elegant-cocktail-menu-preview",
       "category": "bar",
       "features": [
@@ -270,7 +270,7 @@
       "id": "sweet-treats",
       "name": "Sweet Treats Menu",
       "description": "Coral theme with script typography for desserts",
-      "componentPath": "./templates/SweetTreatsPDFTemplate",
+      "componentPath": "../../components/templates/sweet-treats-menu-preview",
       "previewComponentPath": "../components/templates/sweet-treats-menu-preview",
       "category": "bakery",
       "features": [
@@ -304,7 +304,7 @@
       "id": "simple-coffee",
       "name": "Simple Coffee Menu",
       "description": "Clean grid layout with rounded borders and warm colors",
-      "componentPath": "./templates/SimpleCoffeePDFTemplate",
+      "componentPath": "../../components/templates/simple-coffee-preview",
       "previewComponentPath": "../components/templates/simple-coffee-preview",
       "category": "cafe",
       "features": [
@@ -338,7 +338,7 @@
       "id": "borcelle-coffee",
       "name": "Borcelle Coffee Shop",
       "description": "Branded coffee menu with elegant typography and photo",
-      "componentPath": "./templates/BorcelleCoffeePDFTemplate",
+      "componentPath": "../../components/templates/borcelle-coffee-preview",
       "previewComponentPath": "../components/templates/borcelle-coffee-preview",
       "category": "cafe",
       "features": [
@@ -372,7 +372,7 @@
       "id": "luxury-menu",
       "name": "Luxury Dark",
       "description": "Premium black design with gold accents",
-      "componentPath": "./templates/LuxuryMenuPDFTemplate",
+      "componentPath": "../../components/templates/luxury-menu-preview",
       "previewComponentPath": "../components/templates/luxury-menu-preview",
       "category": "premium",
       "features": [
@@ -406,7 +406,7 @@
       "id": "chalkboard-coffee",
       "name": "Chalkboard Style",
       "description": "Dark board with chalk drawings and typography",
-      "componentPath": "./templates/ChalkboardCoffeePDFTemplate",
+      "componentPath": "../../components/templates/chalkboard-coffee-preview",
       "previewComponentPath": "../components/templates/chalkboard-coffee-preview",
       "category": "casual",
       "features": [
@@ -440,7 +440,7 @@
       "id": "botanical-cafe",
       "name": "Botanical Elegance",
       "description": "Sophisticated design with botanical elements",
-      "componentPath": "./templates/BotanicalCafePDFTemplate",
+      "componentPath": "../../components/templates/botanical-cafe-preview",
       "previewComponentPath": "../components/templates/botanical-cafe-preview",
       "category": "elegant",
       "features": [
@@ -474,8 +474,8 @@
       "id": "cocktail-menu",
       "name": "Modern Cocktail Bar",
       "description": "Sleek design with cocktail illustrations",
-      "componentPath": "./templates/CocktailMenuPDFTemplate",
-      "previewComponentPath": "../components/templates/cocktail-menu-preview",
+      "componentPath": "components/templates/cocktail-menu-preview",
+      "previewComponentPath": "components/templates/cocktail-menu-preview",
       "category": "bar",
       "features": [
         "header",
@@ -508,7 +508,7 @@
       "id": "vintage-bakery",
       "name": "Vintage Bakery",
       "description": "Hand-drawn dessert illustrations with vintage styling",
-      "componentPath": "./templates/VintageBakeryPDFTemplate",
+      "componentPath": "../../components/templates/vintage-bakery-preview",
       "previewComponentPath": "../components/templates/vintage-bakery-preview",
       "category": "bakery",
       "features": [
@@ -542,7 +542,7 @@
       "id": "vintage-coffee",
       "name": "Vintage Coffee",
       "description": "Hand-drawn coffee illustrations with vintage charm",
-      "componentPath": "./templates/VintageCoffeePDFTemplate",
+      "componentPath": "../../components/templates/vintage-coffee-preview",
       "previewComponentPath": "../components/templates/vintage-coffee-preview",
       "category": "cafe",
       "features": [
@@ -576,7 +576,7 @@
       "id": "interactive-menu",
       "name": "Interactive Menu",
       "description": "Interactive design with modern animations and effects",
-      "componentPath": "./templates/InteractiveMenuPDFTemplate",
+      "componentPath": "../../components/templates/interactive-menu-preview",
       "previewComponentPath": "../components/templates/interactive-menu-preview",
       "category": "modern",
       "features": [

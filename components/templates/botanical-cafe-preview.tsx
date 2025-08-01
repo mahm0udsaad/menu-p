@@ -186,3 +186,4 @@ const BotanicalCafePreview = memo(() => {
 BotanicalCafePreview.displayName = "BotanicalCafePreview"
 
 export { BotanicalCafePreview }
+export default BotanicalCafePreview

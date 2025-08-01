@@ -24,7 +24,9 @@ export function formatPrice(price: number, currency: string, isRTL: boolean): st
   }
 }
 
-export function getSimplifiedCSS(customizations: any, language: string): string {
+import { TemplateId } from '@/types/templates';
+
+export function getSimplifiedCSS(customizations: any, language: string, templateId: TemplateId = 'classic'): string {
     const isRTL = ['ar', 'fa', 'ur', 'he'].includes(language);
     
   let css = `
@@ -204,6 +206,146 @@ export function getSimplifiedCSS(customizations: any, language: string): string 
     }
   `;
   
+  // Add template-specific styles
+  switch (templateId) {
+    case 'classic':
+      css += `
+        .menu-header { border-bottom: 2px solid #3498db; }
+        .restaurant-name { color: #2980b9; }
+      `;
+      break;
+    case 'cafe':
+      css += `
+        body { background-color: #f5f5dc; }
+        .menu-header { border-bottom: 2px solid #8b4513; }
+        .restaurant-name { color: #8b4513; font-family: 'Georgia', serif; }
+      `;
+      break;
+    case 'modern':
+      css += `
+        body { font-family: 'Helvetica Neue', sans-serif; }
+        .menu-header { border-bottom: none; }
+        .restaurant-name { font-size: 36px; font-weight: 300; letter-spacing: 2px; }
+      `;
+      break;
+    case 'painting':
+        css += `
+          body { background-color: #fdf5e6; }
+          .menu-header { border-bottom: 2px solid #d2b48c; }
+          .restaurant-name { color: #8b4513; font-family: 'Garamond', serif; font-style: italic; }
+        `;
+        break;
+    case 'vintage':
+        css += `
+          body { background-color: #faf0e6; font-family: 'Courier New', monospace; }
+          .menu-header { border-bottom: 1px dashed #333; }
+          .restaurant-name { font-weight: bold; }
+        `;
+        break;
+    case 'modern-coffee':
+        css += `
+          body { background-color: #f1f1f1; }
+          .menu-header { border-bottom: 2px solid #444; }
+          .restaurant-name { color: #333; font-family: 'Arial', sans-serif; text-transform: uppercase; }
+        `;
+        break;
+    case 'fast-food':
+        css += `
+          body { background-color: #ffeb3b; }
+          .menu-header { border-bottom: 3px solid #f44336; }
+          .restaurant-name { color: #d32f2f; font-family: 'Impact', sans-serif; }
+        `;
+        break;
+    case 'elegant-cocktail':
+        css += `
+          body { background-color: #1a1a1a; color: #fff; }
+          .menu-header { border-bottom: 1px solid #fff; }
+          .restaurant-name { color: #fff; font-family: 'Playfair Display', serif; }
+        `;
+        break;
+    case 'sweet-treats':
+        css += `
+          body { background-color: #fff0f5; }
+          .menu-header { border-bottom: 2px solid #ff69b4; }
+          .restaurant-name { color: #ff1493; font-family: 'Comic Sans MS', cursive; }
+        `;
+        break;
+    case 'luxury-menu':
+        css += `
+          body { background-color: #f8f8f8; }
+          .menu-header { border-bottom: 2px solid #c0c0c0; }
+          .restaurant-name { color: #333; font-family: 'Times New Roman', serif; font-weight: bold; }
+        `;
+        break;
+    case 'simple-coffee':
+        css += `
+          body { background-color: #fff; }
+          .menu-header { border-bottom: 1px solid #ccc; }
+          .restaurant-.name { color: #555; font-family: 'Arial', sans-serif; }
+        `;
+        break;
+    case 'borcelle-coffee':
+        css += `
+          body { background-color: #e6e6e6; }
+          .menu-header { border-bottom: 2px solid #777; }
+          .restaurant-name { color: #333; font-family: 'Verdana', sans-serif; }
+        `;
+        break;
+    case 'chalkboard-coffee':
+        css += `
+          body { background-color: #333; color: #fff; }
+          .menu-header { border-bottom: 1px solid #fff; }
+          .restaurant-name { color: #fff; font-family: 'Permanent Marker', cursive; }
+        `;
+        break;
+    case 'botanical-cafe':
+        css += `
+          body { background-color: #e8f5e9; }
+          .menu-header { border-bottom: 2px solid #4caf50; }
+          .restaurant-name { color: #2e7d32; font-family: 'Lora', serif; }
+        `;
+        break;
+    case 'cocktail-menu':
+        css += `
+          body { background-color: #333; color: #fff; }
+          .menu-header { border-bottom: 1px solid #fff; }
+          .restaurant-name { color: #fff; font-family: 'Bebas Neue', cursive; }
+        `;
+        break;
+    case 'vintage-bakery':
+        css += `
+          body { background-color: #fdf5e6; }
+          .menu-header { border-bottom: 2px solid #d2b48c; }
+          .restaurant-name { color: #8b4513; font-family: 'Garamond', serif; font-style: italic; }
+        `;
+        break;
+    case 'vintage-coffee':
+        css += `
+          body { background-color: #faf0e6; font-family: 'Courier New', monospace; }
+          .menu-header { border-bottom: 1px dashed #333; }
+          .restaurant-name { font-weight: bold; }
+        `;
+        break;
+    case 'interactive-menu':
+        css += `
+          /* Interactive menu styles are primarily for the web, so we provide a clean default for PDF */
+          .menu-header { border-bottom: 2px solid #3498db; }
+          .restaurant-name { color: #2980b9; }
+        `;
+        break;
+    default:
+      // Default styles for any other template
+      css += `
+        /* Generic styles */
+        .menu-header {
+          border-bottom: 2px solid #e0e0e0;
+        }
+        .restaurant-name {
+          color: #2c3e50;
+        }
+      `;
+  }
+
   // Add custom styles if provided
   if (customizations) {
     try {

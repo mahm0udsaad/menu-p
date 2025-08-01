@@ -100,7 +100,7 @@ export function generateHTMLContent(options: any): string {
     
     const isRTL = ['ar', 'fa', 'ur', 'he'].includes(language);
     const menuHTML = generateSimplifiedHTML(data, customizations, language, options.templateId);
-    const customCSS = getSimplifiedCSS(customizations, language);
+    const customCSS = getSimplifiedCSS(customizations, language, options.templateId);
   
     const htmlContent = `
     <!DOCTYPE html>

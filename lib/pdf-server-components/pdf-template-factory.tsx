@@ -1,5 +1,40 @@
 import React from 'react'
 import { templateRegistry, TemplateMetadata } from './template-registry'
+import { MenuEditorProvider } from '@/contexts/menu-editor-context'
+
+// Global flag to indicate PDF generation mode
+let isPDFGenerationMode = false
+
+export const setPDFGenerationMode = (value: boolean) => {
+  isPDFGenerationMode = value
+  // Also set on global object for templates to access
+  if (typeof globalThis !== 'undefined') {
+    (globalThis as any).isPDFGenerationMode = value
+  }
+}
+
+export const getPDFGenerationMode = (): boolean => {
+  return isPDFGenerationMode || (typeof globalThis !== 'undefined' && (globalThis as any).isPDFGenerationMode)
+}
+
+/**
+ * React hook for templates to check if they're in PDF generation mode
+ * Templates can use this to conditionally hide interactive elements
+ */
+export const usePDFGenerationMode = (): boolean => {
+  const [pdfMode, setPdfMode] = React.useState(getPDFGenerationMode())
+
+  React.useEffect(() => {
+    const checkMode = () => setPdfMode(getPDFGenerationMode())
+    checkMode()
+    
+    // Check again in case the mode changes during render
+    const interval = setInterval(checkMode, 100)
+    return () => clearInterval(interval)
+  }, [])
+
+  return pdfMode
+}
 
 export type TemplateId = string // Now supports any string ID
 
@@ -57,33 +92,41 @@ export class PDFTemplateFactory {
   
   /**
    * Creates a PDF template component based on template ID
-   * Now uses dynamic imports for truly scalable template management
+   * Uses simple global flag approach for PDF generation mode
    */
   static async createTemplate(
     templateId: TemplateId,
     props: PDFTemplateProps
   ): Promise<React.ReactElement> {
     try {
+      // Set PDF generation mode
+      setPDFGenerationMode(true)
+      
       // Normalize template ID
       const normalizedId = await templateRegistry.normalizeTemplateId(templateId)
       
-      // Load template component dynamically
+      // Load template component dynamically  
       const TemplateComponent = await templateRegistry.loadTemplateComponent(normalizedId)
       
-      // Create React element
-      return React.createElement(TemplateComponent, props)
+      // Create the template element with a wrapper that provides context data
+      const templateElement = React.createElement(
+        PDFTemplateContextProvider,
+        {
+          restaurant: props.restaurant,
+          categories: props.categories,
+          language: props.language,
+          customizations: props.customizations,
+          children: React.createElement(TemplateComponent)
+        }
+      )
+      
+      return templateElement
     } catch (error) {
       console.error(`❌ Error creating template ${templateId}:`, error)
-      
-      // Fallback to default template
-      try {
-        const defaultId = await templateRegistry.getDefaultTemplateId()
-        const DefaultComponent = await templateRegistry.loadTemplateComponent(defaultId)
-        return React.createElement(DefaultComponent, props)
-      } catch (fallbackError) {
-        console.error('❌ Fallback template also failed:', fallbackError)
-        throw new Error(`Failed to create template: ${templateId}`)
-      }
+      throw new Error(`Failed to create template: ${templateId}`)
+    } finally {
+      // Reset PDF generation mode after template creation
+      setPDFGenerationMode(false)
     }
   }
 
@@ -219,6 +262,49 @@ export const DynamicPDFTemplate: React.FC<{
   }
 
   return React.createElement(TemplateComponent, props)
+}
+
+/**
+ * PDF Context provider that wraps templates with MenuEditorProvider
+ * This ensures templates get all the context data they need
+ */
+const PDFTemplateContextProvider: React.FC<{
+  restaurant: Restaurant
+  categories: MenuCategory[]
+  language?: string
+  customizations?: any
+  children: React.ReactNode
+}> = ({ restaurant, categories, language, customizations, children }) => {
+  // Create a proper MenuEditorProvider with the PDF data
+  const contextRestaurant = {
+    ...restaurant,
+    // Ensure color_palette has the right structure for context
+    color_palette: restaurant.color_palette ? {
+      id: 'pdf-palette',
+      name: 'PDF Palette',
+      ...restaurant.color_palette
+    } : null,
+    // Ensure address/phone/website are properly typed
+    address: restaurant.address || undefined,
+    phone: restaurant.phone || undefined,
+    website: restaurant.website || undefined,
+  }
+
+  return React.createElement(
+    MenuEditorProvider,
+    {
+      restaurant: contextRestaurant as any, // Type cast to avoid complex type issues
+      initialCategories: categories,
+      onRefresh: () => {}, // No-op for PDF generation
+      children: React.createElement('div', { 
+        'data-pdf-mode': 'true',
+        style: { 
+          width: '100%', 
+          height: '100%' 
+        }
+      }, children)
+    }
+  )
 }
 
 export default PDFTemplateFactory 

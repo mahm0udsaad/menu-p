@@ -256,3 +256,5 @@ const VintageBakeryPreview = memo(() => {
 VintageBakeryPreview.displayName = "VintageBakeryPreview"
 
 export { VintageBakeryPreview }
+
+export default VintageBakeryPreview

@@ -116,19 +116,39 @@ export class TemplateRegistryService {
 
     const metadata = await this.getTemplateMetadata(templateId)
     if (!metadata) {
-      throw new Error(`Template not found: ${templateId}`)
+      throw new Error(`Template not found in registry: ${templateId}`)
     }
 
     try {
-      // Dynamic import of the template component
-      const componentPath = path.join(process.cwd(), 'lib', 'pdf-server-components', metadata.componentPath)
-      const component = await import(componentPath)
+      // Load template directly from components/templates/ directory
+      // Use correct relative path for server-side compatibility
+      const modulePath = `../../../components/templates/${templateId}-preview`
+      console.log(`🔍 Attempting to load template from: ${modulePath}`)
+      const component = await import(modulePath)
+      
+      // Look for named export first, then default export
+      let TemplateComponent = component.default
+      
+      // If no default export, look for a named export that matches the pattern
+      if (!TemplateComponent) {
+        // Convert kebab-case to PascalCase (e.g., cocktail-menu -> CocktailMenu)
+        const componentName = templateId
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join('') + 'Preview'
+        
+        TemplateComponent = component[componentName]
+      }
+
+      if (!TemplateComponent) {
+        throw new Error(`No suitable component export found in ${modulePath}`)
+      }
       
       // Cache the component
-      this.templateCache.set(templateId, component.default || component)
+      this.templateCache.set(templateId, TemplateComponent)
       
       console.log(`📦 Loaded template component: ${templateId}`)
-      return component.default || component
+      return TemplateComponent
     } catch (error) {
       console.error(`❌ Error loading template component ${templateId}:`, error)
       throw new Error(`Failed to load template component: ${templateId}`)
@@ -175,17 +195,16 @@ export class TemplateRegistryService {
   }
 
   /**
-   * Normalize template ID with fallback to default
+   * Normalize template ID - now throws error instead of falling back to default
    */
   async normalizeTemplateId(templateId?: string): Promise<string> {
     if (!templateId) {
-      return await this.getDefaultTemplateId()
+      throw new Error('Template ID is required')
     }
 
     const isValid = await this.isValidTemplateId(templateId)
     if (!isValid) {
-      console.warn(`⚠️ Unknown template ID: ${templateId}, falling back to default`)
-      return await this.getDefaultTemplateId()
+      throw new Error(`Invalid template ID: ${templateId}. Template not found in registry.`)
     }
 
     return templateId

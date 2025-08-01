@@ -803,3 +803,5 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
     </div>
   )
 }
+
+export default LuxuryMenuPreview

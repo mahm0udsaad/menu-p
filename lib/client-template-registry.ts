@@ -121,7 +121,7 @@ export class ClientTemplateRegistryService {
     try {
       // Map server-side component paths to client-side component names
       const clientComponentName = this.mapToClientComponent(metadata.componentPath)
-      const component = await import(`@/components/pdf-templates/${clientComponentName}`)
+      const component = await import(`@/components/templates/${clientComponentName}`)
       
       // Cache the component
       this.templateCache.set(templateId, component.default || component)

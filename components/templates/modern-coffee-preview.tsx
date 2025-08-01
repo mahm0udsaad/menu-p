@@ -784,3 +784,5 @@ export const ModernCoffeePreview: React.FC<ModernCoffeePreviewProps> = memo(({ m
 })
 
 ModernCoffeePreview.displayName = "ModernCoffeePreview"
+
+export default ModernCoffeePreview

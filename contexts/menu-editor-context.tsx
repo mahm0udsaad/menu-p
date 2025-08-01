@@ -10,7 +10,6 @@ import {
   savePageBackgroundSettings, 
   saveFontSettings, 
   saveRowStyles,
-  saveAllCustomizations 
 } from "@/lib/actions/menu-customizations"
 import { updateRestaurantDetails } from '@/lib/actions/restaurant'
 

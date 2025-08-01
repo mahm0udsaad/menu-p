@@ -55,7 +55,7 @@ export class HTMLTemplateGenerator {
       case 'interactive-menu':
         return this.generateInteractiveMenuTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
       default:
-        return this.generateCafeTemplate(restaurant, categories, currency, isRTL, customizations, pageBackgroundStyle)
+        throw new Error(`Template '${templateId}' is not supported by HTML generator. Please use React template rendering.`)
     }
   }
   

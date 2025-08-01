@@ -1,6 +1,7 @@
 "use client"
 
 import { useMenuEditor } from '@/contexts/menu-editor-context'
+import { getPDFGenerationMode } from '@/lib/pdf-server-components/pdf-template-factory'
 
 // SVG Illustrations for cocktail theme
 const CocktailGlassIllustration = () => (
@@ -132,3 +133,6 @@ export function CocktailMenuPreview() {
     </div>
   )
 }
+
+// Add default export for template registry compatibility
+export default CocktailMenuPreview

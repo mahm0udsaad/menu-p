@@ -60,38 +60,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Error fetching menu data" }, { status: 500 })
     }
 
-    // Check for cached PDF with better cache validation
-    if (!forceRegenerate) {
-      try {
-        const { data: cachedPDF } = await supabase
-          .from("menu_pdfs")
-          .select("pdf_url, template_id, created_at, file_size")
-          .eq("menu_id", menuId)
-          .eq("template_id", normalizedTemplateId)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .single()
-
-        if (cachedPDF?.pdf_url) {
-          const cacheAge = new Date().getTime() - new Date(cachedPDF.created_at).getTime()
-          const maxCacheAge = 24 * 60 * 60 * 1000 // 24 hours
-
-          if (cacheAge < maxCacheAge) {
-            console.log(`📄 Using cached PDF for ${normalizedTemplateId} template (${cachedPDF.file_size} bytes)`)
-            return NextResponse.json({ 
-              pdfUrl: cachedPDF.pdf_url,
-              cached: true,
-              templateId: normalizedTemplateId,
-              fileSize: cachedPDF.file_size
-            })
-          } else {
-            console.log(`⏰ Cached PDF expired (${Math.round(cacheAge / (60 * 60 * 1000))} hours old), regenerating...`)
-          }
-        }
-      } catch (cacheCheckError) {
-        console.warn("⚠️ Cache check failed, proceeding with generation:", cacheCheckError)
-      }
-    }
+    
 
     console.log(`🎯 Generating new PDF with dynamic template loading...`)
 

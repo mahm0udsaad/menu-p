@@ -83,10 +83,7 @@ export class PDFReactRenderer {
       return htmlString
     } catch (error) {
       console.error(`❌ Error rendering PDF template with React '${options.templateId}':`, error)
-      
-      // Fallback to HTML template generator
-      console.log(`🔄 Falling back to HTML template generator for '${options.templateId}'`)
-      return this.renderTemplate(options)
+      throw new Error(`Failed to render PDF template '${options.templateId}': ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 } 
