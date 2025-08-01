@@ -1,6 +1,26 @@
 import path from 'path'
 import fs from 'fs'
 
+// Static import map for template preview components. Using explicit
+// dynamic imports ensures that Next.js bundles the components during the
+// build so they can be resolved at runtime. The keys correspond to
+// template IDs defined in `pdf-templates-metadata.json`.
+const templateImporters: Record<string, () => Promise<any>> = {
+  'borcelle-coffee': () => import('@/components/templates/borcelle-coffee-preview'),
+  'botanical-cafe': () => import('@/components/templates/botanical-cafe-preview'),
+  'chalkboard-coffee': () => import('@/components/templates/chalkboard-coffee-preview'),
+  'cocktail-menu': () => import('@/components/templates/cocktail-menu-preview'),
+  'elegant-cocktail': () => import('@/components/templates/elegant-cocktail-menu-preview'),
+  'fast-food': () => import('@/components/templates/fast-food-menu-preview'),
+  'interactive-menu': () => import('@/components/templates/interactive-menu-preview'),
+  'luxury-menu': () => import('@/components/templates/luxury-menu-preview'),
+  'modern-coffee': () => import('@/components/templates/modern-coffee-preview'),
+  'simple-coffee': () => import('@/components/templates/simple-coffee-preview'),
+  'sweet-treats': () => import('@/components/templates/sweet-treats-menu-preview'),
+  'vintage-bakery': () => import('@/components/templates/vintage-bakery-preview'),
+  'vintage-coffee': () => import('@/components/templates/vintage-coffee-preview'),
+}
+
 export interface TemplateMetadata {
   id: string
   name: string
@@ -120,33 +140,33 @@ export class TemplateRegistryService {
     }
 
     try {
-      // Load template directly from components/templates/ directory
-      // Use correct relative path for server-side compatibility
-      const modulePath = `../../../components/templates/${templateId}-preview`
-      console.log(`🔍 Attempting to load template from: ${modulePath}`)
-      const component = await import(modulePath)
-      
+      const importer = templateImporters[templateId]
+      if (!importer) {
+        throw new Error(`Template component not registered: ${templateId}`)
+      }
+
+      const component = await importer()
+
       // Look for named export first, then default export
       let TemplateComponent = component.default
-      
-      // If no default export, look for a named export that matches the pattern
+
       if (!TemplateComponent) {
         // Convert kebab-case to PascalCase (e.g., cocktail-menu -> CocktailMenu)
         const componentName = templateId
           .split('-')
           .map(word => word.charAt(0).toUpperCase() + word.slice(1))
           .join('') + 'Preview'
-        
+
         TemplateComponent = component[componentName]
       }
 
       if (!TemplateComponent) {
-        throw new Error(`No suitable component export found in ${modulePath}`)
+        throw new Error(`No suitable component export found for ${templateId}`)
       }
-      
+
       // Cache the component
       this.templateCache.set(templateId, TemplateComponent)
-      
+
       console.log(`📦 Loaded template component: ${templateId}`)
       return TemplateComponent
     } catch (error) {
