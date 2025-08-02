@@ -1,6 +1,5 @@
 import React from 'react'
 import { templateRegistry, TemplateMetadata } from './template-registry'
-import { MenuEditorProvider } from '@/contexts/menu-editor-context'
 
 // Global flag to indicate PDF generation mode
 let isPDFGenerationMode = false
@@ -265,8 +264,8 @@ export const DynamicPDFTemplate: React.FC<{
 }
 
 /**
- * PDF Context provider that wraps templates with MenuEditorProvider
- * This ensures templates get all the context data they need
+ * PDF Context provider that provides data directly to templates without client dependencies
+ * This ensures templates get all the context data they need for server-side rendering
  */
 const PDFTemplateContextProvider: React.FC<{
   restaurant: Restaurant
@@ -275,10 +274,12 @@ const PDFTemplateContextProvider: React.FC<{
   customizations?: any
   children: React.ReactNode
 }> = ({ restaurant, categories, language, customizations, children }) => {
-  // Create a proper MenuEditorProvider with the PDF data
+  // For PDF generation, we don't need the full MenuEditorProvider context
+  // Instead, we pass the data directly as props to avoid client-side dependencies
+  
   const contextRestaurant = {
     ...restaurant,
-    // Ensure color_palette has the right structure for context
+    // Ensure color_palette has the right structure
     color_palette: restaurant.color_palette ? {
       id: 'pdf-palette',
       name: 'PDF Palette',
@@ -290,21 +291,24 @@ const PDFTemplateContextProvider: React.FC<{
     website: restaurant.website || undefined,
   }
 
-  return React.createElement(
-    MenuEditorProvider,
-    {
-      restaurant: contextRestaurant as any, // Type cast to avoid complex type issues
-      initialCategories: categories,
-      onRefresh: () => {}, // No-op for PDF generation
-      children: React.createElement('div', { 
-        'data-pdf-mode': 'true',
-        style: { 
-          width: '100%', 
-          height: '100%' 
-        }
-      }, children)
+  // Clone the children and inject the context data as props
+  const childrenWithProps = React.cloneElement(children as React.ReactElement, {
+    restaurant: contextRestaurant,
+    categories,
+    language,
+    customizations,
+    // Add PDF mode flag
+    pdfMode: true
+  } as any)
+
+  return React.createElement('div', { 
+    'data-pdf-mode': 'true',
+    'data-language': language,
+    style: { 
+      width: '100%', 
+      height: '100%' 
     }
-  )
+  }, childrenWithProps)
 }
 
 export default PDFTemplateFactory 

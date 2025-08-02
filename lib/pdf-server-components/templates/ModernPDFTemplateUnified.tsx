@@ -1,6 +1,4 @@
 import React from 'react'
-import { UnifiedTemplateBase, UnifiedTemplateProps } from '@/components/shared/unified-template-base'
-import { SharedFontSettings } from '@/components/shared/menu-components'
 
 interface MenuItem {
   id: string
@@ -40,68 +38,182 @@ interface ModernPDFTemplateUnifiedProps {
   restaurant: Restaurant
   categories: MenuCategory[]
   language?: string
-  customizations?: {
-    fontSettings?: SharedFontSettings
-    pageBackgroundSettings?: any
-    rowStyles?: any
-  }
+  customizations?: any
+  pdfMode?: boolean
 }
 
-/**
- * Unified Modern PDF Template Component
- * Uses the same shared components as the preview for perfect consistency
- * This ensures that the PDF output matches exactly what users see in the preview
- */
-export function ModernPDFTemplateUnified({
-  restaurant,
-  categories,
+export default function ModernPDFTemplateUnified({ 
+  restaurant, 
+  categories, 
   language = 'ar',
-  customizations = {},
+  customizations,
+  pdfMode = false
 }: ModernPDFTemplateUnifiedProps) {
-  // Convert props to unified template format
-  const unifiedProps: UnifiedTemplateProps = {
-    restaurant: {
-      id: restaurant.id,
-      name: restaurant.name,
-      category: restaurant.category,
-      logo_url: restaurant.logo_url,
-      address: restaurant.address,
-      phone: restaurant.phone,
-      website: restaurant.website,
-      color_palette: restaurant.color_palette,
-      currency: restaurant.currency,
-    },
-    categories: categories.map(category => ({
-      id: category.id,
-      name: category.name,
-      description: category.description,
-      menu_items: category.menu_items.map(item => ({
-        id: item.id,
-        name: item.name,
-        description: item.description,
-        price: item.price,
-        image_url: item.image_url,
-        is_available: item.is_available,
-        is_featured: item.is_featured,
-        dietary_info: item.dietary_info,
-      })),
-    })),
-    language,
-    fontSettings: customizations.fontSettings || {
-      arabic: { font: 'Cairo', weight: 'normal' },
-      english: { font: 'Roboto', weight: 'normal' },
-    },
-    customizations: {
-      pageBackgroundSettings: customizations.pageBackgroundSettings,
-      rowStyles: customizations.rowStyles,
-    },
-    isPdfGeneration: true,
-    isPreview: false,
-    showFooter: true,
-    showImages: true,
-  }
+  const currency = restaurant.currency || '$'
+  
+  return (
+    <div style={{ 
+      backgroundColor: '#ffffff', 
+      minHeight: '100vh', 
+      padding: '48px',
+      fontFamily: 'Arial, sans-serif'
+    }}>
+      <div style={{ maxWidth: '1024px', margin: '0 auto' }}>
+        {/* Menu Header */}
+        <div style={{ textAlign: 'center', marginBottom: '64px' }}>
+          {restaurant.logo_url && (
+            <div style={{
+              width: '80px',
+              height: '80px',
+              margin: '0 auto 24px',
+              borderRadius: '8px',
+              overflow: 'hidden',
+              backgroundColor: '#f3f4f6'
+            }}>
+              <img 
+                src={restaurant.logo_url} 
+                alt="Logo" 
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+              />
+            </div>
+          )}
+          <h1 style={{ 
+            fontSize: '48px', 
+            fontWeight: '700', 
+            color: '#111827',
+            marginBottom: '16px',
+            letterSpacing: '0.1em',
+            margin: 0
+          }}>
+            {restaurant.name || 'RESTAURANT'}
+          </h1>
+          <div style={{ 
+            width: '60px', 
+            height: '3px', 
+            backgroundColor: '#3b82f6',
+            margin: '0 auto 24px'
+          }}></div>
+          <h2 style={{ 
+            fontSize: '24px', 
+            fontWeight: '600', 
+            color: '#6b7280',
+            margin: 0
+          }}>
+            MENU
+          </h2>
+        </div>
 
-  return <UnifiedTemplateBase {...unifiedProps} />
+        {/* Menu Content */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
+          {categories.map((category) => (
+            <div key={category.id}>
+              {/* Category Header */}
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                marginBottom: '32px',
+                gap: '16px'
+              }}>
+                <div style={{
+                  width: '4px',
+                  height: '32px',
+                  backgroundColor: '#3b82f6',
+                  borderRadius: '2px'
+                }}></div>
+                <h3 style={{ 
+                  fontSize: '28px', 
+                  fontWeight: '700', 
+                  color: '#111827',
+                  margin: 0,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em'
+                }}>
+                  {category.name}
+                </h3>
+              </div>
+
+              {/* Items */}
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: '1fr 1fr', 
+                gap: '32px' 
+              }}>
+                {category.menu_items.map((item) => (
+                  <div key={item.id} style={{
+                    backgroundColor: '#f9fafb',
+                    borderRadius: '12px',
+                    padding: '24px',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      marginBottom: '12px'
+                    }}>
+                      <h4 style={{ 
+                        fontSize: '18px', 
+                        fontWeight: '600', 
+                        color: '#111827',
+                        margin: 0,
+                        flex: 1
+                      }}>
+                        {item.name}
+                      </h4>
+                      <div style={{ 
+                        fontSize: '20px', 
+                        fontWeight: '700', 
+                        color: '#3b82f6',
+                        marginLeft: '16px'
+                      }}>
+                        {currency}{item.price?.toFixed(2) || '0.00'}
+                      </div>
+                    </div>
+                    {item.description && (
+                      <p style={{ 
+                        fontSize: '14px', 
+                        color: '#6b7280', 
+                        lineHeight: 1.6,
+                        margin: 0
+                      }}>
+                        {item.description}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div style={{ 
+          marginTop: '64px', 
+          padding: '32px',
+          backgroundColor: '#f3f4f6',
+          borderRadius: '12px',
+          textAlign: 'center'
+        }}>
+          <p style={{ 
+            color: '#6b7280', 
+            fontWeight: '500',
+            margin: '0 0 8px 0'
+          }}>
+            Thank you for choosing us
+          </p>
+          <p style={{ 
+            color: '#111827', 
+            fontWeight: '600',
+            margin: 0
+          }}>
+            {restaurant.address || 'Visit us today'}
+          </p>
+        </div>
+      </div>
+    </div>
+  )
 }
-
-export default ModernPDFTemplateUnified
