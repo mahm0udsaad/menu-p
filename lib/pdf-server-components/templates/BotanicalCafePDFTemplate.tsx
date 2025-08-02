@@ -42,9 +42,34 @@ interface BotanicalCafePDFTemplateProps {
   pdfMode?: boolean
 }
 
-export default function BotanicalCafePDFTemplate({ 
-  restaurant, 
-  categories, 
+// Botanical illustrations used in preview for decorative accents
+const FeatherIllustration = () => (
+  <svg width="120" height="300" viewBox="0 0 120 300" style={{ position: 'absolute', color: '#16a34a33' }}>
+    <g fill="currentColor">
+      <path d="M60 10 Q50 50 45 100 Q40 150 35 200 Q30 250 25 290 L35 290 Q40 250 45 200 Q50 150 55 100 Q60 50 70 10 Z" />
+      <path d="M60 20 Q70 30 80 40 Q75 45 65 35 Q60 30 60 20" />
+      <path d="M60 40 Q75 50 85 60 Q80 65 70 55 Q60 50 60 40" />
+      <path d="M60 60 Q80 70 90 80 Q85 85 75 75 Q60 70 60 60" />
+      <path d="M60 80 Q85 90 95 100 Q90 105 80 95 Q60 90 60 80" />
+    </g>
+  </svg>
+)
+
+const LeafIllustration = () => (
+  <svg width="100" height="150" viewBox="0 0 100 150" style={{ position: 'absolute', color: '#16a34a4d' }}>
+    <g fill="currentColor">
+      <path d="M50 10 Q30 30 20 60 Q15 90 25 120 Q35 140 50 145 Q65 140 75 120 Q85 90 80 60 Q70 30 50 10 Z" />
+      <path d="M50 20 L50 130" stroke="currentColor" strokeWidth="1" fill="none" />
+      <path d="M50 40 Q40 45 35 55" stroke="currentColor" strokeWidth="0.5" fill="none" />
+      <path d="M50 60 Q60 65 65 75" stroke="currentColor" strokeWidth="0.5" fill="none" />
+      <path d="M50 80 Q40 85 35 95" stroke="currentColor" strokeWidth="0.5" fill="none" />
+    </g>
+  </svg>
+)
+
+export default function BotanicalCafePDFTemplate({
+  restaurant,
+  categories,
   language = 'ar',
   customizations,
   pdfMode = false
@@ -52,17 +77,24 @@ export default function BotanicalCafePDFTemplate({
   const currency = restaurant.currency || '$'
   
   return (
-    <div style={{ 
-      backgroundColor: '#f0f9ff', 
-      minHeight: '100vh', 
+    <div style={{
+      background: 'linear-gradient(to bottom right, #f0fdf4, #ecfdf5)',
+      minHeight: '100vh',
       padding: '48px',
       fontFamily: 'Georgia, serif',
-      backgroundImage: `
-        radial-gradient(circle at 25% 25%, rgba(34, 197, 94, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 75% 75%, rgba(16, 185, 129, 0.1) 0%, transparent 50%)
-      `
+      position: 'relative'
     }}>
-      <div style={{ maxWidth: '1024px', margin: '0 auto' }}>
+      {/* Background Illustrations */}
+      <div style={{ top: '80px', left: '40px' }}>
+        <FeatherIllustration />
+      </div>
+      <div style={{ bottom: '80px', right: '40px' }}>
+        <LeafIllustration />
+      </div>
+      <div style={{ top: '50%', left: '25%', transform: 'translateY(-50%)' }}>
+        <LeafIllustration />
+      </div>
+      <div style={{ maxWidth: '1024px', margin: '0 auto', position: 'relative', zIndex: 10 }}>
         {/* Menu Header */}
         <div style={{ textAlign: 'center', marginBottom: '64px' }}>
           <div style={{

@@ -42,9 +42,51 @@ interface ChalkboardCoffeePDFTemplateProps {
   pdfMode?: boolean
 }
 
-export default function ChalkboardCoffeePDFTemplate({ 
-  restaurant, 
-  categories, 
+// Chalk-style SVG components mirrored from the preview
+const ChalkCoffeeBean = ({ style = {} }) => (
+  <svg width="40" height="30" viewBox="0 0 40 30" style={{ position: 'absolute', ...style }}>
+    <g fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+      <ellipse cx="20" cy="15" rx="15" ry="12" />
+      <ellipse cx="20" cy="15" rx="10" ry="8" />
+      <path d="M15 10c2-1 4-1 6 0" />
+    </g>
+  </svg>
+)
+
+const ChalkCoffeeCup = ({ style = {} }) => (
+  <svg width="60" height="50" viewBox="0 0 60 50" style={{ position: 'absolute', ...style }}>
+    <g fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+      <ellipse cx="25" cy="40" rx="20" ry="6" />
+      <path d="M5 40 Q10 20 15 15 Q20 10 25 10 Q30 10 35 15 Q40 20 45 40" />
+      <ellipse cx="25" cy="15" rx="15" ry="4" />
+      <path d="M45 25 Q55 25 55 35 Q55 40 45 40" />
+      <path d="M15 20 Q20 25 25 30 Q30 25 35 20" strokeWidth="1" />
+    </g>
+  </svg>
+)
+
+const ChalkArrow = ({ style = {} }) => (
+  <svg width="80" height="20" viewBox="0 0 80 20" style={{ position: 'absolute', ...style }}>
+    <g fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+      <path d="M5 10 Q20 8 40 10 Q60 12 70 10" />
+      <path d="M65 6 L70 10 L65 14" />
+    </g>
+  </svg>
+)
+
+const ChalkLeaf = ({ style = {} }) => (
+  <svg width="50" height="80" viewBox="0 0 50 80" style={{ position: 'absolute', ...style }}>
+    <g fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+      <path d="M25 5 Q35 20 40 40 Q35 60 25 75 Q15 60 10 40 Q15 20 25 5" />
+      <path d="M25 15 Q30 25 35 35 Q30 45 25 55 Q20 45 15 35 Q20 25 25 15" />
+      <path d="M25 5 L25 75" strokeWidth="1" />
+    </g>
+  </svg>
+)
+
+export default function ChalkboardCoffeePDFTemplate({
+  restaurant,
+  categories,
   language = 'ar',
   customizations,
   pdfMode = false
@@ -52,18 +94,39 @@ export default function ChalkboardCoffeePDFTemplate({
   const currency = restaurant.currency || '$'
   
   return (
-    <div style={{ 
-      backgroundColor: '#2d3748', 
-      minHeight: '100vh', 
+    <div style={{
+      background: `
+        radial-gradient(circle at 20% 30%, rgba(64,64,64,0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(96,96,96,0.2) 0%, transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(48,48,48,0.4) 0%, transparent 50%),
+        linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 50%, #0f0f0f 100%)
+      `,
+      minHeight: '100vh',
       padding: '48px',
-      fontFamily: 'Courier New, monospace',
+      fontFamily: 'cursive',
       color: '#ffffff',
-      backgroundImage: `
-        radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 50%)
-      `
+      position: 'relative'
     }}>
-      <div style={{ maxWidth: '1024px', margin: '0 auto' }}>
+      {/* Chalk texture overlay */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        opacity: 0.2,
+        backgroundImage: `
+          radial-gradient(circle at 25% 25%, white 1px, transparent 1px),
+          radial-gradient(circle at 75% 75%, white 0.5px, transparent 0.5px),
+          radial-gradient(circle at 50% 50%, white 0.8px, transparent 0.8px)
+        `,
+        backgroundSize: '100px 100px, 150px 150px, 80px 80px'
+      }}></div>
+
+      {/* Decorative chalk elements */}
+      <ChalkCoffeeBean style={{ left: '-40px', top: '160px', opacity: 0.4, transform: 'rotate(12deg)' }} />
+      <ChalkCoffeeCup style={{ right: '-60px', top: '200px', opacity: 0.3, transform: 'rotate(-12deg)' }} />
+      <ChalkLeaf style={{ left: '-30px', bottom: '200px', opacity: 0.35, transform: 'rotate(45deg)' }} />
+      <ChalkCoffeeBean style={{ right: '-40px', bottom: '240px', opacity: 0.4, transform: 'rotate(-30deg)' }} />
+
+      <div style={{ maxWidth: '1024px', margin: '0 auto', position: 'relative', zIndex: 10 }}>
         {/* Menu Header */}
         <div style={{ textAlign: 'center', marginBottom: '64px' }}>
           <div style={{

@@ -97,7 +97,7 @@ const MenuItemComponent: React.FC<MenuItemComponentProps> = ({ item, categoryId,
 
   return (
     <motion.div
-      className="flex justify-between items-center py-2 group"
+      className="flex justify-between items-center py-2 group border-b border-pink-200"
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
@@ -106,7 +106,7 @@ const MenuItemComponent: React.FC<MenuItemComponentProps> = ({ item, categoryId,
         <EditableText
           value={item.name}
           onChange={(name) => onUpdate({ name })}
-          className="text-gray-700 font-medium"
+          className="text-pink-600 font-medium"
           placeholder="Item name"
         />
       </div>
@@ -117,7 +117,7 @@ const MenuItemComponent: React.FC<MenuItemComponentProps> = ({ item, categoryId,
             const price = Number.parseFloat(priceStr.replace("$", "")) || 0
             onUpdate({ price })
           }}
-          className="text-gray-700 font-medium"
+          className="text-pink-600 font-medium"
           placeholder="$0.00"
         />
         {!isPreviewMode && (
@@ -159,7 +159,7 @@ const MenuCategoryComponent: React.FC<MenuCategoryComponentProps> = ({ category,
         <EditableText
           value={category.name}
           onChange={(name) => onUpdate({ name })}
-          className="text-4xl font-bold text-coral-500 mb-4"
+          className="text-4xl font-bold text-pink-600 mb-4"
           placeholder="Category Name"
         />
       </div>
@@ -231,15 +231,12 @@ export function SweetTreatsMenuPreview() {
   const displayCategories = categories.length > 0 ? categories : []
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-pink-50">
       {/* Header */}
       <div className="text-center py-16 text-white" style={{ backgroundColor: "#FF7F7F" }}>
         <h1
-          className="text-6xl font-bold mb-4"
-          style={{
-            fontFamily: "Dancing Script, cursive",
-            color: "#E6F3F0",
-          }}
+          className="text-6xl font-bold mb-4 text-pink-600"
+          style={{ fontFamily: "Dancing Script, cursive" }}
         >
           Sweet Treats
         </h1>
