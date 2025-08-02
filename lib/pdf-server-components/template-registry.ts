@@ -9,7 +9,7 @@ const templateImporters: Record<string, () => Promise<any>> = {
   'borcelle-coffee': () => import('@/components/templates/borcelle-coffee-preview'),
   'botanical-cafe': () => import('@/components/templates/botanical-cafe-preview'),
   'chalkboard-coffee': () => import('@/components/templates/chalkboard-coffee-preview'),
-  'cocktail-menu': () => import('@/components/templates/cocktail-menu-preview'),
+  'cocktail-menu': () => import('@/lib/pdf-server-components/templates/CocktailMenuPDFTemplate'),
   'elegant-cocktail': () => import('@/components/templates/elegant-cocktail-menu-preview'),
   'fast-food': () => import('@/components/templates/fast-food-menu-preview'),
   'interactive-menu': () => import('@/components/templates/interactive-menu-preview'),
