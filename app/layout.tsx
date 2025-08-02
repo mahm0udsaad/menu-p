@@ -1,25 +1,29 @@
 import type React from "react"
 import type { Metadata, Viewport } from "next"
-import { IBM_Plex_Sans_Arabic, Rubik, Oswald } from 'next/font/google'
+import localFont from 'next/font/local'
 import Script from "next/script"
 import "./globals.css"
 import { Toaster } from "sonner"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
 
-const ibmPlexSansArabic = IBM_Plex_Sans_Arabic({
-  subsets: ['arabic', 'latin'],
-  weight: ['100', '200', '300', '400', '500', '600', '700'],
+const ibmPlexSansArabic = localFont({
+  src: [
+    { path: '../public/fonts/AR/Almarai/Almarai-Light.ttf', weight: '300', style: 'normal' },
+    { path: '../public/fonts/AR/Almarai/Almarai-Regular.ttf', weight: '400', style: 'normal' },
+    { path: '../public/fonts/AR/Almarai/Almarai-Bold.ttf', weight: '700', style: 'normal' },
+    { path: '../public/fonts/AR/Almarai/Almarai-ExtraBold.ttf', weight: '800', style: 'normal' },
+  ],
   variable: '--font-ibm-plex-sans-arabic',
 })
 
-const rubik = Rubik({
-  subsets: ['latin', 'arabic'],
+const rubik = localFont({
+  src: '../public/fonts/AR/Amiri/Amiri-Regular.ttf',
   variable: '--font-rubik',
 })
 
-const oswald = Oswald({
-  subsets: ['latin'],
+const oswald = localFont({
+  src: '../public/fonts/AR/Amiri/Amiri-Bold.ttf',
   variable: '--font-oswald',
 })
 
