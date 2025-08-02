@@ -52,9 +52,9 @@ export default function FastFoodPDFTemplate({
   const currency = restaurant.currency || '$'
   
   return (
-    <div style={{ 
-      backgroundColor: '#ff6b35', 
-      minHeight: '100vh', 
+    <div style={{
+      backgroundColor: '#F5E6D3',
+      minHeight: '100vh',
       padding: '32px',
       fontFamily: 'Arial, sans-serif'
     }}>
@@ -67,10 +67,10 @@ export default function FastFoodPDFTemplate({
             padding: '32px',
             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
           }}>
-            <h1 style={{ 
-              fontSize: '48px', 
-              fontWeight: '900', 
-              color: '#ff6b35',
+            <h1 style={{
+              fontSize: '48px',
+              fontWeight: '900',
+              color: '#C41E3A',
               marginBottom: '16px',
               textTransform: 'uppercase',
               letterSpacing: '0.1em',
@@ -81,7 +81,7 @@ export default function FastFoodPDFTemplate({
             <div style={{
               width: '80px',
               height: '4px',
-              backgroundColor: '#ff6b35',
+              backgroundColor: '#C41E3A',
               margin: '0 auto 16px'
             }}></div>
             <h2 style={{ 
@@ -106,14 +106,14 @@ export default function FastFoodPDFTemplate({
             }}>
               {/* Category Header */}
               <div style={{
-                borderBottom: '3px solid #ff6b35',
+                borderBottom: '3px solid #C41E3A',
                 marginBottom: '24px',
                 paddingBottom: '16px'
               }}>
-                <h3 style={{ 
-                  fontSize: '32px', 
-                  fontWeight: '900', 
-                  color: '#ff6b35',
+                <h3 style={{
+                  fontSize: '32px',
+                  fontWeight: '900',
+                  color: '#C41E3A',
                   margin: 0,
                   textTransform: 'uppercase',
                   letterSpacing: '0.1em'
@@ -126,10 +126,10 @@ export default function FastFoodPDFTemplate({
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                 {category.menu_items.map((item) => (
                   <div key={item.id} style={{
-                    backgroundColor: '#f8fafc',
+                    backgroundColor: '#F5E6D3',
                     borderRadius: '12px',
                     padding: '20px',
-                    border: '2px solid #e2e8f0',
+                    border: '2px solid #C41E3A',
                     position: 'relative',
                     overflow: 'hidden'
                   }}>
@@ -139,7 +139,7 @@ export default function FastFoodPDFTemplate({
                       left: 0,
                       width: '4px',
                       height: '100%',
-                      backgroundColor: '#ff6b35'
+                      backgroundColor: '#C41E3A'
                     }}></div>
                     <div style={{
                       display: 'flex',
@@ -147,29 +147,29 @@ export default function FastFoodPDFTemplate({
                       alignItems: 'flex-start',
                       marginBottom: '12px'
                     }}>
-                      <h4 style={{ 
-                        fontSize: '18px', 
-                        fontWeight: '700', 
-                        color: '#1f2937',
+                      <h4 style={{
+                        fontSize: '18px',
+                        fontWeight: '700',
+                        color: '#C41E3A',
                         margin: 0,
                         flex: 1,
                         textTransform: 'uppercase'
                       }}>
                         {item.name}
                       </h4>
-                      <div style={{ 
-                        fontSize: '24px', 
-                        fontWeight: '900', 
-                        color: '#ff6b35',
+                      <div style={{
+                        fontSize: '24px',
+                        fontWeight: '900',
+                        color: '#C41E3A',
                         marginLeft: '16px'
                       }}>
                         {currency}{item.price?.toFixed(2) || '0.00'}
                       </div>
                     </div>
                     {item.description && (
-                      <p style={{ 
-                        fontSize: '14px', 
-                        color: '#6b7280', 
+                      <p style={{
+                        fontSize: '14px',
+                        color: '#7c2d12',
                         lineHeight: 1.5,
                         margin: 0
                       }}>
@@ -192,10 +192,11 @@ export default function FastFoodPDFTemplate({
             backgroundColor: '#ffffff',
             borderRadius: '16px',
             padding: '24px',
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+            border: '2px solid #C41E3A'
           }}>
-            <p style={{ 
-              color: '#ff6b35', 
+            <p style={{
+              color: '#C41E3A',
               fontWeight: '700',
               fontSize: '18px',
               margin: '0 0 8px 0',
@@ -203,8 +204,8 @@ export default function FastFoodPDFTemplate({
             }}>
               Fast • Fresh • Delicious
             </p>
-            <p style={{ 
-              color: '#374151', 
+            <p style={{
+              color: '#7c2d12',
               fontWeight: '500',
               fontSize: '14px',
               margin: 0

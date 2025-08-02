@@ -52,31 +52,31 @@ export default function VintageCoffeePDFTemplate({
   const currency = restaurant.currency || '$'
   
   return (
-    <div style={{ 
-      backgroundColor: '#f5f5dc', 
-      minHeight: '100vh', 
+    <div style={{
+      background: 'linear-gradient(to bottom right, #f5f5dc, #fef3c7)',
+      minHeight: '100vh',
       padding: '48px',
       fontFamily: 'Times New Roman, serif',
       backgroundImage: `
-        radial-gradient(circle at 30% 70%, rgba(139, 69, 19, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 70% 30%, rgba(160, 82, 45, 0.1) 0%, transparent 50%)
+        radial-gradient(circle at 30% 70%, rgba(139,69,19,0.1) 0%, transparent 50%),
+        radial-gradient(circle at 70% 30%, rgba(160,82,45,0.1) 0%, transparent 50%)
       `
     }}>
       <div style={{ maxWidth: '1024px', margin: '0 auto' }}>
         {/* Menu Header */}
         <div style={{ textAlign: 'center', marginBottom: '64px' }}>
           <div style={{
-            border: '3px double #8b4513',
+            border: '3px double #7b4a2f',
             padding: '40px',
             marginBottom: '32px',
             backgroundColor: '#faf0e6',
             borderRadius: '8px',
             boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
           }}>
-            <h1 style={{ 
-              fontSize: '48px', 
-              fontWeight: '700', 
-              color: '#8b4513',
+            <h1 style={{
+              fontSize: '48px',
+              fontWeight: '700',
+              color: '#7b4a2f',
               marginBottom: '16px',
               textTransform: 'uppercase',
               letterSpacing: '0.2em',
@@ -87,13 +87,13 @@ export default function VintageCoffeePDFTemplate({
             <div style={{
               width: '100px',
               height: '2px',
-              backgroundColor: '#a0522d',
+              backgroundColor: '#b45309',
               margin: '0 auto 16px'
             }}></div>
-            <h2 style={{ 
-              fontSize: '20px', 
-              fontWeight: '400', 
-              color: '#a0522d',
+            <h2 style={{
+              fontSize: '20px',
+              fontWeight: '400',
+              color: '#b45309',
               margin: 0,
               fontStyle: 'italic'
             }}>
@@ -106,23 +106,23 @@ export default function VintageCoffeePDFTemplate({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
           {categories.map((category) => (
             <div key={category.id} style={{
-              backgroundColor: '#faf0e6',
+              backgroundColor: '#fffaf0',
               borderRadius: '12px',
               padding: '32px',
               boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-              border: '2px solid #d2691e'
+              border: '2px solid #b45309'
             }}>
               {/* Category Header */}
               <div style={{
-                borderBottom: '2px solid #d2691e',
+                borderBottom: '2px solid #b45309',
                 marginBottom: '24px',
                 paddingBottom: '16px',
                 position: 'relative'
               }}>
-                <h3 style={{ 
-                  fontSize: '28px', 
-                  fontWeight: '700', 
-                  color: '#8b4513',
+                <h3 style={{
+                  fontSize: '28px',
+                  fontWeight: '700',
+                  color: '#7b4a2f',
                   margin: 0,
                   textTransform: 'uppercase',
                   letterSpacing: '0.1em',
@@ -136,7 +136,7 @@ export default function VintageCoffeePDFTemplate({
                   left: 0,
                   width: '60px',
                   height: '2px',
-                  backgroundColor: '#a0522d'
+                  backgroundColor: '#b45309'
                 }}></div>
               </div>
 
@@ -148,24 +148,24 @@ export default function VintageCoffeePDFTemplate({
                     justifyContent: 'space-between',
                     alignItems: 'flex-start',
                     padding: '20px',
-                    border: '1px solid #cd853f',
+                    border: '1px solid #d1b092',
                     borderRadius: '8px',
-                    backgroundColor: '#f5f5dc'
+                    backgroundColor: '#fffaf0'
                   }}>
                     <div style={{ flex: 1 }}>
-                      <h4 style={{ 
-                        fontSize: '18px', 
-                        fontWeight: '600', 
-                        color: '#8b4513',
+                      <h4 style={{
+                        fontSize: '18px',
+                        fontWeight: '600',
+                        color: '#7b4a2f',
                         margin: '0 0 8px 0',
                         fontFamily: 'Times New Roman, serif'
                       }}>
                         {item.name}
                       </h4>
                       {item.description && (
-                        <p style={{ 
-                          fontSize: '14px', 
-                          color: '#a0522d', 
+                        <p style={{
+                          fontSize: '14px',
+                          color: '#b45309',
                           lineHeight: 1.5,
                           margin: 0,
                           fontStyle: 'italic'
@@ -174,10 +174,10 @@ export default function VintageCoffeePDFTemplate({
                         </p>
                       )}
                     </div>
-                    <div style={{ 
-                      fontSize: '20px', 
-                      fontWeight: '700', 
-                      color: '#d2691e',
+                    <div style={{
+                      fontSize: '20px',
+                      fontWeight: '700',
+                      color: '#b45309',
                       marginLeft: '24px',
                       fontFamily: 'Times New Roman, serif'
                     }}>
@@ -191,23 +191,22 @@ export default function VintageCoffeePDFTemplate({
         </div>
 
         {/* Footer */}
-        <div style={{ 
-          marginTop: '64px', 
+        <div style={{
+          marginTop: '64px',
           textAlign: 'center',
           padding: '32px',
-          borderTop: '2px solid #d2691e'
+          backgroundColor: '#7b4a2f',
+          color: '#ffffff'
         }}>
-          <p style={{ 
-            color: '#8b4513', 
+          <p style={{
             fontWeight: '500',
             fontSize: '18px',
             margin: '0 0 8px 0',
             fontStyle: 'italic'
           }}>
-            "Brewed with tradition since 1960"
+            Brewed with tradition since 1960
           </p>
-          <p style={{ 
-            color: '#a0522d', 
+          <p style={{
             fontWeight: '600',
             fontSize: '16px',
             margin: 0

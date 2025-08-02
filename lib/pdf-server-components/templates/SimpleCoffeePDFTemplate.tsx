@@ -52,38 +52,38 @@ export default function SimpleCoffeePDFTemplate({
   const currency = restaurant.currency || '$'
   
   return (
-    <div style={{ 
-      backgroundColor: '#f5f5f5', 
-      minHeight: '100vh', 
+    <div style={{
+      background: 'linear-gradient(to bottom right, #fffbeb, #ffedd5)',
+      minHeight: '100vh',
       padding: '48px',
       fontFamily: 'Arial, sans-serif'
     }}>
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         {/* Menu Header */}
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <h1 style={{ 
-            fontSize: '36px', 
-            fontWeight: '700', 
-            color: '#2d3748',
-            marginBottom: '16px',
-            margin: 0
-          }}>
-            {restaurant.name || 'COFFEE SHOP'}
-          </h1>
           <div style={{
-            width: '60px',
-            height: '2px',
-            backgroundColor: '#8b4513',
-            margin: '0 auto 16px'
-          }}></div>
-          <h2 style={{ 
-            fontSize: '18px', 
-            fontWeight: '400', 
-            color: '#718096',
-            margin: 0
+            background: 'linear-gradient(to right, #d97706, #ea580c)',
+            padding: '32px',
+            borderRadius: '12px'
           }}>
-            Menu
-          </h2>
+            <h1 style={{
+              fontSize: '36px',
+              fontWeight: '700',
+              color: '#ffffff',
+              marginBottom: '8px',
+              margin: 0
+            }}>
+              {restaurant.name || 'COFFEE SHOP'}
+            </h1>
+            <h2 style={{
+              fontSize: '18px',
+              fontWeight: '400',
+              color: '#fef3c7',
+              margin: 0
+            }}>
+              Fresh Coffee & Delicious Treats
+            </h2>
+          </div>
         </div>
 
         {/* Menu Content */}
@@ -92,14 +92,14 @@ export default function SimpleCoffeePDFTemplate({
             <div key={category.id}>
               {/* Category Header */}
               <div style={{
-                borderBottom: '1px solid #e2e8f0',
+                borderBottom: '2px solid #fcd34d',
                 marginBottom: '20px',
                 paddingBottom: '12px'
               }}>
-                <h3 style={{ 
-                  fontSize: '24px', 
-                  fontWeight: '600', 
-                  color: '#2d3748',
+                <h3 style={{
+                  fontSize: '24px',
+                  fontWeight: '600',
+                  color: '#78350f',
                   margin: 0
                 }}>
                   {category.name}
@@ -114,23 +114,23 @@ export default function SimpleCoffeePDFTemplate({
                     justifyContent: 'space-between',
                     alignItems: 'flex-start',
                     padding: '16px',
-                    backgroundColor: '#ffffff',
+                    backgroundColor: '#fef3c7',
                     borderRadius: '8px',
-                    border: '1px solid #e2e8f0'
+                    border: '1px solid #fcd34d'
                   }}>
                     <div style={{ flex: 1 }}>
-                      <h4 style={{ 
-                        fontSize: '16px', 
-                        fontWeight: '600', 
-                        color: '#2d3748',
+                      <h4 style={{
+                        fontSize: '16px',
+                        fontWeight: '600',
+                        color: '#78350f',
                         margin: '0 0 4px 0'
                       }}>
                         {item.name}
                       </h4>
                       {item.description && (
-                        <p style={{ 
-                          fontSize: '14px', 
-                          color: '#718096', 
+                        <p style={{
+                          fontSize: '14px',
+                          color: '#92400e',
                           lineHeight: 1.4,
                           margin: 0
                         }}>
@@ -138,10 +138,10 @@ export default function SimpleCoffeePDFTemplate({
                         </p>
                       )}
                     </div>
-                    <div style={{ 
-                      fontSize: '16px', 
-                      fontWeight: '600', 
-                      color: '#8b4513',
+                    <div style={{
+                      fontSize: '16px',
+                      fontWeight: '600',
+                      color: '#b45309',
                       marginLeft: '16px'
                     }}>
                       {currency}{item.price?.toFixed(2) || '0.00'}
@@ -154,21 +154,20 @@ export default function SimpleCoffeePDFTemplate({
         </div>
 
         {/* Footer */}
-        <div style={{ 
-          marginTop: '48px', 
+        <div style={{
+          marginTop: '48px',
           textAlign: 'center',
           padding: '24px',
-          backgroundColor: '#ffffff',
-          borderRadius: '8px',
-          border: '1px solid #e2e8f0'
+          backgroundColor: '#92400e',
+          borderRadius: '8px'
         }}>
-          <p style={{ 
-            color: '#718096', 
+          <p style={{
+            color: '#ffffff',
             fontWeight: '500',
             fontSize: '14px',
             margin: 0
           }}>
-            Fresh coffee, every day
+            Thank you for choosing {restaurant.name}
           </p>
         </div>
       </div>

@@ -245,10 +245,10 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
             {/* Menu Header */}
             <div className="text-center mb-16">
               <div className="mb-6">
-                <h1 className="text-6xl font-serif text-yellow-400 mb-2 tracking-wider">
+                <h1 className="text-6xl font-serif text-[#d4af37] mb-2 tracking-wider">
                   <span className="font-script text-7xl">Think</span>
                 </h1>
-                <h2 className="text-5xl font-serif text-yellow-400 tracking-[0.3em] font-light">UNLIMITED</h2>
+                <h2 className="text-5xl font-serif text-[#d4af37] tracking-[0.3em] font-light">UNLIMITED</h2>
               </div>
               <div className="text-yellow-200/80 text-lg tracking-[0.2em] font-light mb-6">A TASTE OF COMFORT</div>
               {/* Decorative Divider */}
@@ -287,13 +287,13 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                     {...provided.dragHandleProps}
                                     className="cursor-grab p-1 hover:bg-yellow-600/20 rounded bg-yellow-600/10"
                                   >
-                                    <GripVertical className="w-4 h-4 text-yellow-400/70" />
+                                    <GripVertical className="w-4 h-4 text-[#d4af37]/70" />
                                   </div>
                                   <Button
                                     size="sm"
                                     variant="ghost"
                                     onClick={() => toggleSpecialCategory(category.id, category.isSpecial || false)}
-                                    className="h-6 w-6 p-0 text-yellow-400/70 hover:text-yellow-400 hover:bg-yellow-600/20 bg-yellow-600/10"
+                                    className="h-6 w-6 p-0 text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-yellow-600/20 bg-yellow-600/10"
                                   >
                                     <Sparkles className="w-3 h-3" />
                                   </Button>
@@ -301,7 +301,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                     size="sm"
                                     variant="ghost"
                                     onClick={() => startEditingCategory(category.id, category.name)}
-                                    className="h-6 w-6 p-0 text-yellow-400/70 hover:text-yellow-400 hover:bg-yellow-600/20 bg-yellow-600/10"
+                                    className="h-6 w-6 p-0 text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-yellow-600/20 bg-yellow-600/10"
                                   >
                                     <Edit className="w-3 h-3" />
                                   </Button>
@@ -309,7 +309,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                     size="sm"
                                     variant="ghost"
                                     onClick={() => deleteCategory(category.id)}
-                                    className="h-6 w-6 p-0 text-yellow-400/70 hover:text-red-400 hover:bg-red-500/20 bg-yellow-600/10"
+                                    className="h-6 w-6 p-0 text-[#d4af37]/70 hover:text-red-400 hover:bg-red-500/20 bg-yellow-600/10"
                                   >
                                     <Trash2 className="w-3 h-3" />
                                   </Button>
@@ -317,7 +317,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                     size="sm"
                                     variant="ghost"
                                     onClick={() => addItem(category.id)}
-                                    className="h-6 w-6 p-0 text-yellow-400/70 hover:text-yellow-400 hover:bg-yellow-600/20 bg-yellow-600/10"
+                                    className="h-6 w-6 p-0 text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-yellow-600/20 bg-yellow-600/10"
                                   >
                                     <Plus className="w-3 h-3" />
                                   </Button>
@@ -334,14 +334,14 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                         if (e.key === "Enter") saveCategory()
                                         if (e.key === "Escape") cancelEditingCategory()
                                       }}
-                                      className="text-2xl font-serif font-bold bg-yellow-600/20 border-yellow-600/50 text-yellow-400 tracking-wider"
+                                      className="text-2xl font-serif font-bold bg-yellow-600/20 border-yellow-600/50 text-[#d4af37] tracking-wider"
                                       autoFocus
                                     />
                                   </div>
                                 ) : (
                                   <div className="mb-4">
                                     <h3
-                                      className="text-2xl font-serif font-bold text-yellow-400 tracking-wider cursor-pointer hover:text-yellow-300 transition-colors"
+                                      className="text-2xl font-serif font-bold text-[#d4af37] tracking-wider cursor-pointer hover:text-yellow-300 transition-colors"
                                       onClick={() =>
                                         isPreviewMode && startEditingCategory(category.id, category.name)
                                       }
@@ -383,7 +383,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                                           : "opacity-0 translate-x-4 pointer-events-none"
                                                       }`}
                                                     >
-                                                      <GripVertical className="w-3 h-3 text-yellow-400/50" />
+                                                      <GripVertical className="w-3 h-3 text-[#d4af37]/50" />
                                                     </div>
                                                     {editingItemId === item.id ? (
                                                       <input
@@ -397,7 +397,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                                           )
                                                         }
                                                         onBlur={() => setEditingItemId(null)}
-                                                        className="text-lg font-serif font-semibold text-yellow-200 bg-transparent border-b border-yellow-600/50 focus:border-yellow-400 outline-none"
+                                                        className="text-lg font-serif font-semibold text-yellow-200 bg-transparent border-b border-yellow-600/50 focus:border-[#d4af37] outline-none"
                                                         autoFocus
                                                       />
                                                     ) : (
@@ -417,7 +417,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                                         )
                                                       }
                                                       onBlur={() => setEditingItemId(null)}
-                                                      className="text-sm text-yellow-100/80 leading-relaxed bg-transparent border-b border-yellow-600/50 focus:border-yellow-400 outline-none w-full resize-none"
+                                                      className="text-sm text-yellow-100/80 leading-relaxed bg-transparent border-b border-yellow-600/50 focus:border-[#d4af37] outline-none w-full resize-none"
                                                       rows={2}
                                                     />
                                                   ) : (
@@ -441,10 +441,10 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                                         )
                                                       }
                                                       onBlur={() => setEditingItemId(null)}
-                                                      className="text-xl font-serif font-bold text-yellow-400 bg-transparent border-b border-yellow-600/50 focus:border-yellow-400 outline-none w-16 text-right"
+                                                      className="text-xl font-serif font-bold text-[#d4af37] bg-transparent border-b border-yellow-600/50 focus:border-[#d4af37] outline-none w-16 text-right"
                                                     />
                                                   ) : (
-                                                    <div className="text-xl font-serif font-bold text-yellow-400">
+                                                    <div className="text-xl font-serif font-bold text-[#d4af37]">
                                                       {item.price?.toFixed(0)}
                                                     </div>
                                                   )}
@@ -459,7 +459,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                                       size="sm"
                                                       variant="ghost"
                                                       onClick={() => editItem(item.id)}
-                                                      className="h-6 w-6 p-0 text-yellow-400/70 hover:text-yellow-400 hover:bg-yellow-600/20 bg-yellow-600/10"
+                                                      className="h-6 w-6 p-0 text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-yellow-600/20 bg-yellow-600/10"
                                                     >
                                                       <Edit className="w-3 h-3" />
                                                     </Button>
@@ -467,7 +467,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                                       size="sm"
                                                       variant="ghost"
                                                       onClick={() => deleteItem(category.id, item.id)}
-                                                      className="h-6 w-6 p-0 text-yellow-400/70 hover:text-red-400 hover:bg-red-500/20 bg-yellow-600/10"
+                                                      className="h-6 w-6 p-0 text-[#d4af37]/70 hover:text-red-400 hover:bg-red-500/20 bg-yellow-600/10"
                                                     >
                                                       <Trash2 className="w-3 h-3" />
                                                     </Button>
@@ -493,7 +493,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                           <Button
                                             variant="ghost"
                                             onClick={() => addItem(category.id)}
-                                            className="text-yellow-400/70 hover:text-yellow-400 hover:bg-yellow-600/20"
+                                            className="text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-yellow-600/20"
                                           >
                                             <Plus className="w-4 h-4 mr-2" />
                                             Add first item
@@ -515,7 +515,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                         <Button
                           onClick={addCategory}
                           variant="outline"
-                          className="border-yellow-600/50 text-yellow-400 hover:bg-yellow-600/10 bg-transparent"
+                          className="border-yellow-600/50 text-[#d4af37] hover:bg-yellow-600/10 bg-transparent"
                         >
                           <Plus className="w-4 h-4 mr-2" />
                           Add New Category
@@ -557,13 +557,13 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                     {...provided.dragHandleProps}
                                     className="cursor-grab p-1 hover:bg-yellow-600/20 rounded bg-yellow-600/10"
                                   >
-                                    <GripVertical className="w-4 h-4 text-yellow-400/70" />
+                                    <GripVertical className="w-4 h-4 text-[#d4af37]/70" />
                                   </div>
                                   <Button
                                     size="sm"
                                     variant="ghost"
                                     onClick={() => toggleSpecialCategory(category.id, category.isSpecial || false)}
-                                    className="h-6 w-6 p-0 text-yellow-400/70 hover:text-yellow-400 hover:bg-yellow-600/20 bg-yellow-600/10"
+                                    className="h-6 w-6 p-0 text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-yellow-600/20 bg-yellow-600/10"
                                   >
                                     <Sparkles className="w-3 h-3" />
                                   </Button>
@@ -571,7 +571,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                     size="sm"
                                     variant="ghost"
                                     onClick={() => startEditingCategory(category.id, category.name)}
-                                    className="h-6 w-6 p-0 text-yellow-400/70 hover:text-yellow-400 hover:bg-yellow-600/20 bg-yellow-600/10"
+                                    className="h-6 w-6 p-0 text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-yellow-600/20 bg-yellow-600/10"
                                   >
                                     <Edit className="w-3 h-3" />
                                   </Button>
@@ -579,7 +579,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                     size="sm"
                                     variant="ghost"
                                     onClick={() => deleteCategory(category.id)}
-                                    className="h-6 w-6 p-0 text-yellow-400/70 hover:text-red-400 hover:bg-red-500/20 bg-yellow-600/10"
+                                    className="h-6 w-6 p-0 text-[#d4af37]/70 hover:text-red-400 hover:bg-red-500/20 bg-yellow-600/10"
                                   >
                                     <Trash2 className="w-3 h-3" />
                                   </Button>
@@ -587,7 +587,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                     size="sm"
                                     variant="ghost"
                                     onClick={() => addItem(category.id)}
-                                    className="h-6 w-6 p-0 text-yellow-400/70 hover:text-yellow-400 hover:bg-yellow-600/20 bg-yellow-600/10"
+                                    className="h-6 w-6 p-0 text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-yellow-600/20 bg-yellow-600/10"
                                   >
                                     <Plus className="w-4 h-4 mr-2" />
                                   </Button>
@@ -604,14 +604,14 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                         if (e.key === "Enter") saveCategory()
                                         if (e.key === "Escape") cancelEditingCategory()
                                       }}
-                                      className="text-2xl font-serif font-bold bg-yellow-600/20 border-yellow-600/50 text-yellow-400 tracking-wider"
+                                      className="text-2xl font-serif font-bold bg-yellow-600/20 border-yellow-600/50 text-[#d4af37] tracking-wider"
                                       autoFocus
                                     />
                                   </div>
                                 ) : (
                                   <div className="mb-4">
                                     <h3
-                                      className="text-2xl font-serif font-bold text-yellow-400 tracking-wider cursor-pointer hover:text-yellow-300 transition-colors"
+                                      className="text-2xl font-serif font-bold text-[#d4af37] tracking-wider cursor-pointer hover:text-yellow-300 transition-colors"
                                       onClick={() =>
                                         isPreviewMode && startEditingCategory(category.id, category.name)
                                       }
@@ -653,7 +653,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                                           : "opacity-0 translate-x-4 pointer-events-none"
                                                       }`}
                                                     >
-                                                      <GripVertical className="w-4 h-4 text-yellow-400/50" />
+                                                      <GripVertical className="w-4 h-4 text-[#d4af37]/50" />
                                                     </div>
                                                     {editingItemId === item.id ? (
                                                       <input
@@ -667,7 +667,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                                           )
                                                         }
                                                         onBlur={() => setEditingItemId(null)}
-                                                        className="text-lg font-serif font-semibold text-yellow-200 bg-transparent border-b border-yellow-600/50 focus:border-yellow-400 outline-none"
+                                                        className="text-lg font-serif font-semibold text-yellow-200 bg-transparent border-b border-yellow-600/50 focus:border-[#d4af37] outline-none"
                                                         autoFocus
                                                       />
                                                     ) : (
@@ -687,7 +687,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                                         )
                                                       }
                                                       onBlur={() => setEditingItemId(null)}
-                                                      className="text-sm text-yellow-100/80 leading-relaxed bg-transparent border-b border-yellow-600/50 focus:border-yellow-400 outline-none w-full resize-none"
+                                                      className="text-sm text-yellow-100/80 leading-relaxed bg-transparent border-b border-yellow-600/50 focus:border-[#d4af37] outline-none w-full resize-none"
                                                       rows={2}
                                                     />
                                                   ) : (
@@ -711,10 +711,10 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                                         )
                                                       }
                                                       onBlur={() => setEditingItemId(null)}
-                                                      className="text-xl font-serif font-bold text-yellow-400 bg-transparent border-b border-yellow-600/50 focus:border-yellow-400 outline-none w-16 text-right"
+                                                      className="text-xl font-serif font-bold text-[#d4af37] bg-transparent border-b border-yellow-600/50 focus:border-[#d4af37] outline-none w-16 text-right"
                                                     />
                                                   ) : (
-                                                    <div className="text-xl font-serif font-bold text-yellow-400">
+                                                    <div className="text-xl font-serif font-bold text-[#d4af37]">
                                                       {item.price?.toFixed(0)}
                                                     </div>
                                                   )}
@@ -729,7 +729,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                                       size="sm"
                                                       variant="ghost"
                                                       onClick={() => editItem(item.id)}
-                                                      className="h-6 w-6 p-0 text-yellow-400/70 hover:text-yellow-400 hover:bg-yellow-600/20 bg-yellow-600/10"
+                                                      className="h-6 w-6 p-0 text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-yellow-600/20 bg-yellow-600/10"
                                                     >
                                                       <Edit className="w-3 h-3" />
                                                     </Button>
@@ -737,7 +737,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                                       size="sm"
                                                       variant="ghost"
                                                       onClick={() => deleteItem(category.id, item.id)}
-                                                      className="h-6 w-6 p-0 text-yellow-400/70 hover:text-red-400 hover:bg-red-500/20 bg-yellow-600/10"
+                                                      className="h-6 w-6 p-0 text-[#d4af37]/70 hover:text-red-400 hover:bg-red-500/20 bg-yellow-600/10"
                                                     >
                                                       <Trash2 className="w-3 h-3" />
                                                     </Button>
@@ -763,7 +763,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                           <Button
                                             variant="ghost"
                                             onClick={() => addItem(category.id)}
-                                            className="text-yellow-400/70 hover:text-yellow-400 hover:bg-yellow-600/20"
+                                            className="text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-yellow-600/20"
                                           >
                                             <Plus className="w-4 h-4 mr-2" />
                                             Add first item
@@ -785,7 +785,7 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                         <Button
                           onClick={addCategory}
                           variant="outline"
-                          className="border-yellow-600/50 text-yellow-400 hover:bg-yellow-600/10 bg-transparent"
+                          className="border-yellow-600/50 text-[#d4af37] hover:bg-yellow-600/10 bg-transparent"
                         >
                           <Plus className="w-4 h-4 mr-2" />
                           Add New Category
