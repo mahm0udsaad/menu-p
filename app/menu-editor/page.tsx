@@ -5,6 +5,11 @@ import LiveMenuEditor from "@/components/editor/live-menu-editor"
 import { MenuEditorProvider } from "@/contexts/menu-editor-context"
 import { redirect } from 'next/navigation'
 
+// This page relies on server-side data and requires runtime configuration,
+// so we disable static prerendering to prevent build-time errors when
+// environment variables like Supabase credentials are missing.
+export const dynamic = 'force-dynamic'
+
 interface MenuCategory {
   id: string
   name: string

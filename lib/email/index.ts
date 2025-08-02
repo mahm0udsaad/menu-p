@@ -11,14 +11,19 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Verify connection configuration
-transporter.verify(function(error: any, success: any) {
-  if (error) {
-    console.error('Email service configuration error:', error);
-  } else {
-    console.log('Email service is ready to send messages');
-  }
-});
+// Verify connection configuration only in development to avoid
+// network calls during build or in environments where SMTP access
+// isn't available. This prevents the build from failing when the
+// SMTP server can't be reached.
+if (process.env.NODE_ENV !== 'production') {
+  transporter.verify(function (error: any) {
+    if (error) {
+      console.error('Email service configuration error:', error);
+    } else {
+      console.log('Email service is ready to send messages');
+    }
+  });
+}
 
 export interface EmailOptions {
   to: string;

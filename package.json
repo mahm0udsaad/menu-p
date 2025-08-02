@@ -6,7 +6,7 @@
     "dev": "next dev",
     "prebuild": "node scripts/copy-pdf-worker.js",
     "build:css": "tailwindcss -i styles/globals.css -o app/globals.css --minify",
-    "build": "npm run build:css && next build && npx playwright install --with-deps",
+    "build": "npm run build:css && next build",
     "postbuild": "next-sitemap",
     "start": "next start",
     "lint": "next lint",
