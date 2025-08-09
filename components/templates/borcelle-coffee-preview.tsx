@@ -4,17 +4,18 @@ import { memo } from "react"
 import { useMenuEditor } from "@/contexts/menu-editor-context"
 import { Button } from "@/components/ui/button"
 import { Edit, Trash2, GripVertical } from "lucide-react"
+import { TEMPLATE_DESIGN_TOKENS } from "@/lib/template-design-tokens"
 
 const BorcelleCoffeePreview = memo(() => {
   const { isPreviewMode, categories } = useMenuEditor()
 
   const backgroundStyle = {
-    backgroundColor: "#f8f9fa",
+    background: TEMPLATE_DESIGN_TOKENS.borcelle.colors.background,
     backgroundSize: "cover",
     backgroundPosition: "center",
-    fontFamily: "Inter",
+    fontFamily: TEMPLATE_DESIGN_TOKENS.borcelle.fonts.family,
     fontSize: "16px",
-    color: "#2d3748",
+    color: TEMPLATE_DESIGN_TOKENS.borcelle.colors.text,
   }
 
   return (
@@ -25,18 +26,33 @@ const BorcelleCoffeePreview = memo(() => {
           <div className="flex-1">
             {/* Logo */}
             <div className="flex items-center mb-6">
-              <div className="w-12 h-12 rounded-full border-2 border-amber-900 flex items-center justify-center mr-4">
-                <span className="text-amber-900 font-bold text-lg">B</span>
+              <div className="w-12 h-12 rounded-full border-2 flex items-center justify-center mr-4" style={{ borderColor: TEMPLATE_DESIGN_TOKENS.borcelle.colors.primary }}>
+                <span className="font-bold text-lg" style={{ color: TEMPLATE_DESIGN_TOKENS.borcelle.colors.primary }}>B</span>
               </div>
-              <h1 className="text-3xl font-bold text-amber-900 tracking-wider">BORCELLE</h1>
+              <h1 className="font-bold tracking-wider" style={{ 
+                color: TEMPLATE_DESIGN_TOKENS.borcelle.colors.primary,
+                fontSize: TEMPLATE_DESIGN_TOKENS.borcelle.fonts.sizes.title,
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase'
+              }}>BORCELLE</h1>
             </div>
 
             {/* Title */}
             <div className="mb-8">
-              <h2 className="text-4xl font-script text-amber-900 mb-2" style={{ fontFamily: "cursive" }}>
-                Coffee Shop
+              <div style={{
+                width: '80px',
+                height: '2px',
+                backgroundColor: TEMPLATE_DESIGN_TOKENS.borcelle.colors.secondary,
+                margin: '0 auto 16px'
+              }}></div>
+              <h2 className="font-normal mb-2" style={{
+                fontSize: '20px',
+                color: TEMPLATE_DESIGN_TOKENS.borcelle.colors.secondary,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase'
+              }}>
+                Premium Coffee & Pastries
               </h2>
-              <h3 className="text-6xl font-bold text-amber-900 tracking-tight">MENU</h3>
             </div>
           </div>
 
@@ -89,19 +105,55 @@ const BorcelleCoffeePreview = memo(() => {
                     </svg>
                   )}
                 </div>
-                <h3 className="text-3xl font-bold text-amber-900 tracking-wide">{category.name.toUpperCase()}</h3>
-                <div className="flex-1 ml-4 border-b border-amber-900"></div>
+                <h3 className="font-semibold tracking-wide" style={{
+                  fontSize: TEMPLATE_DESIGN_TOKENS.borcelle.fonts.sizes.category,
+                  color: TEMPLATE_DESIGN_TOKENS.borcelle.colors.primary,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em'
+                }}>{category.name}</h3>
+                <div className="flex-1 ml-4" style={{ borderBottom: `1px solid ${TEMPLATE_DESIGN_TOKENS.borcelle.colors.secondary}` }}></div>
               </div>
 
               {/* Menu Items */}
-              <div className="grid grid-cols-2 gap-x-12 gap-y-4">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: TEMPLATE_DESIGN_TOKENS.borcelle.spacing.item }}>
                 {category.menu_items.map((item) => (
-                  <div key={item.id} className="flex justify-between items-center group/item relative">
-                    {/* Item Edit Controls */}
-                    {/* The edit buttons are removed as per the new_code */}
-
-                    <span className="text-amber-900 font-medium text-lg">{item.name}</span>
-                    <span className="text-amber-900 font-bold text-lg">${item.price}</span>
+                  <div key={item.id} style={{
+                    backgroundColor: '#fff7ed',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    border: `1px solid ${TEMPLATE_DESIGN_TOKENS.borcelle.colors.accent}`
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      marginBottom: '12px'
+                    }}>
+                      <h4 className="font-semibold" style={{
+                        fontSize: TEMPLATE_DESIGN_TOKENS.borcelle.fonts.sizes.item,
+                        color: TEMPLATE_DESIGN_TOKENS.borcelle.colors.primary,
+                        flex: 1
+                      }}>
+                        {item.name}
+                      </h4>
+                      <div className="font-bold" style={{
+                        fontSize: TEMPLATE_DESIGN_TOKENS.borcelle.fonts.sizes.price,
+                        color: '#b45309',
+                        marginLeft: '16px'
+                      }}>
+                        ${item.price?.toFixed(2) || '0.00'}
+                      </div>
+                    </div>
+                    {item.description && (
+                      <p style={{
+                        fontSize: '14px',
+                        color: '#92400e',
+                        lineHeight: 1.5,
+                        margin: 0
+                      }}>
+                        {item.description}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>

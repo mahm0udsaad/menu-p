@@ -1,4 +1,5 @@
 import React from 'react'
+import { TEMPLATE_DESIGN_TOKENS } from '@/lib/template-design-tokens'
 
 interface MenuItem {
   id: string
@@ -76,87 +77,94 @@ export default function BotanicalCafePDFTemplate({
 }: BotanicalCafePDFTemplateProps) {
   const currency = restaurant.currency || '$'
   
+  const backgroundStyle = {
+    background: TEMPLATE_DESIGN_TOKENS.botanical.colors.background,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    fontFamily: TEMPLATE_DESIGN_TOKENS.botanical.fonts.family,
+    fontSize: '16px',
+    color: TEMPLATE_DESIGN_TOKENS.botanical.colors.text,
+  }
+  
   return (
-    <div style={{
-      background: 'linear-gradient(to bottom right, #f0fdf4, #ecfdf5)',
-      minHeight: '100vh',
-      padding: '48px',
-      fontFamily: 'Georgia, serif',
-      position: 'relative'
-    }}>
+    <div style={{ ...backgroundStyle, minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
       {/* Background Illustrations */}
-      <div style={{ top: '80px', left: '40px' }}>
+      <div style={{ position: 'absolute', top: '80px', left: '40px' }}>
         <FeatherIllustration />
       </div>
-      <div style={{ bottom: '80px', right: '40px' }}>
+      <div style={{ position: 'absolute', bottom: '80px', right: '40px' }}>
         <LeafIllustration />
       </div>
-      <div style={{ top: '50%', left: '25%', transform: 'translateY(-50%)' }}>
+      <div style={{ position: 'absolute', top: '50%', left: '25%', transform: 'translateY(-50%)' }}>
         <LeafIllustration />
       </div>
-      <div style={{ maxWidth: '1024px', margin: '0 auto', position: 'relative', zIndex: 10 }}>
-        {/* Menu Header */}
+
+      <div style={{ position: 'relative', zIndex: 10, maxWidth: '1024px', margin: '0 auto', padding: '32px' }}>
+        {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '64px' }}>
           <div style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '16px',
-            padding: '40px',
-            boxShadow: '0 20px 25px -5px rgba(34, 197, 94, 0.1)',
-            border: '2px solid #dcfce7'
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '80px',
+            height: '80px',
+            backgroundColor: TEMPLATE_DESIGN_TOKENS.botanical.colors.accent,
+            borderRadius: '50%',
+            marginBottom: '24px'
           }}>
-            <h1 style={{ 
-              fontSize: '48px', 
-              fontWeight: '700', 
-              color: '#166534',
-              marginBottom: '16px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              margin: 0
-            }}>
-              {restaurant.name || 'BOTANICAL CAFE'}
-            </h1>
-            <div style={{
-              width: '100px',
-              height: '3px',
-              backgroundColor: '#22c55e',
-              margin: '0 auto 16px',
-              borderRadius: '2px'
-            }}></div>
-            <h2 style={{ 
-              fontSize: '20px', 
-              fontWeight: '500', 
-              color: '#16a34a',
-              margin: 0
-            }}>
-              Fresh & Natural
-            </h2>
+            <svg width="40" height="40" viewBox="0 0 24 24" style={{ color: TEMPLATE_DESIGN_TOKENS.botanical.colors.primary }}>
+              <path
+                fill="currentColor"
+                d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z"
+              />
+            </svg>
           </div>
+          <h1 style={{
+            fontWeight: 'bold',
+            marginBottom: '24px',
+            fontSize: TEMPLATE_DESIGN_TOKENS.botanical.fonts.sizes.title,
+            color: TEMPLATE_DESIGN_TOKENS.botanical.colors.primary,
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            margin: '0 0 24px 0'
+          }}>
+            {restaurant.name || 'BOTANICAL CAFE'}
+          </h1>
+          <div style={{
+            width: '100px',
+            height: '3px',
+            backgroundColor: TEMPLATE_DESIGN_TOKENS.botanical.colors.secondary,
+            margin: '0 auto 16px',
+            borderRadius: '2px'
+          }}></div>
+          <p style={{
+            fontSize: '20px',
+            maxWidth: '400px',
+            margin: '0 auto',
+            color: TEMPLATE_DESIGN_TOKENS.botanical.colors.primary
+          }}>
+            Fresh & Natural
+          </p>
         </div>
 
-        {/* Menu Content */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
+        {/* Menu Categories */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: TEMPLATE_DESIGN_TOKENS.botanical.spacing.section }}>
           {categories.map((category) => (
-            <div key={category.id} style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '16px',
-              padding: '32px',
-              boxShadow: '0 10px 15px -3px rgba(34, 197, 94, 0.1)',
-              border: '2px solid #dcfce7'
-            }}>
+            <div key={category.id} style={{ position: 'relative' }}>
               {/* Category Header */}
               <div style={{
-                borderBottom: '2px solid #dcfce7',
-                marginBottom: '24px',
+                borderBottom: `2px solid ${TEMPLATE_DESIGN_TOKENS.botanical.colors.accent}`,
+                marginBottom: TEMPLATE_DESIGN_TOKENS.botanical.spacing.item,
                 paddingBottom: '16px',
                 position: 'relative'
               }}>
-                <h3 style={{ 
-                  fontSize: '28px', 
-                  fontWeight: '600', 
-                  color: '#166534',
-                  margin: 0,
+                <h3 style={{
+                  fontSize: TEMPLATE_DESIGN_TOKENS.botanical.fonts.sizes.category,
+                  fontWeight: '600',
+                  color: TEMPLATE_DESIGN_TOKENS.botanical.colors.primary,
                   textTransform: 'uppercase',
-                  letterSpacing: '0.1em'
+                  letterSpacing: '0.1em',
+                  margin: 0
                 }}>
                   {category.name}
                 </h3>
@@ -166,99 +174,88 @@ export default function BotanicalCafePDFTemplate({
                   left: 0,
                   width: '60px',
                   height: '2px',
-                  backgroundColor: '#22c55e'
+                  backgroundColor: TEMPLATE_DESIGN_TOKENS.botanical.colors.secondary
                 }}></div>
               </div>
 
-              {/* Items */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-                {category.menu_items.map((item) => (
-                  <div key={item.id} style={{
-                    backgroundColor: '#f0fdf4',
-                    borderRadius: '12px',
-                    padding: '20px',
-                    border: '1px solid #bbf7d0',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}>
-                    <div style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '4px',
-                      height: '100%',
-                      backgroundColor: '#22c55e'
-                    }}></div>
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      marginBottom: '12px'
+              {/* Menu Items */}
+              <div style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '16px',
+                padding: TEMPLATE_DESIGN_TOKENS.botanical.spacing.card,
+                boxShadow: '0 10px 15px -3px rgba(34, 197, 94, 0.1)',
+                border: `2px solid ${TEMPLATE_DESIGN_TOKENS.botanical.colors.accent}`
+              }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: TEMPLATE_DESIGN_TOKENS.botanical.spacing.item }}>
+                  {category.menu_items.map((item) => (
+                    <div key={item.id} style={{
+                      backgroundColor: '#f0fdf4',
+                      borderRadius: '12px',
+                      padding: '20px',
+                      border: '1px solid #bbf7d0',
+                      position: 'relative',
+                      overflow: 'hidden'
                     }}>
-                      <h4 style={{ 
-                        fontSize: '18px', 
-                        fontWeight: '600', 
-                        color: '#166534',
-                        margin: 0,
-                        flex: 1
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '4px',
+                        height: '100%',
+                        backgroundColor: TEMPLATE_DESIGN_TOKENS.botanical.colors.secondary
+                      }}></div>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        marginBottom: '12px'
                       }}>
-                        {item.name}
-                      </h4>
-                      <div style={{ 
-                        fontSize: '20px', 
-                        fontWeight: '700', 
-                        color: '#22c55e',
-                        marginLeft: '16px'
-                      }}>
-                        {currency}{item.price?.toFixed(2) || '0.00'}
+                        <h4 style={{
+                          fontSize: TEMPLATE_DESIGN_TOKENS.botanical.fonts.sizes.item,
+                          fontWeight: '600',
+                          color: TEMPLATE_DESIGN_TOKENS.botanical.colors.primary,
+                          margin: 0,
+                          flex: 1
+                        }}>
+                          {item.name}
+                        </h4>
+                        <div style={{
+                          fontSize: TEMPLATE_DESIGN_TOKENS.botanical.fonts.sizes.price,
+                          fontWeight: '700',
+                          color: TEMPLATE_DESIGN_TOKENS.botanical.colors.secondary,
+                          marginLeft: '16px'
+                        }}>
+                          {currency}{item.price?.toFixed(2) || '0.00'}
+                        </div>
                       </div>
+                      {item.description && (
+                        <p style={{
+                          fontSize: '14px',
+                          color: '#15803d',
+                          lineHeight: 1.5,
+                          margin: 0
+                        }}>
+                          {item.description}
+                        </p>
+                      )}
                     </div>
-                    {item.description && (
-                      <p style={{ 
-                        fontSize: '14px', 
-                        color: '#15803d', 
-                        lineHeight: 1.5,
-                        margin: 0
-                      }}>
-                        {item.description}
-                      </p>
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           ))}
         </div>
 
         {/* Footer */}
-        <div style={{ 
-          marginTop: '48px', 
-          textAlign: 'center'
-        }}>
-          <div style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '16px',
-            padding: '24px',
-            boxShadow: '0 10px 15px -3px rgba(34, 197, 94, 0.1)',
-            border: '2px solid #dcfce7'
+        <div style={{ textAlign: 'center', marginTop: TEMPLATE_DESIGN_TOKENS.botanical.spacing.section }}>
+          <p style={{
+            color: '#16a34a',
+            fontSize: '18px',
+            fontStyle: 'italic',
+            margin: 0
           }}>
-            <p style={{ 
-              color: '#22c55e', 
-              fontWeight: '600',
-              fontSize: '18px',
-              margin: '0 0 8px 0'
-            }}>
-              🌿 Fresh ingredients, natural flavors 🌿
-            </p>
-            <p style={{ 
-              color: '#16a34a', 
-              fontWeight: '500',
-              fontSize: '14px',
-              margin: 0
-            }}>
-              {restaurant.address || 'Where nature meets taste'}
-            </p>
-          </div>
+            "Where nature meets nourishment"
+          </p>
         </div>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import React from 'react'
+import { TEMPLATE_DESIGN_TOKENS } from '@/lib/template-design-tokens'
 
 interface MenuItem {
   id: string
@@ -51,179 +52,296 @@ export default function LuxuryMenuPDFTemplate({
 }: LuxuryMenuPDFTemplateProps) {
   const currency = restaurant.currency || '$'
   
+  const backgroundStyle = {
+    backgroundColor: TEMPLATE_DESIGN_TOKENS.luxury.colors.background,
+    fontFamily: TEMPLATE_DESIGN_TOKENS.luxury.fonts.family,
+    color: TEMPLATE_DESIGN_TOKENS.luxury.colors.text,
+    backgroundImage: TEMPLATE_DESIGN_TOKENS.luxury.colors.backgroundGradient
+  }
+  
   return (
-    <div style={{ 
-      backgroundColor: '#0f0f0f', 
-      minHeight: '100vh', 
-      padding: '48px',
-      fontFamily: 'Georgia, serif',
-      color: '#ffffff',
-      backgroundImage: `
-        linear-gradient(45deg, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
-        linear-gradient(-45deg, rgba(212, 175, 55, 0.05) 0%, transparent 50%)
-      `
-    }}>
-      <div style={{ maxWidth: '1024px', margin: '0 auto' }}>
-        {/* Menu Header */}
-        <div style={{ textAlign: 'center', marginBottom: '80px' }}>
+    <div style={{ ...backgroundStyle, minHeight: '100vh', position: 'relative' }}>
+      <div style={{ position: 'relative', padding: '32px' }}>
+        {/* Decorative Border */}
+        <div style={{
+          position: 'absolute',
+          top: '16px',
+          left: '16px',
+          right: '16px',
+          bottom: '16px',
+          border: `2px solid ${TEMPLATE_DESIGN_TOKENS.luxury.colors.primary}33`,
+          borderRadius: '8px',
+          pointerEvents: 'none'
+        }}>
+          {/* Corner Decorations */}
           <div style={{
-            border: '3px solid #d4af37',
-            padding: '48px',
-            marginBottom: '32px',
-            position: 'relative'
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: '-2px',
-              left: '-2px',
-              right: '-2px',
-              bottom: '-2px',
-              background: 'linear-gradient(45deg, #d4af37, #f4e4bc, #d4af37)',
-              zIndex: -1
-            }}></div>
-            <h1 style={{ 
-              fontSize: '56px', 
-              fontWeight: '300', 
-              color: '#ffffff',
-              marginBottom: '24px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.3em',
-              margin: 0
-            }}>
-              {restaurant.name || 'LUXURY'}
-            </h1>
-            <div style={{
-              width: '120px',
-              height: '1px',
-              backgroundColor: '#d4af37',
-              margin: '0 auto 24px'
-            }}></div>
-            <h2 style={{ 
-              fontSize: '20px', 
-              fontWeight: '400', 
-              color: '#d4af37',
-              margin: 0,
-              letterSpacing: '0.2em',
-              textTransform: 'uppercase'
-            }}>
-              Fine Dining Experience
-            </h2>
-          </div>
+            position: 'absolute',
+            top: '-4px',
+            left: '-4px',
+            width: '32px',
+            height: '32px',
+            borderLeft: `2px solid ${TEMPLATE_DESIGN_TOKENS.luxury.colors.primary}`,
+            borderTop: `2px solid ${TEMPLATE_DESIGN_TOKENS.luxury.colors.primary}`,
+            borderTopLeftRadius: '8px'
+          }}></div>
+          <div style={{
+            position: 'absolute',
+            top: '-4px',
+            right: '-4px',
+            width: '32px',
+            height: '32px',
+            borderRight: `2px solid ${TEMPLATE_DESIGN_TOKENS.luxury.colors.primary}`,
+            borderTop: `2px solid ${TEMPLATE_DESIGN_TOKENS.luxury.colors.primary}`,
+            borderTopRightRadius: '8px'
+          }}></div>
+          <div style={{
+            position: 'absolute',
+            bottom: '-4px',
+            left: '-4px',
+            width: '32px',
+            height: '32px',
+            borderLeft: `2px solid ${TEMPLATE_DESIGN_TOKENS.luxury.colors.primary}`,
+            borderBottom: `2px solid ${TEMPLATE_DESIGN_TOKENS.luxury.colors.primary}`,
+            borderBottomLeftRadius: '8px'
+          }}></div>
+          <div style={{
+            position: 'absolute',
+            bottom: '-4px',
+            right: '-4px',
+            width: '32px',
+            height: '32px',
+            borderRight: `2px solid ${TEMPLATE_DESIGN_TOKENS.luxury.colors.primary}`,
+            borderBottom: `2px solid ${TEMPLATE_DESIGN_TOKENS.luxury.colors.primary}`,
+            borderBottomRightRadius: '8px'
+          }}></div>
         </div>
 
-        {/* Menu Content */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '64px' }}>
-          {categories.map((category) => (
-            <div key={category.id}>
-              {/* Category Header */}
-              <div style={{
-                borderBottom: '2px solid #d4af37',
-                marginBottom: '32px',
-                paddingBottom: '20px',
-                position: 'relative'
+        <div style={{ maxWidth: '1536px', margin: '0 auto', position: 'relative', zIndex: 10 }}>
+          {/* Menu Header */}
+          <div style={{ textAlign: 'center', marginBottom: '64px' }}>
+            <div style={{
+              border: `3px solid ${TEMPLATE_DESIGN_TOKENS.luxury.colors.primary}`,
+              padding: '48px',
+              marginBottom: '32px',
+              position: 'relative'
+            }}>
+              <h1 style={{
+                fontWeight: '300',
+                marginBottom: '24px',
+                fontSize: TEMPLATE_DESIGN_TOKENS.luxury.fonts.sizes.title,
+                color: TEMPLATE_DESIGN_TOKENS.luxury.colors.text,
+                textTransform: 'uppercase',
+                letterSpacing: '0.3em',
+                margin: '0 0 24px 0',
+                trackingWider: true
               }}>
-                <h3 style={{ 
-                  fontSize: '32px', 
-                  fontWeight: '300', 
-                  color: '#d4af37',
-                  margin: 0,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.2em'
-                }}>
-                  {category.name}
-                </h3>
-                <div style={{
-                  position: 'absolute',
-                  bottom: '-2px',
-                  left: 0,
-                  width: '80px',
-                  height: '2px',
-                  backgroundColor: '#ffffff'
-                }}></div>
-              </div>
+                {restaurant.name || 'LUXURY'}
+              </h1>
+              <div style={{
+                width: '120px',
+                height: '1px',
+                backgroundColor: TEMPLATE_DESIGN_TOKENS.luxury.colors.primary,
+                margin: '0 auto 24px'
+              }}></div>
+              <h2 style={{
+                fontWeight: 'normal',
+                fontSize: '20px',
+                color: TEMPLATE_DESIGN_TOKENS.luxury.colors.primary,
+                margin: 0,
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase'
+              }}>
+                Fine Dining Experience
+              </h2>
+            </div>
+          </div>
 
-              {/* Items */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                {category.menu_items.map((item) => (
-                  <div key={item.id} style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    padding: '32px',
-                    border: '1px solid #333333',
-                    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+          {/* Menu Content - Two Column Layout */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px' }}>
+            {/* Left Column */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: TEMPLATE_DESIGN_TOKENS.luxury.spacing.section }}>
+              {categories.slice(0, Math.ceil(categories.length / 2)).map((category) => (
+                <div key={category.id} style={{ position: 'relative' }}>
+                  {/* Category Header */}
+                  <div style={{
+                    borderBottom: `2px solid ${TEMPLATE_DESIGN_TOKENS.luxury.colors.primary}`,
+                    marginBottom: TEMPLATE_DESIGN_TOKENS.luxury.spacing.item,
+                    paddingBottom: '20px',
                     position: 'relative'
                   }}>
+                    <h3 style={{
+                      fontWeight: '300',
+                      fontSize: TEMPLATE_DESIGN_TOKENS.luxury.fonts.sizes.category,
+                      color: TEMPLATE_DESIGN_TOKENS.luxury.colors.primary,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.2em',
+                      margin: 0
+                    }}>
+                      {category.name}
+                    </h3>
                     <div style={{
                       position: 'absolute',
-                      top: 0,
+                      bottom: '-2px',
                       left: 0,
-                      width: '4px',
-                      height: '100%',
-                      backgroundColor: '#d4af37'
+                      width: '80px',
+                      height: '2px',
+                      backgroundColor: TEMPLATE_DESIGN_TOKENS.luxury.colors.text
                     }}></div>
-                    <div style={{ flex: 1, paddingLeft: '20px' }}>
-                      <h4 style={{ 
-                        fontSize: '22px', 
-                        fontWeight: '400', 
-                        color: '#ffffff',
-                        margin: '0 0 12px 0',
-                        letterSpacing: '0.1em'
-                      }}>
-                        {item.name}
-                      </h4>
-                      {item.description && (
-                        <p style={{ 
-                          fontSize: '16px', 
-                          color: '#cccccc', 
-                          lineHeight: 1.6,
-                          margin: 0,
-                          fontStyle: 'italic'
-                        }}>
-                          {item.description}
-                        </p>
-                      )}
-                    </div>
-                    <div style={{ 
-                      fontSize: '28px', 
-                      fontWeight: '300', 
-                      color: '#d4af37',
-                      marginLeft: '40px',
-                      letterSpacing: '0.1em'
-                    }}>
-                      {currency}{item.price?.toFixed(2) || '0.00'}
-                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
 
-        {/* Footer */}
-        <div style={{ 
-          marginTop: '80px', 
-          textAlign: 'center',
-          padding: '48px',
-          borderTop: '2px solid #d4af37'
-        }}>
-          <p style={{ 
-            color: '#d4af37', 
-            fontWeight: '300',
-            fontSize: '18px',
-            margin: '0 0 16px 0',
-            letterSpacing: '0.1em'
-          }}>
-            "Excellence is never an accident"
-          </p>
-          <p style={{ 
-            color: '#cccccc', 
-            fontWeight: '400',
-            fontSize: '16px',
-            margin: 0
-          }}>
-            {restaurant.address || 'Where luxury meets culinary artistry'}
-          </p>
+                  {/* Items */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: TEMPLATE_DESIGN_TOKENS.luxury.spacing.item }}>
+                    {category.menu_items.map((item) => (
+                      <div key={item.id} style={{ position: 'relative' }}>
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'flex-start'
+                        }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              marginBottom: '8px'
+                            }}>
+                              <h4 style={{
+                                fontWeight: 'normal',
+                                fontSize: TEMPLATE_DESIGN_TOKENS.luxury.fonts.sizes.item,
+                                color: TEMPLATE_DESIGN_TOKENS.luxury.colors.text,
+                                letterSpacing: '0.1em',
+                                margin: 0,
+                                trackingWide: true
+                              }}>
+                                {item.name}
+                              </h4>
+                            </div>
+                            {item.description && (
+                              <p style={{
+                                fontSize: '14px',
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                lineHeight: 1.6,
+                                fontWeight: '300',
+                                margin: 0
+                              }}>
+                                {item.description}
+                              </p>
+                            )}
+                          </div>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            marginLeft: '24px'
+                          }}>
+                            <div style={{
+                              fontSize: TEMPLATE_DESIGN_TOKENS.luxury.fonts.sizes.price,
+                              fontWeight: 'bold',
+                              color: TEMPLATE_DESIGN_TOKENS.luxury.colors.primary
+                            }}>
+                              {item.price?.toFixed(0)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Right Column */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: TEMPLATE_DESIGN_TOKENS.luxury.spacing.section }}>
+              {categories.slice(Math.ceil(categories.length / 2)).map((category) => (
+                <div key={category.id} style={{ position: 'relative' }}>
+                  {/* Category Header */}
+                  <div style={{
+                    borderBottom: `2px solid ${TEMPLATE_DESIGN_TOKENS.luxury.colors.primary}`,
+                    marginBottom: TEMPLATE_DESIGN_TOKENS.luxury.spacing.item,
+                    paddingBottom: '20px',
+                    position: 'relative'
+                  }}>
+                    <h3 style={{
+                      fontWeight: '300',
+                      fontSize: TEMPLATE_DESIGN_TOKENS.luxury.fonts.sizes.category,
+                      color: TEMPLATE_DESIGN_TOKENS.luxury.colors.primary,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.2em',
+                      margin: 0
+                    }}>
+                      {category.name}
+                    </h3>
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '-2px',
+                      left: 0,
+                      width: '80px',
+                      height: '2px',
+                      backgroundColor: TEMPLATE_DESIGN_TOKENS.luxury.colors.text
+                    }}></div>
+                  </div>
+
+                  {/* Items */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: TEMPLATE_DESIGN_TOKENS.luxury.spacing.item }}>
+                    {category.menu_items.map((item) => (
+                      <div key={item.id} style={{ position: 'relative' }}>
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'flex-start'
+                        }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              marginBottom: '8px'
+                            }}>
+                              <h4 style={{
+                                fontWeight: 'normal',
+                                fontSize: TEMPLATE_DESIGN_TOKENS.luxury.fonts.sizes.item,
+                                color: TEMPLATE_DESIGN_TOKENS.luxury.colors.text,
+                                letterSpacing: '0.1em',
+                                margin: 0,
+                                trackingWide: true
+                              }}>
+                                {item.name}
+                              </h4>
+                            </div>
+                            {item.description && (
+                              <p style={{
+                                fontSize: '14px',
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                lineHeight: 1.6,
+                                fontWeight: '300',
+                                margin: 0
+                              }}>
+                                {item.description}
+                              </p>
+                            )}
+                          </div>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            marginLeft: '24px'
+                          }}>
+                            <div style={{
+                              fontSize: TEMPLATE_DESIGN_TOKENS.luxury.fonts.sizes.price,
+                              fontWeight: 'bold',
+                              color: TEMPLATE_DESIGN_TOKENS.luxury.colors.primary
+                            }}>
+                              {item.price?.toFixed(0)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

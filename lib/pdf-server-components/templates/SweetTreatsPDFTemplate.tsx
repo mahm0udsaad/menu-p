@@ -52,173 +52,152 @@ export default function SweetTreatsPDFTemplate({
   const currency = restaurant.currency || '$'
   
   return (
-    <div style={{ 
-      backgroundColor: '#fdf2f8', 
-      minHeight: '100vh', 
-      padding: '48px',
-      fontFamily: 'Arial, sans-serif',
-      backgroundImage: `
-        radial-gradient(circle at 25% 25%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 75% 75%, rgba(244, 114, 182, 0.1) 0%, transparent 50%)
-      `
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#fdf2f8'
     }}>
-      <div style={{ maxWidth: '1024px', margin: '0 auto' }}>
-        {/* Menu Header */}
-        <div style={{ textAlign: 'center', marginBottom: '64px' }}>
-          <div style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '20px',
-            padding: '40px',
-            boxShadow: '0 20px 25px -5px rgba(236, 72, 153, 0.1)',
-            border: '2px solid #fce7f3'
-          }}>
-            <h1 style={{ 
-              fontSize: '48px', 
-              fontWeight: '800', 
-              color: '#ec4899',
-              marginBottom: '16px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              margin: 0
-            }}>
-              {restaurant.name || 'SWEET TREATS'}
-            </h1>
-            <div style={{
-              width: '100px',
-              height: '3px',
-              backgroundColor: '#ec4899',
-              margin: '0 auto 16px',
-              borderRadius: '2px'
-            }}></div>
-            <h2 style={{ 
-              fontSize: '24px', 
-              fontWeight: '600', 
-              color: '#be185d',
-              margin: 0
-            }}>
-              Dessert Menu
-            </h2>
-          </div>
-        </div>
+      {/* Header */}
+      <div style={{
+        textAlign: 'center',
+        padding: '64px 0',
+        color: '#ffffff',
+        backgroundColor: '#FF7F7F'
+      }}>
+        <h1 style={{
+          fontSize: '64px',
+          fontWeight: '700',
+          marginBottom: '16px',
+          color: '#ec4899',
+          fontFamily: '"Dancing Script", cursive',
+          margin: 0
+        }}>
+          Sweet Treats
+        </h1>
+        <div style={{
+          fontSize: '18px',
+          letterSpacing: '0.3em',
+          fontWeight: '300'
+        }}>• M E N U •</div>
+      </div>
+      
+      {/* Menu content */}
+      <div style={{
+        maxWidth: '512px',
+        margin: '0 auto',
+        padding: '64px 32px'
+      }}>
 
-        {/* Menu Content */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
-          {categories.map((category) => (
-            <div key={category.id} style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '20px',
-              padding: '32px',
-              boxShadow: '0 10px 15px -3px rgba(236, 72, 153, 0.1)',
-              border: '2px solid #fce7f3'
-            }}>
-              {/* Category Header */}
-              <div style={{
-                borderBottom: '2px solid #fce7f3',
-                marginBottom: '24px',
-                paddingBottom: '16px'
+        {categories.map((category) => (
+          <div key={category.id} style={{ marginBottom: '48px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <h3 style={{
+                fontSize: '40px',
+                fontWeight: '700',
+                color: '#ec4899',
+                marginBottom: '16px',
+                margin: 0
               }}>
-                <h3 style={{ 
-                  fontSize: '28px', 
-                  fontWeight: '700', 
-                  color: '#be185d',
-                  margin: 0,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em'
-                }}>
-                  {category.name}
-                </h3>
-              </div>
+                {category.name}
+              </h3>
+            </div>
 
-              {/* Items */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-                {category.menu_items.map((item) => (
-                  <div key={item.id} style={{
-                    backgroundColor: '#fdf2f8',
-                    borderRadius: '16px',
-                    padding: '20px',
-                    border: '1px solid #fce7f3',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}>
-                    <div style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '4px',
-                      height: '100%',
-                      backgroundColor: '#ec4899'
-                    }}></div>
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      marginBottom: '12px'
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              maxWidth: '448px',
+              margin: '0 auto'
+            }}>
+              {category.menu_items.map((item) => (
+                <div key={item.id} style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '8px 0',
+                  borderBottom: '1px solid #fce7f3'
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <h4 style={{
+                      fontSize: '16px',
+                      fontWeight: '500',
+                      color: '#ec4899',
+                      margin: 0
                     }}>
-                      <h4 style={{ 
-                        fontSize: '18px', 
-                        fontWeight: '600', 
-                        color: '#be185d',
-                        margin: 0,
-                        flex: 1
-                      }}>
-                        {item.name}
-                      </h4>
-                      <div style={{ 
-                        fontSize: '20px', 
-                        fontWeight: '700', 
-                        color: '#ec4899',
-                        marginLeft: '16px'
-                      }}>
-                        {currency}{item.price?.toFixed(2) || '0.00'}
-                      </div>
-                    </div>
+                      {item.name}
+                    </h4>
                     {item.description && (
-                      <p style={{ 
-                        fontSize: '14px', 
-                        color: '#9d174d', 
-                        lineHeight: 1.5,
-                        margin: 0
+                      <p style={{
+                        fontSize: '12px',
+                        color: '#be185d',
+                        margin: '4px 0 0 0',
+                        lineHeight: 1.4
                       }}>
                         {item.description}
                       </p>
                     )}
                   </div>
-                ))}
-              </div>
+                  <div style={{
+                    fontSize: '16px',
+                    fontWeight: '500',
+                    color: '#ec4899',
+                    marginLeft: '16px'
+                  }}>
+                    {currency}{(item.price || 0).toFixed(2)}
+                  </div>
+                </div>
+              ))}
             </div>
+          </div>
+        ))}
+      </div>
+      
+      {/* Bottom decorative border */}
+      <div style={{
+        height: '64px',
+        backgroundColor: '#FF7F7F',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'flex-end'
+      }}>
+        <div style={{
+          display: 'flex',
+          gap: '4px',
+          paddingBottom: '8px'
+        }}>
+          {/* Decorative bars */}
+          {Array.from({ length: 40 }, (_, i) => (
+            <div key={i} style={{
+              backgroundColor: '#ffffff',
+              opacity: 0.8,
+              width: '8px',
+              height: `${Math.floor(Math.random() * 30) + 20}px`
+            }} />
           ))}
         </div>
-
-        {/* Footer */}
-        <div style={{ 
-          marginTop: '48px', 
-          textAlign: 'center'
+      </div>
+      
+      {/* Footer */}
+      <div style={{
+        backgroundColor: '#fdf2f8',
+        padding: '32px',
+        textAlign: 'center'
+      }}>
+        <p style={{
+          color: '#ec4899',
+          fontWeight: '600',
+          fontSize: '18px',
+          margin: '0 0 8px 0'
         }}>
-          <div style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '20px',
-            padding: '24px',
-            boxShadow: '0 10px 15px -3px rgba(236, 72, 153, 0.1)',
-            border: '2px solid #fce7f3'
-          }}>
-            <p style={{ 
-              color: '#ec4899', 
-              fontWeight: '600',
-              fontSize: '18px',
-              margin: '0 0 8px 0'
-            }}>
-              🍰 Sweet dreams are made of these 🍰
-            </p>
-            <p style={{ 
-              color: '#be185d', 
-              fontWeight: '500',
-              fontSize: '14px',
-              margin: 0
-            }}>
-              {restaurant.address || 'Indulge in sweetness today!'}
-            </p>
-          </div>
-        </div>
+          🍰 Sweet dreams are made of these 🍰
+        </p>
+        <p style={{
+          color: '#be185d',
+          fontWeight: '500',
+          fontSize: '14px',
+          margin: 0
+        }}>
+          {restaurant.address || 'Indulge in sweetness today!'}
+        </p>
       </div>
     </div>
   )

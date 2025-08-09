@@ -102,7 +102,7 @@ export default function ChalkboardCoffeePDFTemplate({
         linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 50%, #0f0f0f 100%)
       `,
       minHeight: '100vh',
-      padding: '48px',
+      padding: '32px',
       fontFamily: 'cursive',
       color: '#ffffff',
       position: 'relative'
@@ -117,165 +117,238 @@ export default function ChalkboardCoffeePDFTemplate({
           radial-gradient(circle at 75% 75%, white 0.5px, transparent 0.5px),
           radial-gradient(circle at 50% 50%, white 0.8px, transparent 0.8px)
         `,
-        backgroundSize: '100px 100px, 150px 150px, 80px 80px'
+        backgroundSize: '100px 100px, 150px 150px, 80px 80px',
+        pointerEvents: 'none'
       }}></div>
 
-      {/* Decorative chalk elements */}
-      <ChalkCoffeeBean style={{ left: '-40px', top: '160px', opacity: 0.4, transform: 'rotate(12deg)' }} />
-      <ChalkCoffeeCup style={{ right: '-60px', top: '200px', opacity: 0.3, transform: 'rotate(-12deg)' }} />
-      <ChalkLeaf style={{ left: '-30px', bottom: '200px', opacity: 0.35, transform: 'rotate(45deg)' }} />
-      <ChalkCoffeeBean style={{ right: '-40px', bottom: '240px', opacity: 0.4, transform: 'rotate(-30deg)' }} />
+      <div style={{ maxWidth: '1536px', margin: '0 auto', position: 'relative' }}>
+        {/* Decorative chalk elements */}
+        <ChalkCoffeeBean style={{ left: '-64px', top: '80px', opacity: 0.4, transform: 'rotate(12deg)' }} />
+        <ChalkCoffeeCup style={{ right: '-80px', top: '128px', opacity: 0.3, transform: 'rotate(-12deg)' }} />
+        <ChalkLeaf style={{ left: '-48px', bottom: '160px', opacity: 0.35, transform: 'rotate(45deg)' }} />
+        <ChalkCoffeeBean style={{ right: '-64px', bottom: '240px', opacity: 0.4, transform: 'rotate(-30deg)' }} />
 
-      <div style={{ maxWidth: '1024px', margin: '0 auto', position: 'relative', zIndex: 10 }}>
         {/* Menu Header */}
-        <div style={{ textAlign: 'center', marginBottom: '64px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '48px', position: 'relative', zIndex: 10 }}>
           <div style={{
-            border: '3px solid #ffffff',
-            padding: '40px',
-            marginBottom: '32px',
-            borderRadius: '8px'
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '16px',
+            marginBottom: '24px'
           }}>
+            <ChalkCoffeeCup style={{ position: 'static', opacity: 0.6 }} />
             <h1 style={{ 
-              fontSize: '48px', 
+              fontSize: '36px', 
               fontWeight: '700', 
               color: '#ffffff',
-              marginBottom: '16px',
+              margin: 0,
               textTransform: 'uppercase',
               letterSpacing: '0.2em',
-              margin: 0,
-              textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'
+              fontFamily: 'cursive'
             }}>
-              {restaurant.name || 'COFFEE SHOP'}
+              {restaurant.name || 'FAUCET COFFEE'}
             </h1>
-            <div style={{
-              width: '100px',
-              height: '2px',
-              backgroundColor: '#ffffff',
-              margin: '0 auto 16px'
-            }}></div>
+          </div>
+          <div style={{ position: 'relative' }}>
             <h2 style={{ 
-              fontSize: '20px', 
-              fontWeight: '400', 
-              color: '#e2e8f0',
-              margin: 0,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase'
+              fontSize: '84px', 
+              fontWeight: '700', 
+              color: '#ffffff',
+              margin: '0 0 16px 0',
+              fontFamily: 'cursive',
+              transform: 'rotate(-2deg)'
             }}>
-              Today's Specials
+              Menu
             </h2>
+            <div style={{
+              position: 'absolute',
+              bottom: '-8px',
+              left: '50%',
+              transform: 'translateX(-50%)'
+            }}>
+              <svg width="200" height="10" viewBox="0 0 200 10" style={{ color: '#ffffff' }}>
+                <path
+                  d="M10 5 Q50 2 100 5 Q150 8 190 5"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  fill="none"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
           </div>
         </div>
 
-        {/* Menu Content */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
-          {categories.map((category) => (
-            <div key={category.id}>
-              {/* Category Header */}
-              <div style={{
-                borderBottom: '2px solid #ffffff',
-                marginBottom: '24px',
-                paddingBottom: '16px'
-              }}>
-                <h3 style={{ 
-                  fontSize: '32px', 
-                  fontWeight: '700', 
-                  color: '#ffffff',
-                  margin: 0,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
-                  textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)'
-                }}>
-                  {category.name}
-                </h3>
-              </div>
-
-              {/* Items */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                {category.menu_items.map((item) => (
-                  <div key={item.id} style={{
+        {/* Menu Content - Two Column Layout */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: '1fr 1fr', 
+          gap: '64px', 
+          position: 'relative', 
+          zIndex: 10 
+        }}>
+          {/* Left Column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
+            {categories.slice(0, Math.ceil(categories.length / 2)).map((category) => (
+              <div key={category.id} style={{ position: 'relative' }}>
+                {/* Category Header */}
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{
                     display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    padding: '20px',
-                    border: '2px solid #ffffff',
-                    borderRadius: '8px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    position: 'relative'
+                    alignItems: 'center',
+                    gap: '16px',
+                    marginBottom: '8px'
                   }}>
-                    <div style={{
-                      position: 'absolute',
-                      top: '8px',
-                      left: '8px',
-                      width: '8px',
-                      height: '8px',
-                      backgroundColor: '#ffffff',
-                      borderRadius: '50%'
-                    }}></div>
-                    <div style={{ flex: 1, paddingLeft: '24px' }}>
-                      <h4 style={{ 
-                        fontSize: '20px', 
-                        fontWeight: '600', 
-                        color: '#ffffff',
-                        margin: '0 0 8px 0',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                        textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)'
-                      }}>
-                        {item.name}
-                      </h4>
-                      {item.description && (
-                        <p style={{ 
-                          fontSize: '16px', 
-                          color: '#e2e8f0', 
-                          lineHeight: 1.5,
-                          margin: 0,
-                          fontStyle: 'italic'
-                        }}>
-                          {item.description}
-                        </p>
-                      )}
-                    </div>
-                    <div style={{ 
-                      fontSize: '24px', 
+                    <h3 style={{ 
+                      fontSize: '28px', 
                       fontWeight: '700', 
                       color: '#ffffff',
-                      marginLeft: '24px',
-                      textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)'
+                      margin: 0,
+                      fontFamily: 'cursive'
                     }}>
-                      {currency}{item.price?.toFixed(2) || '0.00'}
-                    </div>
+                      {category.name}
+                    </h3>
+                    <ChalkArrow style={{ position: 'static', opacity: 0.6 }} />
                   </div>
-                ))}
+                  <div style={{
+                    width: '100%',
+                    height: '1px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.4)'
+                  }}></div>
+                </div>
+
+                {/* Items */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {category.menu_items.map((item) => (
+                    <div key={item.id} style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '8px 0'
+                    }}>
+                      <div style={{ flex: 1 }}>
+                        <h4 style={{ 
+                          fontSize: '18px', 
+                          color: '#ffffff',
+                          margin: 0,
+                          fontFamily: 'cursive'
+                        }}>
+                          {item.name}
+                        </h4>
+                        {item.description && (
+                          <p style={{ 
+                            fontSize: '14px', 
+                            color: 'rgba(255, 255, 255, 0.7)', 
+                            margin: '4px 0 0 0',
+                            fontFamily: 'cursive'
+                          }}>
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+                      <div style={{ 
+                        fontSize: '18px', 
+                        fontWeight: '700', 
+                        color: '#ffffff',
+                        marginLeft: '12px',
+                        fontFamily: 'cursive'
+                      }}>
+                        {currency}{Math.round(item.price || 0)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+
+          {/* Right Column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
+            {categories.slice(Math.ceil(categories.length / 2)).map((category) => (
+              <div key={category.id} style={{ position: 'relative' }}>
+                {/* Category Header */}
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                    marginBottom: '8px'
+                  }}>
+                    <h3 style={{ 
+                      fontSize: '28px', 
+                      fontWeight: '700', 
+                      color: '#ffffff',
+                      margin: 0,
+                      fontFamily: 'cursive'
+                    }}>
+                      {category.name}
+                    </h3>
+                    <ChalkArrow style={{ position: 'static', opacity: 0.6 }} />
+                  </div>
+                  <div style={{
+                    width: '100%',
+                    height: '1px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.4)'
+                  }}></div>
+                </div>
+
+                {/* Items */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {category.menu_items.map((item) => (
+                    <div key={item.id} style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '8px 0'
+                    }}>
+                      <div style={{ flex: 1 }}>
+                        <h4 style={{ 
+                          fontSize: '18px', 
+                          color: '#ffffff',
+                          margin: 0,
+                          fontFamily: 'cursive'
+                        }}>
+                          {item.name}
+                        </h4>
+                        {item.description && (
+                          <p style={{ 
+                            fontSize: '14px', 
+                            color: 'rgba(255, 255, 255, 0.7)', 
+                            margin: '4px 0 0 0',
+                            fontFamily: 'cursive'
+                          }}>
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+                      <div style={{ 
+                        fontSize: '18px', 
+                        fontWeight: '700', 
+                        color: '#ffffff',
+                        marginLeft: '12px',
+                        fontFamily: 'cursive'
+                      }}>
+                        {currency}{Math.round(item.price || 0)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Footer */}
-        <div style={{ 
-          marginTop: '64px', 
-          textAlign: 'center',
-          padding: '32px',
-          borderTop: '2px solid #ffffff'
+        {/* Decorative element in center */}
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          opacity: 0.2,
+          zIndex: 1
         }}>
-          <p style={{ 
-            color: '#e2e8f0', 
-            fontWeight: '500',
-            fontSize: '18px',
-            margin: '0 0 8px 0',
-            textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)'
-          }}>
-            "Fresh coffee, every morning"
-          </p>
-          <p style={{ 
-            color: '#ffffff', 
-            fontWeight: '600',
-            fontSize: '16px',
-            margin: 0,
-            textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)'
-          }}>
-            {restaurant.address || 'Visit us today!'}
-          </p>
+          <ChalkCoffeeCup style={{ position: 'static', width: '128px', height: '128px' }} />
         </div>
       </div>
     </div>

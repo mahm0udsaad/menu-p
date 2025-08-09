@@ -53,98 +53,90 @@ export default function SimpleCoffeePDFTemplate({
   
   return (
     <div style={{
-      background: 'linear-gradient(to bottom right, #fffbeb, #ffedd5)',
+      backgroundColor: '#fffbeb',
       minHeight: '100vh',
-      padding: '48px',
-      fontFamily: 'Arial, sans-serif'
+      padding: '32px',
+      fontFamily: 'Inter, Arial, sans-serif',
+      fontSize: '16px',
+      color: '#2d3748'
     }}>
-      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-        {/* Menu Header */}
+      <div style={{ maxWidth: '1024px', margin: '0 auto' }}>
+        {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <div style={{
-            background: 'linear-gradient(to right, #d97706, #ea580c)',
-            padding: '32px',
-            borderRadius: '12px'
+          <h1 style={{
+            fontSize: '32px',
+            fontWeight: '300',
+            color: '#92400e',
+            marginBottom: '8px'
           }}>
-            <h1 style={{
-              fontSize: '36px',
-              fontWeight: '700',
-              color: '#ffffff',
-              marginBottom: '8px',
-              margin: 0
-            }}>
-              {restaurant.name || 'COFFEE SHOP'}
-            </h1>
-            <h2 style={{
-              fontSize: '18px',
-              fontWeight: '400',
-              color: '#fef3c7',
-              margin: 0
-            }}>
-              Fresh Coffee & Delicious Treats
-            </h2>
+            {restaurant.name || 'Coffee Shop'}
+          </h1>
+          <h2 style={{
+            fontSize: '48px',
+            fontWeight: '700',
+            color: '#92400e',
+            marginBottom: '16px'
+          }}>
+            MENU
+          </h2>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            marginBottom: '16px'
+          }}>
+            <svg width="100" height="20" viewBox="0 0 100 20">
+              <path d="M0 10 Q25 0 50 10 T100 10" stroke="#92400e" strokeWidth="2" fill="none" />
+            </svg>
           </div>
         </div>
 
-        {/* Menu Content */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-          {categories.map((category) => (
-            <div key={category.id}>
-              {/* Category Header */}
-              <div style={{
-                borderBottom: '2px solid #fcd34d',
-                marginBottom: '20px',
-                paddingBottom: '12px'
+        {/* Menu Grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '32px',
+          marginBottom: '32px'
+        }}>
+          {categories.slice(0, 4).map((category) => (
+            <div key={category.id} style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              borderRadius: '24px',
+              padding: '24px',
+              border: '2px solid #fde68a',
+              height: '100%'
+            }}>
+              <h3 style={{
+                fontSize: '24px',
+                fontWeight: '700',
+                color: '#92400e',
+                marginBottom: '24px',
+                textAlign: 'center',
+                textTransform: 'uppercase'
               }}>
-                <h3 style={{
-                  fontSize: '24px',
-                  fontWeight: '600',
-                  color: '#78350f',
-                  margin: 0
-                }}>
-                  {category.name}
-                </h3>
-              </div>
+                {category.name}
+              </h3>
 
-              {/* Items */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {category.menu_items.map((item) => (
                   <div key={item.id} style={{
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    padding: '16px',
-                    backgroundColor: '#fef3c7',
-                    borderRadius: '8px',
-                    border: '1px solid #fcd34d'
+                    alignItems: 'center'
                   }}>
-                    <div style={{ flex: 1 }}>
-                      <h4 style={{
-                        fontSize: '16px',
-                        fontWeight: '600',
-                        color: '#78350f',
-                        margin: '0 0 4px 0'
-                      }}>
-                        {item.name}
-                      </h4>
-                      {item.description && (
-                        <p style={{
-                          fontSize: '14px',
-                          color: '#92400e',
-                          lineHeight: 1.4,
-                          margin: 0
-                        }}>
-                          {item.description}
-                        </p>
-                      )}
-                    </div>
-                    <div style={{
-                      fontSize: '16px',
-                      fontWeight: '600',
-                      color: '#b45309',
-                      marginLeft: '16px'
+                    <span style={{
+                      color: '#92400e',
+                      fontWeight: '500'
                     }}>
-                      {currency}{item.price?.toFixed(2) || '0.00'}
+                      {item.name}
+                    </span>
+                    <div style={{ marginLeft: '24px', flexShrink: 0 }}>
+                      <span style={{
+                        fontSize: '20px',
+                        fontWeight: '700',
+                        color: '#1f2937'
+                      }}>
+                        {currency}{item.price || 0}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -152,22 +144,78 @@ export default function SimpleCoffeePDFTemplate({
             </div>
           ))}
         </div>
+        
+        {/* Additional categories */}
+        {categories.length > 4 && (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '32px',
+            marginBottom: '32px'
+          }}>
+            {categories.slice(4).map((category) => (
+              <div key={category.id} style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                borderRadius: '24px',
+                padding: '24px',
+                border: '2px solid #fde68a',
+                height: '100%'
+              }}>
+                <h3 style={{
+                  fontSize: '24px',
+                  fontWeight: '700',
+                  color: '#92400e',
+                  marginBottom: '24px',
+                  textAlign: 'center',
+                  textTransform: 'uppercase'
+                }}>
+                  {category.name}
+                </h3>
 
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {category.menu_items.map((item) => (
+                    <div key={item.id} style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <span style={{
+                        color: '#92400e',
+                        fontWeight: '500'
+                      }}>
+                        {item.name}
+                      </span>
+                      <div style={{ marginLeft: '24px', flexShrink: 0 }}>
+                        <span style={{
+                          fontSize: '20px',
+                          fontWeight: '700',
+                          color: '#1f2937'
+                        }}>
+                          {currency}{item.price || 0}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        
         {/* Footer */}
         <div style={{
-          marginTop: '48px',
-          textAlign: 'center',
-          padding: '24px',
           backgroundColor: '#92400e',
-          borderRadius: '8px'
+          color: '#ffffff',
+          textAlign: 'center',
+          padding: '16px',
+          borderRadius: '16px'
         }}>
           <p style={{
-            color: '#ffffff',
-            fontWeight: '500',
-            fontSize: '14px',
+            fontSize: '20px',
+            fontWeight: '700',
             margin: 0
           }}>
-            Thank you for choosing {restaurant.name}
+            OPEN DAILY 10 AM - 10 PM
           </p>
         </div>
       </div>

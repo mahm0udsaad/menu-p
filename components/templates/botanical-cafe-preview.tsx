@@ -4,6 +4,7 @@ import { memo } from "react"
 import { useMenuEditor } from "@/contexts/menu-editor-context"
 import { Button } from "@/components/ui/button"
 import { Edit, Trash2, GripVertical } from "lucide-react"
+import { TEMPLATE_DESIGN_TOKENS } from "@/lib/template-design-tokens"
 
 // Botanical illustrations
 const FeatherIllustration = memo(() => (
@@ -34,13 +35,12 @@ const BotanicalCafePreview = memo(() => {
   const { isPreviewMode, categories, pageBackgroundSettings, fontSettings } = useMenuEditor()
 
   const backgroundStyle = {
-    backgroundColor: pageBackgroundSettings?.backgroundColor || "#f8fdf8",
-    backgroundImage: pageBackgroundSettings?.backgroundImage ? `url(${pageBackgroundSettings.backgroundImage})` : undefined,
+    background: TEMPLATE_DESIGN_TOKENS.botanical.colors.background,
     backgroundSize: "cover",
     backgroundPosition: "center",
-    fontFamily: fontSettings?.english?.font || "Inter",
-    fontSize: `${16}px`,
-    color: "#2d5016",
+    fontFamily: TEMPLATE_DESIGN_TOKENS.botanical.fonts.family,
+    fontSize: "16px",
+    color: TEMPLATE_DESIGN_TOKENS.botanical.colors.text,
   }
 
   return (
@@ -67,9 +67,22 @@ const BotanicalCafePreview = memo(() => {
               />
             </svg>
           </div>
-          <h1 className="text-5xl font-light text-green-800 mb-2">Botanical</h1>
-          <h2 className="text-6xl font-bold text-green-900 mb-4">CAFE</h2>
-          <p className="text-xl text-green-700 max-w-md mx-auto">Fresh, organic, and naturally inspired</p>
+          <h1 className="font-bold mb-6 tracking-wider" style={{ 
+            fontSize: TEMPLATE_DESIGN_TOKENS.botanical.fonts.sizes.title,
+            color: TEMPLATE_DESIGN_TOKENS.botanical.colors.primary,
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em'
+          }}>BOTANICAL CAFE</h1>
+          <div style={{
+            width: '100px',
+            height: '3px',
+            backgroundColor: TEMPLATE_DESIGN_TOKENS.botanical.colors.secondary,
+            margin: '0 auto 16px',
+            borderRadius: '2px'
+          }}></div>
+          <p className="text-xl max-w-md mx-auto" style={{ 
+            color: TEMPLATE_DESIGN_TOKENS.botanical.colors.primary 
+          }}>Fresh & Natural</p>
         </div>
 
         {/* Menu Categories */}
@@ -111,61 +124,87 @@ const BotanicalCafePreview = memo(() => {
               )}
 
               {/* Category Header */}
-              <div className="text-center mb-10">
-                <h3 className="text-3xl font-bold text-green-900 mb-2">{category.name}</h3>
-                <div className="w-24 h-0.5 bg-green-600 mx-auto"></div>
+              <div style={{
+                borderBottom: '2px solid #dcfce7',
+                marginBottom: TEMPLATE_DESIGN_TOKENS.botanical.spacing.item,
+                paddingBottom: '16px',
+                position: 'relative'
+              }}>
+                <h3 className="font-semibold" style={{ 
+                  fontSize: TEMPLATE_DESIGN_TOKENS.botanical.fonts.sizes.category,
+                  color: TEMPLATE_DESIGN_TOKENS.botanical.colors.primary,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em'
+                }}>
+                  {category.name}
+                </h3>
+                <div style={{
+                  position: 'absolute',
+                  bottom: '-2px',
+                  left: 0,
+                  width: '60px',
+                  height: '2px',
+                  backgroundColor: TEMPLATE_DESIGN_TOKENS.botanical.colors.secondary
+                }}></div>
               </div>
 
               {/* Menu Items */}
-              <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-8 border border-green-200">
-                <div className="space-y-6">
+              <div style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '16px',
+                padding: TEMPLATE_DESIGN_TOKENS.botanical.spacing.card,
+                boxShadow: '0 10px 15px -3px rgba(34, 197, 94, 0.1)',
+                border: `2px solid ${TEMPLATE_DESIGN_TOKENS.botanical.colors.accent}`
+              }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: TEMPLATE_DESIGN_TOKENS.botanical.spacing.item }}>
                   {category.menu_items.map((item) => (
-                    <div key={item.id} className="flex justify-between items-start group/item relative">
-                      {/* Item Edit Controls */}
-                      {!isPreviewMode && (
-                        <div
-                          className="absolute -left-10 top-0 flex flex-col gap-1 transition-all duration-300 ease-in-out"
-                          style={{
-                            opacity: !isPreviewMode ? 1 : 0,
-                            transform: !isPreviewMode ? "translateX(0)" : "translateX(-10px)",
-                            pointerEvents: !isPreviewMode ? "auto" : "none",
-                          }}
-                        >
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-6 w-6 p-0 bg-white/80 backdrop-blur-sm hover:bg-white"
-                          >
-                            <GripVertical className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-6 w-6 p-0 bg-white/80 backdrop-blur-sm hover:bg-white"
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-6 w-6 p-0 bg-white/80 backdrop-blur-sm hover:bg-white"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                    <div key={item.id} style={{
+                      backgroundColor: '#f0fdf4',
+                      borderRadius: '12px',
+                      padding: '20px',
+                      border: '1px solid #bbf7d0',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}>
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '4px',
+                        height: '100%',
+                        backgroundColor: TEMPLATE_DESIGN_TOKENS.botanical.colors.secondary
+                      }}></div>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        marginBottom: '12px'
+                      }}>
+                        <h4 className="font-semibold" style={{ 
+                          fontSize: TEMPLATE_DESIGN_TOKENS.botanical.fonts.sizes.item,
+                          color: TEMPLATE_DESIGN_TOKENS.botanical.colors.primary,
+                          flex: 1
+                        }}>
+                          {item.name}
+                        </h4>
+                        <div className="font-bold" style={{ 
+                          fontSize: TEMPLATE_DESIGN_TOKENS.botanical.fonts.sizes.price,
+                          color: TEMPLATE_DESIGN_TOKENS.botanical.colors.secondary,
+                          marginLeft: '16px'
+                        }}>
+                          ${item.price?.toFixed(2) || '0.00'}
                         </div>
+                      </div>
+                      {item.description && (
+                        <p style={{ 
+                          fontSize: '14px',
+                          color: '#15803d',
+                          lineHeight: 1.5,
+                          margin: 0
+                        }}>
+                          {item.description}
+                        </p>
                       )}
-
-                      <div className="flex-1">
-                        <h4 className="text-xl font-semibold text-green-900 mb-1">{item.name}</h4>
-                        {item.description && (
-                          <p className="text-green-700 text-sm leading-relaxed">{item.description}</p>
-                        )}
-                      </div>
-                      <div className="ml-6 flex-shrink-0">
-                        <span className="text-2xl font-bold text-green-800">
-                          ${item.price}
-                        </span>
-                      </div>
                     </div>
                   ))}
                 </div>

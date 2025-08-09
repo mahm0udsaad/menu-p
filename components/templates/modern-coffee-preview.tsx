@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { InlineItemForm } from "./inline-item-form"
 import type { Menu, MenuCategory, MenuItem } from "@/types/menu"
 import { useMenuEditor } from "@/contexts/menu-editor-context"
+import { TEMPLATE_DESIGN_TOKENS } from "@/lib/template-design-tokens"
 
 interface ModernCoffeePreviewProps {
   menu: Menu
@@ -263,7 +264,10 @@ export const ModernCoffeePreview: React.FC<ModernCoffeePreviewProps> = memo(({ m
   )
 
   return (
-    <div className="bg-gradient-to-br from-orange-100 via-amber-50 to-orange-200 min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden" style={{ 
+      backgroundColor: TEMPLATE_DESIGN_TOKENS.modern.colors.background,
+      fontFamily: TEMPLATE_DESIGN_TOKENS.modern.fonts.family 
+    }}>
       {/* Decorative Elements */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-orange-400 to-transparent rounded-full opacity-30 -translate-y-32 translate-x-32"></div>
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-amber-400 to-transparent rounded-full opacity-20 translate-y-48 -translate-x-48"></div>
@@ -317,13 +321,25 @@ export const ModernCoffeePreview: React.FC<ModernCoffeePreviewProps> = memo(({ m
             {/* Menu Header */}
           <div className="text-left mb-12 relative">
             <div className="mb-8">
-              <h1 className="text-4xl font-bold text-gray-900 mb-2 tracking-wide">
+              <h1 className="font-bold mb-2 tracking-wide" style={{ 
+                fontSize: '36px',
+                color: TEMPLATE_DESIGN_TOKENS.modern.colors.primary,
+                letterSpacing: '0.1em'
+              }}>
                 {menu.restaurant.name?.toUpperCase() || "BORCELLE"}
               </h1>
-              <p className="text-lg text-gray-700 font-medium tracking-wider">COFFEESHOP</p>
+              <p className="font-medium tracking-wider" style={{ 
+                fontSize: '18px',
+                color: TEMPLATE_DESIGN_TOKENS.modern.colors.primary,
+                letterSpacing: '0.2em'
+              }}>COFFEESHOP</p>
             </div>
             <div className="text-right">
-              <h2 className="text-8xl font-black text-gray-900 tracking-tight">MENU</h2>
+              <h2 className="font-black tracking-tight" style={{ 
+                fontSize: TEMPLATE_DESIGN_TOKENS.modern.fonts.sizes.title,
+                color: TEMPLATE_DESIGN_TOKENS.modern.colors.primary,
+                letterSpacing: '-0.05em'
+              }}>MENU</h2>
             </div>
           </div>
 
@@ -340,7 +356,15 @@ export const ModernCoffeePreview: React.FC<ModernCoffeePreviewProps> = memo(({ m
                             {...provided.draggableProps}
                             className={`group relative ${snapshot.isDragging ? "opacity-50 rotate-1 scale-105" : ""}`}
                           >
-                            <div className="relative bg-white/60 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-orange-200">
+                            <div style={{
+                              position: 'relative',
+                              backgroundColor: 'rgba(255, 255, 255, 0.6)',
+                              backdropFilter: 'blur(8px)',
+                              borderRadius: '16px',
+                              padding: TEMPLATE_DESIGN_TOKENS.modern.spacing.card,
+                              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                              border: `1px solid ${TEMPLATE_DESIGN_TOKENS.modern.colors.accent}`
+                            }}>
                               {/* Category Controls */}
                               {!isPreviewMode && (
                                 <div
@@ -401,10 +425,16 @@ export const ModernCoffeePreview: React.FC<ModernCoffeePreviewProps> = memo(({ m
                               ) : (
                                 <div className="mb-6">
                                   <h3
-                                    className="text-3xl font-black text-gray-900 tracking-wider cursor-pointer hover:text-orange-700 transition-colors"
+                                    className="font-black tracking-wider cursor-pointer hover:text-orange-700 transition-colors"
                                     onClick={() => startEditingCategory(category.id, category.name)}
+                                    style={{ 
+                                      fontSize: TEMPLATE_DESIGN_TOKENS.modern.fonts.sizes.category,
+                                      color: TEMPLATE_DESIGN_TOKENS.modern.colors.primary,
+                                      letterSpacing: '0.2em',
+                                      textTransform: 'uppercase'
+                                    }}
                                   >
-                                    {category.name.toUpperCase()}
+                                    {category.name}
                                   </h3>
                                 </div>
                               )}

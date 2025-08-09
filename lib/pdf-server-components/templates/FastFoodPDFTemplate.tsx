@@ -53,112 +53,104 @@ export default function FastFoodPDFTemplate({
   
   return (
     <div style={{
-      backgroundColor: '#F5E6D3',
+      background: 'linear-gradient(to bottom right, #fffbeb, #ffedd5)',
       minHeight: '100vh',
       padding: '32px',
       fontFamily: 'Arial, sans-serif'
     }}>
-      <div style={{ maxWidth: '1024px', margin: '0 auto' }}>
-        {/* Menu Header */}
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <div style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '16px',
-            padding: '32px',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
-          }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        {/* Header with decorative elements */}
+        <div style={{
+          background: 'linear-gradient(to right, #fef3c7, #fde68a)',
+          border: '4px solid #C41E3A',
+          borderRadius: '8px',
+          padding: '32px',
+          marginBottom: '32px',
+          position: 'relative'
+        }}>
+          {/* Header content */}
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <div style={{
+              fontSize: '14px',
+              color: '#C41E3A',
+              fontWeight: '500',
+              letterSpacing: '0.3em',
+              marginBottom: '8px'
+            }}>B O R C E L L E</div>
             <h1 style={{
-              fontSize: '48px',
+              fontSize: '64px',
               fontWeight: '900',
               color: '#C41E3A',
-              marginBottom: '16px',
-              textTransform: 'uppercase',
               letterSpacing: '0.1em',
-              margin: 0
-            }}>
-              {restaurant.name || 'FAST FOOD'}
-            </h1>
-            <div style={{
-              width: '80px',
-              height: '4px',
-              backgroundColor: '#C41E3A',
-              margin: '0 auto 16px'
-            }}></div>
-            <h2 style={{ 
-              fontSize: '24px', 
-              fontWeight: '700', 
-              color: '#374151',
-              margin: 0
-            }}>
-              MENU
-            </h2>
+              margin: 0,
+              textTransform: 'uppercase'
+            }}>MENU</h1>
           </div>
-        </div>
+          
+          {/* Decorative line */}
+          <div style={{
+            borderTop: '4px dashed #C41E3A',
+            marginBottom: '32px'
+          }}></div>
 
-        {/* Menu Content */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-          {categories.map((category) => (
-            <div key={category.id} style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '16px',
-              padding: '32px',
-              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-            }}>
-              {/* Category Header */}
-              <div style={{
-                borderBottom: '3px solid #C41E3A',
-                marginBottom: '24px',
-                paddingBottom: '16px'
-              }}>
+          {/* Menu grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '32px' }}>
+            {categories.slice(0, 4).map((category) => (
+              <div key={category.id} style={{ textAlign: 'center' }}>
                 <h3 style={{
-                  fontSize: '32px',
+                  fontSize: '24px',
                   fontWeight: '900',
                   color: '#C41E3A',
-                  margin: 0,
                   textTransform: 'uppercase',
-                  letterSpacing: '0.1em'
+                  letterSpacing: '0.1em',
+                  marginBottom: '16px'
                 }}>
                   {category.name}
                 </h3>
-              </div>
+                
+                <div style={{ marginBottom: '16px' }}>
+                  {category.description && (
+                    <p style={{
+                      fontSize: '14px',
+                      color: '#92400e',
+                      margin: 0
+                    }}>
+                      {category.description}
+                    </p>
+                  )}
+                </div>
 
-              {/* Items */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-                {category.menu_items.map((item) => (
-                  <div key={item.id} style={{
-                    backgroundColor: '#F5E6D3',
-                    borderRadius: '12px',
-                    padding: '20px',
-                    border: '2px solid #C41E3A',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}>
-                    <div style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '4px',
-                      height: '100%',
-                      backgroundColor: '#C41E3A'
-                    }}></div>
-                    <div style={{
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {category.menu_items.map((item) => (
+                    <div key={item.id} style={{
                       display: 'flex',
                       justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      marginBottom: '12px'
+                      alignItems: 'center',
+                      padding: '8px 0',
+                      borderBottom: '1px dotted #C41E3A'
                     }}>
-                      <h4 style={{
-                        fontSize: '18px',
-                        fontWeight: '700',
-                        color: '#C41E3A',
-                        margin: 0,
-                        flex: 1,
-                        textTransform: 'uppercase'
-                      }}>
-                        {item.name}
-                      </h4>
+                      <div style={{ flex: 1 }}>
+                        <h4 style={{
+                          fontSize: '16px',
+                          fontWeight: '600',
+                          color: '#92400e',
+                          margin: 0
+                        }}>
+                          {item.name}
+                        </h4>
+                        {item.description && (
+                          <p style={{
+                            fontSize: '12px',
+                            color: '#92400e',
+                            margin: '4px 0 0 0',
+                            lineHeight: 1.4
+                          }}>
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
                       <div style={{
-                        fontSize: '24px',
+                        fontSize: '18px',
                         fontWeight: '900',
                         color: '#C41E3A',
                         marginLeft: '16px'
@@ -166,21 +158,89 @@ export default function FastFoodPDFTemplate({
                         {currency}{item.price?.toFixed(2) || '0.00'}
                       </div>
                     </div>
-                    {item.description && (
-                      <p style={{
-                        fontSize: '14px',
-                        color: '#7c2d12',
-                        lineHeight: 1.5,
-                        margin: 0
-                      }}>
-                        {item.description}
-                      </p>
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
+            ))}
+          </div>
+          
+          {/* Additional categories */}
+          {categories.length > 4 && (
+            <div style={{
+              marginTop: '48px',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '32px'
+            }}>
+              {categories.slice(4).map((category) => (
+                <div key={category.id} style={{ textAlign: 'center' }}>
+                  <h3 style={{
+                    fontSize: '24px',
+                    fontWeight: '900',
+                    color: '#C41E3A',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    marginBottom: '16px'
+                  }}>
+                    {category.name}
+                  </h3>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {category.menu_items.map((item) => (
+                      <div key={item.id} style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '8px 0',
+                        borderBottom: '1px dotted #C41E3A'
+                      }}>
+                        <div style={{ flex: 1 }}>
+                          <h4 style={{
+                            fontSize: '16px',
+                            fontWeight: '600',
+                            color: '#92400e',
+                            margin: 0
+                          }}>
+                            {item.name}
+                          </h4>
+                          {item.description && (
+                            <p style={{
+                              fontSize: '12px',
+                              color: '#92400e',
+                              margin: '4px 0 0 0'
+                            }}>
+                              {item.description}
+                            </p>
+                          )}
+                        </div>
+                        <div style={{
+                          fontSize: '18px',
+                          fontWeight: '900',
+                          color: '#C41E3A',
+                          marginLeft: '16px'
+                        }}>
+                          {currency}{item.price?.toFixed(2) || '0.00'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
+          
+          {/* Bottom decorative border */}
+          <div style={{
+            marginTop: '32px',
+            paddingTop: '32px',
+            borderTop: '4px solid #C41E3A',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <div style={{ flex: 1 }}></div>
+            <div style={{ flex: 1 }}></div>
+          </div>
         </div>
 
         {/* Footer */}

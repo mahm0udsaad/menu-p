@@ -6,6 +6,7 @@ import { Plus, Edit, Trash2, GripVertical, FileText, Sparkles } from "lucide-rea
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { InlineItemForm } from "./inline-item-form"
+import { TEMPLATE_DESIGN_TOKENS } from "@/lib/template-design-tokens"
 
 interface MenuItem {
   id: string
@@ -226,7 +227,12 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
   }
 
   return (
-    <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 min-h-screen">
+    <div className="min-h-screen" style={{ 
+      backgroundColor: TEMPLATE_DESIGN_TOKENS.luxury.colors.background,
+      fontFamily: TEMPLATE_DESIGN_TOKENS.luxury.fonts.family,
+      color: TEMPLATE_DESIGN_TOKENS.luxury.colors.text,
+      backgroundImage: TEMPLATE_DESIGN_TOKENS.luxury.colors.backgroundGradient
+    }}>
  
  
 
@@ -244,18 +250,34 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
           <div className="max-w-6xl mx-auto relative z-10">
             {/* Menu Header */}
             <div className="text-center mb-16">
-              <div className="mb-6">
-                <h1 className="text-6xl font-serif text-[#d4af37] mb-2 tracking-wider">
-                  <span className="font-script text-7xl">Think</span>
+              <div style={{
+                border: `3px solid ${TEMPLATE_DESIGN_TOKENS.luxury.colors.primary}`,
+                padding: '48px',
+                marginBottom: '32px',
+                position: 'relative'
+              }}>
+                <h1 className="font-light mb-6 tracking-wider" style={{ 
+                  fontSize: TEMPLATE_DESIGN_TOKENS.luxury.fonts.sizes.title,
+                  color: TEMPLATE_DESIGN_TOKENS.luxury.colors.text,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.3em'
+                }}>
+                  LUXURY
                 </h1>
-                <h2 className="text-5xl font-serif text-[#d4af37] tracking-[0.3em] font-light">UNLIMITED</h2>
-              </div>
-              <div className="text-yellow-200/80 text-lg tracking-[0.2em] font-light mb-6">A TASTE OF COMFORT</div>
-              {/* Decorative Divider */}
-              <div className="flex items-center justify-center">
-                <div className="w-24 h-px bg-yellow-600"></div>
-                <div className="mx-4 text-yellow-600 text-2xl">❦</div>
-                <div className="w-24 h-px bg-yellow-600"></div>
+                <div style={{
+                  width: '120px',
+                  height: '1px',
+                  backgroundColor: TEMPLATE_DESIGN_TOKENS.luxury.colors.primary,
+                  margin: '0 auto 24px'
+                }}></div>
+                <h2 className="font-normal" style={{ 
+                  fontSize: '20px',
+                  color: TEMPLATE_DESIGN_TOKENS.luxury.colors.primary,
+                  letterSpacing: '0.2em',
+                  textTransform: 'uppercase'
+                }}>
+                  Fine Dining Experience
+                </h2>
               </div>
             </div>
 
@@ -339,16 +361,34 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                     />
                                   </div>
                                 ) : (
-                                  <div className="mb-4">
+                                  <div style={{
+                                    borderBottom: '2px solid #d4af37',
+                                    marginBottom: TEMPLATE_DESIGN_TOKENS.luxury.spacing.item,
+                                    paddingBottom: '20px',
+                                    position: 'relative'
+                                  }}>
                                     <h3
-                                      className="text-2xl font-serif font-bold text-[#d4af37] tracking-wider cursor-pointer hover:text-yellow-300 transition-colors"
+                                      className="font-light cursor-pointer hover:text-yellow-300 transition-colors"
                                       onClick={() =>
                                         isPreviewMode && startEditingCategory(category.id, category.name)
                                       }
+                                      style={{ 
+                                        fontSize: TEMPLATE_DESIGN_TOKENS.luxury.fonts.sizes.category,
+                                        color: TEMPLATE_DESIGN_TOKENS.luxury.colors.primary,
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.2em'
+                                      }}
                                     >
                                       {category.name}
                                     </h3>
-                                    <div className="w-full h-px bg-yellow-600/50 mt-2"></div>
+                                    <div style={{
+                                      position: 'absolute',
+                                      bottom: '-2px',
+                                      left: 0,
+                                      width: '80px',
+                                      height: '2px',
+                                      backgroundColor: TEMPLATE_DESIGN_TOKENS.luxury.colors.text
+                                    }}></div>
                                   </div>
                                 )}
 
@@ -401,8 +441,12 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                                         autoFocus
                                                       />
                                                     ) : (
-                                                      <h4 className="text-lg font-serif font-semibold text-yellow-200 tracking-wide">
-                                                        {item.name.toUpperCase()}
+                                                      <h4 className="font-normal tracking-wide" style={{ 
+                                                        fontSize: TEMPLATE_DESIGN_TOKENS.luxury.fonts.sizes.item,
+                                                        color: TEMPLATE_DESIGN_TOKENS.luxury.colors.text,
+                                                        letterSpacing: '0.1em'
+                                                      }}>
+                                                        {item.name}
                                                       </h4>
                                                     )}
                                                   </div>
@@ -609,16 +653,34 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                     />
                                   </div>
                                 ) : (
-                                  <div className="mb-4">
+                                  <div style={{
+                                    borderBottom: '2px solid #d4af37',
+                                    marginBottom: TEMPLATE_DESIGN_TOKENS.luxury.spacing.item,
+                                    paddingBottom: '20px',
+                                    position: 'relative'
+                                  }}>
                                     <h3
-                                      className="text-2xl font-serif font-bold text-[#d4af37] tracking-wider cursor-pointer hover:text-yellow-300 transition-colors"
+                                      className="font-light cursor-pointer hover:text-yellow-300 transition-colors"
                                       onClick={() =>
                                         isPreviewMode && startEditingCategory(category.id, category.name)
                                       }
+                                      style={{ 
+                                        fontSize: TEMPLATE_DESIGN_TOKENS.luxury.fonts.sizes.category,
+                                        color: TEMPLATE_DESIGN_TOKENS.luxury.colors.primary,
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.2em'
+                                      }}
                                     >
                                       {category.name}
                                     </h3>
-                                    <div className="w-full h-px bg-yellow-600/50 mt-2"></div>
+                                    <div style={{
+                                      position: 'absolute',
+                                      bottom: '-2px',
+                                      left: 0,
+                                      width: '80px',
+                                      height: '2px',
+                                      backgroundColor: TEMPLATE_DESIGN_TOKENS.luxury.colors.text
+                                    }}></div>
                                   </div>
                                 )}
 
@@ -671,8 +733,12 @@ export function LuxuryMenuPreview({ menu, onUpdateMenu }: LuxuryMenuPreviewProps
                                                         autoFocus
                                                       />
                                                     ) : (
-                                                      <h4 className="text-lg font-serif font-semibold text-yellow-200 tracking-wide">
-                                                        {item.name.toUpperCase()}
+                                                      <h4 className="font-normal tracking-wide" style={{ 
+                                                        fontSize: TEMPLATE_DESIGN_TOKENS.luxury.fonts.sizes.item,
+                                                        color: TEMPLATE_DESIGN_TOKENS.luxury.colors.text,
+                                                        letterSpacing: '0.1em'
+                                                      }}>
+                                                        {item.name}
                                                       </h4>
                                                     )}
                                                   </div>
