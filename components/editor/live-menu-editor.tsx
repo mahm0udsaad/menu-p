@@ -776,7 +776,21 @@ export default function LiveMenuEditor({
               }
               case 'luxury-menu': {
                 const LuxuryMenuPreview = require("@/components/templates/luxury-menu-preview").LuxuryMenuPreview;
-                return <LuxuryMenuPreview key={selectedTemplate} menu={categories} onUpdateMenu={() => {}} />;
+                const menuData = {
+                  id: restaurant.id,
+                  name: restaurant.name,
+                  description: null,
+                  categories: categories,
+                  restaurant,
+                  designSettings: {},
+                  customizations: {},
+                } as any;
+                const handleUpdateMenu = (updatedMenu: any) => {
+                  if (updatedMenu && Array.isArray(updatedMenu.categories)) {
+                    setCategories(updatedMenu.categories);
+                  }
+                };
+                return <LuxuryMenuPreview key={selectedTemplate} menu={menuData} onUpdateMenu={handleUpdateMenu} />;
               }
               case 'simple-coffee': {
                 const SimpleCoffeePreview = require("@/components/templates/simple-coffee-menu-preview").SimpleCoffeeMenuPreview;

@@ -72,13 +72,13 @@ export const TEMPLATE_DESIGN_TOKENS = {
     colors: {
       background: '#0f0f0f',
       primary: '#d4af37',
-      secondary: '#ffffff',
-      accent: '#333333',
+      secondary: '#F5F2E7',
+      text: '#F5F2E7',
+            accent: '#333333',
       backgroundGradient: `
         linear-gradient(45deg, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
         linear-gradient(-45deg, rgba(212, 175, 55, 0.05) 0%, transparent 50%)
       `,
-      text: '#ffffff'
     },
     fonts: {
       family: 'Georgia, serif',

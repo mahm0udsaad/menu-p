@@ -1,37 +1,5 @@
 {
   "templates": {
-    "classic": {
-      "id": "classic",
-      "name": "Classic Style",
-      "description": "Traditional menu layout with clean design and professional appearance",
-      "componentPath": "./templates/ModernPDFTemplate",
-      "previewComponentPath": "../components/editor/templates/classic-preview",
-      "category": "professional",
-      "previewImageUrl": "/previews/classic-preview.png",
-      "features": [
-        "header",
-        "sections",
-        "footer",
-        "images"
-      ],
-      "defaultSettings": {
-        "fontSettings": {
-          "arabic": {
-            "font": "Cairo",
-            "weight": "normal"
-          },
-          "english": {
-            "font": "Roboto",
-            "weight": "normal"
-          }
-        },
-        "colorPalette": {
-          "primary": "#065f46",
-          "secondary": "#6b7280",
-          "accent": "#f59e0b"
-        }
-      }
-    },
     "cafe": {
       "id": "cafe",
       "name": "Cafe Style",

@@ -51,6 +51,51 @@ export default function ElegantCocktailPDFTemplate({
 }: ElegantCocktailPDFTemplateProps) {
   const currency = restaurant.currency || '$'
   
+  // Inline SVG illustrations to mirror preview design
+  const GinBottleIllustration = () => (
+    <svg width="64" height="96" viewBox="0 0 120 200">
+      <rect x="35" y="60" width="50" height="120" fill="none" stroke="#2D1810" strokeWidth="2" />
+      <rect x="45" y="30" width="30" height="30" fill="none" stroke="#2D1810" strokeWidth="2" />
+      <rect x="42" y="20" width="36" height="15" fill="none" stroke="#2D1810" strokeWidth="2" />
+      <rect x="40" y="80" width="40" height="60" fill="none" stroke="#2D1810" strokeWidth="1" />
+      <text x="60" y="110" textAnchor="middle" fontSize="8" fill="#2D1810" fontFamily="serif">Gin</text>
+      <g stroke="#2D1810" strokeWidth="0.5" opacity="0.3">
+        <line x1="35" y1="70" x2="85" y2="120" />
+        <line x1="35" y1="80" x2="85" y2="130" />
+        <line x1="35" y1="90" x2="85" y2="140" />
+        <line x1="35" y1="100" x2="85" y2="150" />
+        <line x1="35" y1="110" x2="85" y2="160" />
+        <line x1="35" y1="120" x2="85" y2="170" />
+      </g>
+      <rect x="5" y="140" width="25" height="35" fill="none" stroke="#2D1810" strokeWidth="2" />
+      <line x1="5" y1="160" x2="30" y2="160" stroke="#2D1810" strokeWidth="1" />
+    </svg>
+  )
+
+  const WineBottleIllustration = () => (
+    <svg width="64" height="96" viewBox="0 0 120 200">
+      <path d="M45 180 L45 80 Q45 70 50 65 L50 30 L70 30 L70 65 Q75 70 75 80 L75 180 Z" fill="none" stroke="#2D1810" strokeWidth="2" />
+      <rect x="48" y="20" width="24" height="15" fill="none" stroke="#2D1810" strokeWidth="2" />
+      <path d="M85 140 Q85 130 95 130 Q105 130 105 140 L105 160 Q105 170 95 170 Q85 170 85 160 Z" fill="none" stroke="#2D1810" strokeWidth="2" />
+      <line x1="95" y1="170" x2="95" y2="180" stroke="#2D1810" strokeWidth="2" />
+      <line x1="85" y1="180" x2="105" y2="180" stroke="#2D1810" strokeWidth="2" />
+      <g fill="none" stroke="#2D1810" strokeWidth="1">
+        <circle cx="110" cy="100" r="4" />
+        <circle cx="118" cy="105" r="4" />
+        <circle cx="102" cy="108" r="4" />
+        <circle cx="110" cy="115" r="4" />
+        <circle cx="118" cy="120" r="4" />
+      </g>
+      <g stroke="#2D1810" strokeWidth="0.5" opacity="0.3">
+        <line x1="45" y1="90" x2="75" y2="120" />
+        <line x1="45" y1="100" x2="75" y2="130" />
+        <line x1="45" y1="110" x2="75" y2="140" />
+        <line x1="45" y1="120" x2="75" y2="150" />
+        <line x1="45" y1="130" x2="75" y2="160" />
+      </g>
+    </svg>
+  )
+
   return (
     <div style={{
       background: `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='wood' patternUnits='userSpaceOnUse' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23654321'/%3E%3Cpath d='M0 0L100 100M100 0L0 100' stroke='%238B4513' strokeWidth='0.5' opacity='0.3'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100' height='100' fill='url(%23wood)'/%3E%3C/svg%3E"), linear-gradient(to bottom right, rgba(157, 139, 20, 0.2), rgba(217, 119, 6, 0.3))`,
@@ -76,7 +121,9 @@ export default function ElegantCocktailPDFTemplate({
               alignItems: 'center',
               marginBottom: '48px'
             }}>
-              <div style={{ width: '64px' }}></div>
+              <div style={{ width: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <GinBottleIllustration />
+              </div>
               
               <div style={{ textAlign: 'center', flex: 1 }}>
                 {/* Art Deco decoration */}
@@ -129,7 +176,9 @@ export default function ElegantCocktailPDFTemplate({
                 </div>
               </div>
               
-              <div style={{ width: '64px' }}></div>
+              <div style={{ width: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <WineBottleIllustration />
+              </div>
             </div>
 
             {/* Menu content */}

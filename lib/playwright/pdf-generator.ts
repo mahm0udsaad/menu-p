@@ -196,8 +196,13 @@ async function getBrowserContext(): Promise<BrowserContext> {
 
   // Create new context
   console.log('🔄 Creating new browser context...');
+  // Default viewport roughly equal to A4 at 96 DPI. The exact size for each
+  // PDF export is set on the page level based on the requested format, but we
+  // still provide a sane default here to avoid an excessively tall viewport
+  // that would make CSS 100vh larger than a single PDF page and cause blank
+  // trailing space.
   _browserContext = await browser.newContext({
-    viewport: { width: 1200, height: 1600 },
+    viewport: { width: 794, height: 1123 },
     javaScriptEnabled: true,
     ignoreHTTPSErrors: true,
   });
@@ -312,6 +317,23 @@ export class PlaywrightPDFGenerator {
       const context = await getBrowserContext();
       page = await context.newPage();
 
+      // Ensure the viewport matches the intended PDF format so that CSS units
+      // like 100vh align with the printed page height. This prevents partial
+      // spillover creating a new blank page.
+      const viewportByFormat = (format: 'A4' | 'Letter' | undefined) => {
+        switch (format) {
+          case 'Letter':
+            // 8.5in x 11in at 96 DPI => 816 x 1056
+            return { width: 816, height: 1056 };
+          case 'A4':
+          default:
+            // 210mm x 297mm ≈ 8.27in x 11.69in at 96 DPI => ~794 x 1123
+            return { width: 794, height: 1123 };
+        }
+      };
+      const vp = viewportByFormat(options.format);
+      await page.setViewportSize(vp);
+
       // Setup enhanced asset routing
       await setupAssetRouting(page);
 
@@ -363,7 +385,9 @@ export class PlaywrightPDFGenerator {
           left: '15mm'
         },
         printBackground: true,
-        preferCSSPageSize: false,
+        // Prefer CSS page size when provided; otherwise Playwright uses the
+        // format above. Keeping this true helps if templates specify @page.
+        preferCSSPageSize: true,
         tagged: true,
         outline: false,
         displayHeaderFooter: false,
@@ -422,12 +446,31 @@ export class PlaywrightPDFGenerator {
       
       const context = await getBrowserContext();
       page = await context.newPage();
+
+      // Align viewport to requested output page size so 100vh equals one page.
+      const viewportByFormat = (format: 'A4' | 'Letter' | undefined) => {
+        switch (format) {
+          case 'Letter':
+            return { width: 816, height: 1056 };
+          case 'A4':
+          default:
+            return { width: 794, height: 1123 };
+        }
+      };
+      const vp = viewportByFormat(options.format);
+      await page.setViewportSize(vp);
       
       // Setup enhanced asset routing
       await setupAssetRouting(page);
       
+      // Ensure the provided HTML has zero default margins and a full document wrapper
+      const isFullDocument = /<html[\s\S]*>/i.test(htmlContent);
+      const wrappedHtml = isFullDocument
+        ? htmlContent
+        : `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>html,body{margin:0;padding:0} @page{margin:0}</style></head><body style="margin:0;padding:0">${htmlContent}</body></html>`;
+
       // Set content with timeout handling
-      await page.setContent(htmlContent, { 
+      await page.setContent(wrappedHtml, { 
         waitUntil: 'domcontentloaded',
         timeout: envConfig.pdfTimeout || 30000
       });
@@ -445,6 +488,7 @@ export class PlaywrightPDFGenerator {
         format: options.format || 'A4',
         printBackground: true,
         margin: options.margin || { top: '0px', right: '0px', bottom: '0px', left: '0px' },
+        preferCSSPageSize: true,
       });
 
       return this.validatePDFBuffer(pdfBuffer);

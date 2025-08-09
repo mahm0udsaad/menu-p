@@ -111,6 +111,9 @@ export function generateHTMLContent(options: any): string {
           <meta name="color-scheme" content="light">
           <title>${escapeHTML(data.restaurant.name)} - Menu</title>
         <style>
+          /* Reset default browser margins/padding to remove extra white borders in PDFs */
+          html, body { margin: 0; padding: 0; }
+          @page { margin: 0; }
           ${customCSS}
         </style>
         ${getFontLinks(language)}

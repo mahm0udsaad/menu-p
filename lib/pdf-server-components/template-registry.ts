@@ -8,7 +8,7 @@ import fs from 'fs'
 const templateImporters: Record<string, () => Promise<any>> = {
   'classic': () => import('@/lib/pdf-server-components/templates/ClassicPDFTemplate'),
   'cafe': () => import('@/lib/pdf-server-components/templates/CafePDFTemplate'),
-  'modern': () => import('@/lib/pdf-server-components/templates/ModernPDFTemplateUnified'),
+  'modern': () => import('@/lib/pdf-server-components/templates/ModernPDFTemplate'),
   'modern-coffee': () => import('@/lib/pdf-server-components/templates/ModernCoffeePDFTemplateUnified'),
   'painting': () => import('@/lib/pdf-server-components/templates/PaintingStylePDFTemplate'),
   'vintage': () => import('@/lib/pdf-server-components/templates/VintagePDFTemplate'),

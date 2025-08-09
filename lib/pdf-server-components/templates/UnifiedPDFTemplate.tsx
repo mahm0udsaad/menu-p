@@ -1,1 +1,1 @@
-export { default } from './ModernPDFTemplateUnified'
+export { default } from './ModernPDFTemplate'
