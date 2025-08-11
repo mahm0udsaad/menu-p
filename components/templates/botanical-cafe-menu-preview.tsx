@@ -1,6 +1,11 @@
 "use client"
 
+import { DndProvider } from 'react-dnd'
+import { HTML5Backend } from 'react-dnd-html5-backend'
 import { useMenuEditor } from '@/contexts/menu-editor-context'
+import EditableMenuItem from '@/components/editor/editable-menu-item'
+import { Button } from '@/components/ui/button'
+import { Edit, Trash2, Plus } from 'lucide-react'
 
 // Botanical illustrations
 const FeatherIllustration = () => (
@@ -28,10 +33,29 @@ const LeafIllustration = () => (
 )
 
 export function BotanicalCafeMenuPreview() {
-  const { categories } = useMenuEditor()
+  const { 
+    categories,
+    appliedPageBackgroundSettings,
+    appliedFontSettings,
+    handleUpdateCategory,
+    handleDeleteCategory,
+    handleAddItem,
+    handleAddCategory,
+    moveItem,
+    isPreviewMode
+  } = useMenuEditor()
+
+  const bgStyle: React.CSSProperties = (() => {
+    const s = appliedPageBackgroundSettings
+    if (s.backgroundType === 'solid') return { backgroundColor: s.backgroundColor }
+    if (s.backgroundType === 'gradient') return { background: `linear-gradient(${s.gradientDirection}, ${s.gradientFrom}, ${s.gradientTo})` }
+    if (s.backgroundType === 'image' && s.backgroundImage) return { backgroundImage: `url(${s.backgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+    return {}
+  })()
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-green-50 to-emerald-50">
+    <DndProvider backend={HTML5Backend}>
+    <div className="min-h-screen relative overflow-hidden" style={bgStyle}>
       {/* Background Illustrations */}
       <div className="absolute top-20 left-10">
         <FeatherIllustration />
@@ -64,33 +88,58 @@ export function BotanicalCafeMenuPreview() {
           {categories.map((category) => (
             <div key={category.id} className="relative">
               {/* Category Header */}
-              <div className="text-center mb-10">
-                <h3 className="text-3xl font-bold text-green-900 mb-2">{category.name}</h3>
-                <div className="w-24 h-0.5 bg-green-600 mx-auto"></div>
+              <div className="flex items-center justify-between mb-6">
+                <div className="text-center flex-1">
+                  <h3 className="text-3xl font-bold text-green-900 mb-2" style={{ fontFamily: appliedFontSettings.english.font }}>{category.name}</h3>
+                  <div className="w-24 h-0.5 bg-green-600 mx-auto"></div>
+                </div>
+                {!isPreviewMode && (
+                  <div className="ml-3 flex items-center gap-1">
+                    <Button size="sm" variant="ghost" onClick={() => {
+                      const newName = prompt('Category name', category.name) || category.name
+                      handleUpdateCategory(category.id, 'name', newName)
+                    }}>
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" className="text-red-600" onClick={() => handleDeleteCategory(category.id)}>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {/* Menu Items */}
-              <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-8 border border-green-200">
-                <div className="space-y-6">
-                  {category.menu_items.map((item) => (
-                    <div key={item.id} className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h4 className="text-xl font-semibold text-green-900 mb-1">{item.name}</h4>
-                        {item.description && (
-                          <p className="text-green-700 text-sm leading-relaxed">{item.description}</p>
-                        )}
-                      </div>
-                      <div className="ml-6 flex-shrink-0">
-                        <span className="text-2xl font-bold text-green-800">
-                          ${item.price?.toFixed(0)}
-                        </span>
-                      </div>
-                    </div>
+              <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-green-200">
+                <div className="space-y-4">
+                  {category.menu_items.map((item, index) => (
+                    <EditableMenuItem
+                      key={item.id}
+                      item={item}
+                      index={index}
+                      categoryId={category.id}
+                      onUpdate={() => {}}
+                      onDelete={() => {}}
+                      moveItem={(dragIndex, hoverIndex) => moveItem(category.id, dragIndex, hoverIndex)}
+                    />
                   ))}
                 </div>
+                {!isPreviewMode && (
+                  <div className="mt-4 text-center">
+                    <Button variant="outline" onClick={() => handleAddItem(category.id)}>
+                      <Plus className="w-4 h-4 mr-2" /> Add Item
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
+          {!isPreviewMode && (
+            <div className="text-center">
+              <Button onClick={handleAddCategory} className="bg-green-600 hover:bg-green-700 text-white">
+                <Plus className="w-4 h-4 mr-2" /> Add Category
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -99,5 +148,6 @@ export function BotanicalCafeMenuPreview() {
         </div>
       </div>
     </div>
+    </DndProvider>
   )
 } 

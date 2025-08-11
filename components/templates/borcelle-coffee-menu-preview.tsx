@@ -1,11 +1,26 @@
 "use client"
 
 import { useMenuEditor } from '@/contexts/menu-editor-context'
+import EditableMenuItem from '@/components/editor/editable-menu-item'
+import { DndProvider } from "react-dnd"
+import { HTML5Backend } from "react-dnd-html5-backend"
+import { Button } from '@/components/ui/button'
+import { Edit, Trash2, Plus } from 'lucide-react'
 
 export function BorcelleCoffeeMenuPreview() {
-  const { categories } = useMenuEditor()
+  const { 
+    categories,
+    appliedFontSettings,
+    handleUpdateCategory,
+    handleDeleteCategory,
+    handleAddItem,
+    handleAddCategory,
+    moveItem,
+    isPreviewMode
+  } = useMenuEditor()
 
   return (
+    <DndProvider backend={HTML5Backend}>
     <div className="min-h-screen p-8 bg-gradient-to-br from-amber-50 to-orange-50">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
@@ -75,24 +90,57 @@ export function BorcelleCoffeeMenuPreview() {
                   )}
                 </div>
                 <h3 className="text-3xl font-bold text-amber-900 tracking-wide">{category.name.toUpperCase()}</h3>
+                {!isPreviewMode && (
+                  <div className="ml-2 flex items-center gap-1">
+                    <Button size="sm" variant="ghost" onClick={() => {
+                      const newName = prompt('Category name', category.name) || category.name
+                      handleUpdateCategory(category.id, 'name', newName)
+                    }}>
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" className="text-red-600" onClick={() => handleDeleteCategory(category.id)}>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
                 <div className="flex-1 ml-4 border-b border-amber-900"></div>
               </div>
 
               {/* Menu Items */}
               <div className="grid grid-cols-2 gap-x-12 gap-y-4">
-                {category.menu_items.map((item) => (
-                  <div key={item.id} className="flex justify-between items-center">
-                    <span className="text-amber-900 font-medium text-lg">{item.name}</span>
-                    <span className="text-amber-900 font-bold text-lg">${item.price}</span>
-                  </div>
+                {category.menu_items.map((item, idx) => (
+                  <EditableMenuItem
+                    key={item.id}
+                    item={item}
+                    index={idx}
+                    categoryId={category.id}
+                    onUpdate={() => {}}
+                    onDelete={() => {}}
+                    moveItem={(dragIndex, hoverIndex) => moveItem(category.id, dragIndex, hoverIndex)}
+                  />
                 ))}
               </div>
+              {!isPreviewMode && (
+                <div className="mt-4 text-center">
+                  <Button variant="outline" onClick={() => handleAddItem(category.id)}>
+                    <Plus className="w-4 h-4 mr-2" /> Add Item
+                  </Button>
+                </div>
+              )}
             </div>
           ))}
         </div>
+        {!isPreviewMode && (
+          <div className="text-center mt-8">
+            <Button onClick={handleAddCategory} className="bg-amber-600 hover:bg-amber-700 text-white">
+              <Plus className="w-4 h-4 mr-2" /> Add Category
+            </Button>
+          </div>
+        )}
 
         
       </div>
     </div>
+    </DndProvider>
   )
 } 

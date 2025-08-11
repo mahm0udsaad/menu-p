@@ -1,7 +1,11 @@
 "use client"
 
 import { useMenuEditor } from '@/contexts/menu-editor-context'
-// import { getPDFGenerationMode } from '@/lib/pdf-server-components/pdf-template-factory'
+import EditableMenuItem from '@/components/editor/editable-menu-item'
+import { DndProvider } from 'react-dnd'
+import { HTML5Backend } from 'react-dnd-html5-backend'
+import { Button } from '@/components/ui/button'
+import { Edit, Trash2, Plus } from 'lucide-react'
 
 // SVG Illustrations for cocktail theme
 const CocktailGlassIllustration = () => (
@@ -80,9 +84,20 @@ const CocktailShakerIllustration = () => (
 );
 
 export function CocktailMenuPreview() {
-  const { categories } = useMenuEditor()
+  const { 
+    categories,
+    appliedFontSettings,
+    appliedPageBackgroundSettings,
+    handleUpdateCategory,
+    handleDeleteCategory,
+    handleAddItem,
+    handleAddCategory,
+    moveItem,
+    isPreviewMode
+  } = useMenuEditor()
 
   return (
+    <DndProvider backend={HTML5Backend}>
     <div className="min-h-screen bg-gray-100 flex">
       {/* Black Sidebar with Illustrations */}
       <div className="w-80 bg-black flex flex-col items-center justify-center space-y-12 p-8">
@@ -103,26 +118,53 @@ export function CocktailMenuPreview() {
           {categories.map((category) => (
             <div key={category.id} className="relative">
               {/* Category Header */}
-              <h2 className="text-4xl font-bold text-gray-900 tracking-wide mb-8">{category.name.toUpperCase()}</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-4xl font-bold text-gray-900 tracking-wide">{category.name.toUpperCase()}</h2>
+                {!isPreviewMode && (
+                  <div className="ml-3 flex items-center gap-1">
+                    <Button size="sm" variant="ghost" onClick={() => {
+                      const newName = prompt('Category name', category.name) || category.name
+                      handleUpdateCategory(category.id, 'name', newName)
+                    }}>
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" className="text-red-600" onClick={() => handleDeleteCategory(category.id)}>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
 
               {/* Menu Items */}
               <div className="space-y-6">
-                {category.menu_items.map((item) => (
-                  <div key={item.id} className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-gray-900 mb-1 tracking-wide">{item.name.toUpperCase()}</h3>
-                      {item.description && <p className="text-gray-700 text-lg leading-relaxed">{item.description}</p>}
-                    </div>
-                    <div className="ml-8 flex-shrink-0">
-                      <span className="text-3xl font-bold text-gray-900">
-                        ${item.price?.toFixed(2) || '0.00'}
-                      </span>
-                    </div>
-                  </div>
+                {category.menu_items.map((item, index) => (
+                  <EditableMenuItem
+                    key={item.id}
+                    item={item}
+                    index={index}
+                    categoryId={category.id}
+                    onUpdate={() => {}}
+                    onDelete={() => {}}
+                    moveItem={(dragIndex, hoverIndex) => moveItem(category.id, dragIndex, hoverIndex)}
+                  />
                 ))}
               </div>
+              {!isPreviewMode && (
+                <div className="mt-4">
+                  <Button variant="outline" onClick={() => handleAddItem(category.id)}>
+                    <Plus className="w-4 h-4 mr-2" /> Add Item
+                  </Button>
+                </div>
+              )}
             </div>
           ))}
+          {!isPreviewMode && (
+            <div className="text-center mt-8">
+              <Button onClick={handleAddCategory} className="bg-gray-900 text-white hover:bg-black">
+                <Plus className="w-4 h-4 mr-2" /> Add Category
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -131,6 +173,7 @@ export function CocktailMenuPreview() {
         </div>
       </div>
     </div>
+    </DndProvider>
   )
 }
 

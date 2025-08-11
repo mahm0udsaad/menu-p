@@ -1,0 +1,50 @@
+---
+description:# PDF Menu Template System Implementation
+
+## Primary Objective
+You are responsible for implementing a complete PDF menu creation system that processes templates from `@pdf-templates-metadata.json` and generates dynamic, accurately styled PDF menus.
+
+## Core Requirements
+
+### 1. Template Processing
+- Load and parse all templates from `@pdf-templates-metadata.json`
+- Validate template structure and required fields
+- Handle template inheritance and dependencies
+- Support multiple template formats (layouts, styles, components)
+
+### 2. Dynamic Data Integration
+- Implement dynamic value injection for all template variables
+- Support real-time data binding from external sources
+- Handle menu items, prices, descriptions, categories, and metadata
+- Ensure data validation and sanitization before injection
+
+### 3. Style Management
+- Apply dynamic styling based on template configurations
+- Support responsive layouts and font scaling
+- Handle color schemes, typography, and spacing dynamically
+- Maintain visual consistency across all generated PDFs
+
+### 4. PDF Generation Pipeline
+- Create end-to-end workflow from template editing to final PDF output
+- Implement template preview functionality
+- Generate high-quality, print-ready PDF files
+- Support batch processing for multiple menus
+
+## Success Criteria
+- All templates receive their designated data values accurately
+- Styling is applied consistently and dynamically
+- Generated PDFs match template specifications exactly
+- System handles errors gracefully with meaningful feedback
+- Performance is optimized for real-time generation
+
+## Expected Deliverables
+1. Complete template processing engine
+2. Dynamic data injection system
+3. PDF rendering pipeline
+4. Error handling and validation mechanisms
+5. Testing suite to verify accuracy of all generated outputs
+
+Ensure every component works seamlessly together to produce professional, accurate PDF menus from the template system.
+globs:
+alwaysApply: false
+---

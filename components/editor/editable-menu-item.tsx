@@ -6,7 +6,7 @@ import { useDrag, useDrop, type DropTargetMonitor } from "react-dnd"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Edit, Save, X, Trash2, Star, GripVertical } from "lucide-react"
+import { Edit, Save, X, Trash2, Star, GripVertical, Eye, EyeOff } from "lucide-react"
 import { updateMenuItemData, quickUpdateItem } from "@/lib/actions/editor/quick-menu-actions"
 import { toast } from "sonner"
 import ConfirmationModal from "@/components/ui/confirmation-modal"
@@ -197,6 +197,17 @@ export default function EditableMenuItem({
     }
   }
 
+  const toggleAvailability = async () => {
+    const newAvailability = !item.is_available
+    const result = await quickUpdateItem(item.id, "is_available", newAvailability)
+    if (result.success) {
+      onUpdate({ ...item, is_available: newAvailability })
+      toast.success(newAvailability ? "العنصر متاح الآن" : "تم إخفاء العنصر")
+    } else {
+      toast.error(result.error || "فشل في تحديث توافر العنصر")
+    }
+  }
+
   const handleDeleteConfirm = () => {
     setIsVisible(false);
     setTimeout(() => {
@@ -362,6 +373,9 @@ export default function EditableMenuItem({
             <div className="flex flex-col items-center gap-2 transition-opacity flex-shrink-0">
               <Button onClick={() => setIsEditing(true)} size="sm" variant="outline">
                 <Edit className="h-4 w-4" />
+              </Button>
+              <Button onClick={toggleAvailability} size="sm" variant="ghost" className={item.is_available ? "text-green-600" : "text-slate-400"} title={item.is_available ? "إخفاء العنصر" : "إظهار العنصر"}>
+                {item.is_available ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
               </Button>
               <Button onClick={() => setIsDeleteModalOpen(true)} size="sm" variant="ghost" className="text-red-500">
                 <Trash2 className="h-4 w-4" />

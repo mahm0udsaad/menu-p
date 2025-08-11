@@ -1,6 +1,11 @@
 "use client"
 
 import { useMenuEditor } from '@/contexts/menu-editor-context'
+import EditableMenuItem from '@/components/editor/editable-menu-item'
+import { DndProvider } from 'react-dnd'
+import { HTML5Backend } from 'react-dnd-html5-backend'
+import { Button } from '@/components/ui/button'
+import { Edit, Trash2, Plus } from 'lucide-react'
 
 // Chalk-style SVG components
 const ChalkCoffeeBean = ({ className = "" }) => (
@@ -45,9 +50,20 @@ const ChalkLeaf = ({ className = "" }) => (
 )
 
 export function ChalkboardCoffeeMenuPreview() {
-  const { categories } = useMenuEditor()
+  const { 
+    categories,
+    appliedPageBackgroundSettings,
+    appliedFontSettings,
+    handleUpdateCategory,
+    handleDeleteCategory,
+    handleAddItem,
+    handleAddCategory,
+    moveItem,
+    isPreviewMode
+  } = useMenuEditor()
 
   return (
+    <DndProvider backend={HTML5Backend}>
     <div
       className="min-h-screen relative"
       style={{
@@ -124,33 +140,49 @@ export function ChalkboardCoffeeMenuPreview() {
               {categories.slice(0, Math.ceil(categories.length / 2)).map((category) => (
                 <div key={category.id} className="relative">
                   {/* Category Header */}
-                  <div className="mb-6">
+                  <div className="mb-6 flex items-center justify-between">
                     <div className="flex items-center gap-4 mb-2">
                       <h3 className="text-3xl font-bold text-white" style={{ fontFamily: "cursive" }}>
                         {category.name}
                       </h3>
                       <ChalkArrow className="opacity-60" />
                     </div>
-                    <div className="w-full h-px bg-white/40"></div>
+                    {!isPreviewMode && (
+                      <div className="flex items-center gap-1">
+                        <Button size="sm" variant="ghost" onClick={() => {
+                          const newName = prompt('Category name', category.name) || category.name
+                          handleUpdateCategory(category.id, 'name', newName)
+                        }}>
+                          <Edit className="w-4 h-4 text-white" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => handleDeleteCategory(category.id)}>
+                          <Trash2 className="w-4 h-4 text-red-400" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Items */}
                   <div className="space-y-3">
-                    {category.menu_items.map((item) => (
-                      <div key={item.id} className="flex justify-between items-center py-2">
-                        <div className="flex items-center gap-3 flex-1">
-                          <h4 className="text-lg text-white" style={{ fontFamily: "cursive" }}>
-                            {item.name}
-                          </h4>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="text-lg font-bold text-white" style={{ fontFamily: "cursive" }}>
-                            ${item.price?.toFixed(0) || '0'}
-                          </div>
-                        </div>
-                      </div>
+                    {category.menu_items.map((item, index) => (
+                      <EditableMenuItem
+                        key={item.id}
+                        item={item}
+                        index={index}
+                        categoryId={category.id}
+                        onUpdate={() => {}}
+                        onDelete={() => {}}
+                        moveItem={(dragIndex, hoverIndex) => moveItem(category.id, dragIndex, hoverIndex)}
+                      />
                     ))}
                   </div>
+                  {!isPreviewMode && (
+                    <div className="mt-3">
+                      <Button variant="outline" onClick={() => handleAddItem(category.id)}>
+                        <Plus className="w-4 h-4 mr-2" /> Add Item
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -160,33 +192,49 @@ export function ChalkboardCoffeeMenuPreview() {
               {categories.slice(Math.ceil(categories.length / 2)).map((category) => (
                 <div key={category.id} className="relative">
                   {/* Category Header */}
-                  <div className="mb-6">
+                  <div className="mb-6 flex items-center justify-between">
                     <div className="flex items-center gap-4 mb-2">
                       <h3 className="text-3xl font-bold text-white" style={{ fontFamily: "cursive" }}>
                         {category.name}
                       </h3>
                       <ChalkArrow className="opacity-60" />
                     </div>
-                    <div className="w-full h-px bg-white/40"></div>
+                    {!isPreviewMode && (
+                      <div className="flex items-center gap-1">
+                        <Button size="sm" variant="ghost" onClick={() => {
+                          const newName = prompt('Category name', category.name) || category.name
+                          handleUpdateCategory(category.id, 'name', newName)
+                        }}>
+                          <Edit className="w-4 h-4 text-white" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => handleDeleteCategory(category.id)}>
+                          <Trash2 className="w-4 h-4 text-red-400" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Items */}
                   <div className="space-y-3">
-                    {category.menu_items.map((item) => (
-                      <div key={item.id} className="flex justify-between items-center py-2">
-                        <div className="flex items-center gap-3 flex-1">
-                          <h4 className="text-lg text-white" style={{ fontFamily: "cursive" }}>
-                            {item.name}
-                          </h4>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="text-lg font-bold text-white" style={{ fontFamily: "cursive" }}>
-                            ${item.price?.toFixed(0) || '0'}
-                          </div>
-                        </div>
-                      </div>
+                    {category.menu_items.map((item, index) => (
+                      <EditableMenuItem
+                        key={item.id}
+                        item={item}
+                        index={index}
+                        categoryId={category.id}
+                        onUpdate={() => {}}
+                        onDelete={() => {}}
+                        moveItem={(dragIndex, hoverIndex) => moveItem(category.id, dragIndex, hoverIndex)}
+                      />
                     ))}
                   </div>
+                  {!isPreviewMode && (
+                    <div className="mt-3">
+                      <Button variant="outline" onClick={() => handleAddItem(category.id)}>
+                        <Plus className="w-4 h-4 mr-2" /> Add Item
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -197,7 +245,15 @@ export function ChalkboardCoffeeMenuPreview() {
             <ChalkCoffeeCup className="w-32 h-32" />
           </div>
         </div>
+        {!isPreviewMode && (
+          <div className="text-center mt-8 relative z-10">
+            <Button onClick={handleAddCategory} className="bg-white/10 hover:bg-white/20 text-white border border-white/30">
+              <Plus className="w-4 h-4 mr-2" /> Add Category
+            </Button>
+          </div>
+        )}
       </div>
     </div>
+    </DndProvider>
   )
 } 

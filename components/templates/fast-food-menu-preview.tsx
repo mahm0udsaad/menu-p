@@ -3,6 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { useMenuEditor } from "@/contexts/menu-editor-context"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Edit3, Trash2, X, Check } from "lucide-react"
@@ -287,31 +288,15 @@ const MenuCategoryComponent: React.FC<MenuCategoryComponentProps> = ({ category,
 }
 
 export function FastFoodMenuPreview() {
-  const { isPreviewMode, categories } = useMenuEditor()
-
-  const addNewCategory = () => {
-    const newCategory: MenuCategory = {
-      id: `category-${Date.now()}`,
-      name: "New Category",
-      description: "",
-      menu_items: [],
-    }
-    // actions.addCategory(newCategory) // This line was removed from the original file
-  }
-
-  const addNewItem = (categoryId: string) => {
-    const newItem: MenuItem = {
-      id: `item-${Date.now()}`,
-      name: "New Item",
-      description: "",
-      price: 0,
-      image_url: null,
-      is_available: true,
-      is_featured: false,
-      dietary_info: [],
-    }
-    // actions.addItem(categoryId, newItem) // This line was removed from the original file
-  }
+  const { 
+    isPreviewMode, 
+    categories,
+    handleAddCategory,
+    handleAddItem,
+    handleUpdateCategory,
+    handleDeleteCategory,
+    moveItem
+  } = useMenuEditor()
 
   // Use categories from context
   const displayCategories = categories.length > 0 ? categories : []
@@ -344,13 +329,9 @@ export function FastFoodMenuPreview() {
               <div key={category.id} className="space-y-4">
                 <MenuCategoryComponent
                   category={category}
-                  onUpdate={(updates) => {
-                    // This function was removed from the original file
-                  }}
-                  onDelete={() => {
-                    // This function was removed from the original file
-                  }}
-                  onAddItem={() => addNewItem(category.id)}
+                  onUpdate={(updates) => handleUpdateCategory(category.id, 'name', updates.name || category.name)}
+                  onDelete={() => handleDeleteCategory(category.id)}
+                  onAddItem={() => handleAddItem(category.id)}
                 />
               </div>
             ))}
@@ -363,13 +344,9 @@ export function FastFoodMenuPreview() {
                 <div key={category.id} className="space-y-4">
                   <MenuCategoryComponent
                     category={category}
-                    onUpdate={(updates) => {
-                      // This function was removed from the original file
-                    }}
-                    onDelete={() => {
-                      // This function was removed from the original file
-                    }}
-                    onAddItem={() => addNewItem(category.id)}
+                    onUpdate={(updates) => handleUpdateCategory(category.id, 'name', updates.name || category.name)}
+                    onDelete={() => handleDeleteCategory(category.id)}
+                    onAddItem={() => handleAddItem(category.id)}
                   />
                 </div>
               ))}
@@ -391,7 +368,7 @@ export function FastFoodMenuPreview() {
         {/* Add Category Button */}
         {isPreviewMode && (
           <div className="text-center transition-opacity duration-300">
-            <Button onClick={addNewCategory} className="bg-red-600 hover:bg-red-700 text-white text-lg px-8 py-3">
+            <Button onClick={handleAddCategory} className="bg-red-600 hover:bg-red-700 text-white text-lg px-8 py-3">
               <Plus className="w-5 h-5 mr-2" />
               Add New Category
             </Button>
