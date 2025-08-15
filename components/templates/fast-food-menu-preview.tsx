@@ -7,7 +7,6 @@ import { useMenuEditor } from "@/contexts/menu-editor-context"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Edit3, Trash2, X, Check } from "lucide-react"
-import { useMenuEditor } from "@/contexts/menu-editor-context"
 import type { MenuCategory, MenuItem } from "@/contexts/menu-editor-context"
 
 // Hand-drawn SVG illustrations matching the reference image
