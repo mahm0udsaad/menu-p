@@ -7,7 +7,7 @@
     "prebuild": "node scripts/copy-pdf-worker.js",
     "build:css": "tailwindcss -i styles/globals.css -o app/globals.css --minify",
     "build": "npm run build:css && next build",
-    "postbuild": "next-sitemap",
+    "postinstall": "playwright install --with-deps chromium",
     "start": "next start",
     "lint": "next lint",
     "test:pdf": "node scripts/test-pdf-generation.js",
