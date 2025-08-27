@@ -185,7 +185,7 @@ export default function InteractiveMenuPDFTemplate({
   const displayCategories = categories.length > 0 ? categories : sampleCategories
   
   return (
-    <div style={{ 
+    <div className="pdf-page" style={{ 
       backgroundColor: '#f5f1eb', 
       minHeight: '100vh', 
       fontFamily: 'Arial, sans-serif',

@@ -53,7 +53,7 @@ export default function ModernPDFTemplateUnified({
   const isArabic = language === 'ar'
   
   return (
-    <div style={{ 
+    <div className="pdf-page" style={{ 
       minHeight: '1123px',
       padding: '64px',
       position: 'relative',

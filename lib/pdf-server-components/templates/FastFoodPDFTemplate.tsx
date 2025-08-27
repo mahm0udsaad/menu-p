@@ -156,7 +156,7 @@ export default function FastFoodPDFTemplate({
   const currency = restaurant.currency || '$'
   
   return (
-    <div style={{
+    <div className="pdf-page" style={{
       background: 'linear-gradient(to bottom right, #fffbeb, #ffedd5)',
       minHeight: '100vh',
       padding: '24px',

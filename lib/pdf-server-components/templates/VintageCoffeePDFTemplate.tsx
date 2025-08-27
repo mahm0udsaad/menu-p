@@ -52,7 +52,7 @@ export default function VintageCoffeePDFTemplate({
   const currency = restaurant.currency || '$'
   
   return (
-    <div style={{
+    <div className="pdf-page" style={{
       background: 'linear-gradient(to bottom right, #f5f5dc, #fef3c7)',
       minHeight: '100vh',
       padding: '48px',

@@ -1,37 +1,6 @@
 {
   "templates": {
-    "classic": {
-      "id": "classic",
-      "name": "Classic Style",
-      "description": "Traditional menu layout with clean design and professional appearance",
-      "componentPath": "lib/pdf-server-components/templates/ClassicPDFTemplate",
-      "previewComponentPath": "components/editor/templates/modern/ModernPreview",
-      "category": "professional",
-      "previewImageUrl": "/previews/classic-preview.png",
-      "features": [
-        "header",
-        "sections",
-        "footer",
-        "images"
-      ],
-      "defaultSettings": {
-        "fontSettings": {
-          "arabic": {
-            "font": "Cairo",
-            "weight": "normal"
-          },
-          "english": {
-            "font": "Roboto",
-            "weight": "normal"
-          }
-        },
-        "colorPalette": {
-          "primary": "#065f46",
-          "secondary": "#6b7280",
-          "accent": "#f59e0b"
-        }
-      }
-    },
+    
     "cafe": {
       "id": "cafe",
       "name": "Cafe Style",
@@ -129,39 +98,6 @@
           "primary": "#d4af37",
           "secondary": "#8b7355",
           "accent": "#f4e4bc"
-        }
-      }
-    },
-    "vintage": {
-      "id": "vintage",
-      "name": "Vintage Style",
-      "description": "Classic vintage design with serif fonts and elegant styling",
-      "componentPath": "lib/pdf-server-components/templates/VintagePDFTemplate",
-      "previewComponentPath": "components/editor/templates/vintage/VintagePreview",
-      "category": "vintage",
-      "previewImageUrl": "/previews/vintage-preview.png",
-      "features": [
-        "header",
-        "sections",
-        "footer",
-        "images",
-        "vintage-elements"
-      ],
-      "defaultSettings": {
-        "fontSettings": {
-          "arabic": {
-            "font": "Amiri",
-            "weight": "normal"
-          },
-          "english": {
-            "font": "Georgia",
-            "weight": "normal"
-          }
-        },
-        "colorPalette": {
-          "primary": "#8b4513",
-          "secondary": "#654321",
-          "accent": "#deb887"
         }
       }
     },
@@ -299,40 +235,6 @@
         }
       },
       "previewImageUrl": "/previews/sweet-treats-preview.png"
-    },
-    "simple-coffee": {
-      "id": "simple-coffee",
-      "name": "Simple Coffee Menu",
-      "description": "Clean grid layout with rounded borders and warm colors",
-      "componentPath": "lib/pdf-server-components/templates/SimpleCoffeePDFTemplate",
-      "previewComponentPath": "components/templates/simple-coffee-preview",
-      "category": "cafe",
-      "features": [
-        "header",
-        "sections",
-        "footer",
-        "images",
-        "grid-layout",
-        "rounded-borders"
-      ],
-      "defaultSettings": {
-        "fontSettings": {
-          "arabic": {
-            "font": "Cairo",
-            "weight": "normal"
-          },
-          "english": {
-            "font": "Roboto",
-            "weight": "normal"
-          }
-        },
-        "colorPalette": {
-          "primary": "#8B4513",
-          "secondary": "#A0522D",
-          "accent": "#DEB887"
-        }
-      },
-      "previewImageUrl": "/previews/simple-coffee-preview.png"
     },
     "borcelle-coffee": {
       "id": "borcelle-coffee",
@@ -504,74 +406,6 @@
       },
       "previewImageUrl": "/previews/cocktail-menu-preview.png"
     },
-    "vintage-bakery": {
-      "id": "vintage-bakery",
-      "name": "Vintage Bakery",
-      "description": "Hand-drawn dessert illustrations with vintage styling",
-      "componentPath": "lib/pdf-server-components/templates/VintageBakeryPDFTemplate",
-      "previewComponentPath": "components/templates/vintage-bakery-preview",
-      "category": "bakery",
-      "features": [
-        "header",
-        "sections",
-        "footer",
-        "images",
-        "hand-drawn-illustrations",
-        "vintage-styling"
-      ],
-      "defaultSettings": {
-        "fontSettings": {
-          "arabic": {
-            "font": "Amiri",
-            "weight": "normal"
-          },
-          "english": {
-            "font": "Georgia",
-            "weight": "normal"
-          }
-        },
-        "colorPalette": {
-          "primary": "#8B4513",
-          "secondary": "#A0522D",
-          "accent": "#DEB887"
-        }
-      },
-      "previewImageUrl": "/previews/vintage-bakery-preview.png"
-    },
-    "vintage-coffee": {
-      "id": "vintage-coffee",
-      "name": "Vintage Coffee",
-      "description": "Hand-drawn coffee illustrations with vintage charm",
-      "componentPath": "lib/pdf-server-components/templates/VintageCoffeePDFTemplate",
-      "previewComponentPath": "components/templates/vintage-coffee-preview",
-      "category": "cafe",
-      "features": [
-        "header",
-        "sections",
-        "footer",
-        "images",
-        "hand-drawn-illustrations",
-        "vintage-charm"
-      ],
-      "defaultSettings": {
-        "fontSettings": {
-          "arabic": {
-            "font": "Amiri",
-            "weight": "normal"
-          },
-          "english": {
-            "font": "Georgia",
-            "weight": "normal"
-          }
-        },
-        "colorPalette": {
-          "primary": "#8B4513",
-          "secondary": "#654321",
-          "accent": "#DEB887"
-        }
-      },
-      "previewImageUrl": "/previews/vintage-coffee-preview.png"
-    },
     "interactive-menu": {
       "id": "interactive-menu",
       "name": "Interactive Menu",
@@ -657,6 +491,6 @@
       "description": "Refined and sophisticated designs"
     }
   },
-  "defaultTemplate": "classic",
+  "defaultTemplate": "modern",
   "version": "1.0.0"
 }

@@ -60,7 +60,7 @@ export default function LuxuryMenuPDFTemplate({
   }
   
   return (
-    <div style={{ ...backgroundStyle, minHeight: '100vh', position: 'relative' }}>
+    <div className="pdf-page" style={{ ...backgroundStyle, minHeight: '100vh', position: 'relative' }}>
       <div style={{ position: 'relative', padding: '32px' }}>
         {/* Decorative Border */}
         <div style={{

@@ -52,7 +52,7 @@ export default function CafePDFTemplate({
   const currency = restaurant.currency || '$'
   
   return (
-    <div style={{ 
+    <div className="pdf-page" style={{ 
       backgroundColor: '#f5f1eb', 
       minHeight: '100vh', 
       padding: '48px',

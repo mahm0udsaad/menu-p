@@ -12,6 +12,7 @@ interface PDFGenerationOptions {
     rowStyles?: any;
   };
   format?: 'A4' | 'Letter';
+  landscape?: boolean; // Force landscape orientation for menu PDFs
   margin?: {
     top?: string;
     right?: string;
@@ -23,6 +24,7 @@ interface PDFGenerationOptions {
 interface GeneratePDFFromDataOptions {
   htmlContent: string;
   format?: 'A4' | 'Letter';
+  landscape?: boolean; // Orientation control for consistent layout
   language?: string;
   margin?: {
     top?: string;
@@ -337,8 +339,8 @@ export class PlaywrightPDFGenerator {
       // Setup enhanced asset routing
       await setupAssetRouting(page);
 
-      // Set media type for better PDF generation
-      await page.emulateMedia({ media: 'print' });
+      // Align rendering with on-screen preview rules
+      await page.emulateMedia({ media: 'screen' });
 
       // Generate HTML content
       const htmlContent = generateHTMLContent(options);
@@ -378,15 +380,14 @@ export class PlaywrightPDFGenerator {
       
       const pdfBuffer = await page.pdf({
         format: options.format || 'A4',
+        landscape: options.landscape !== false, // default landscape true
         margin: options.margin || {
-          top: '15mm',
-          right: '15mm',
-          bottom: '15mm',
-          left: '15mm'
+          top: '0',
+          right: '0',
+          bottom: '0',
+          left: '0'
         },
         printBackground: true,
-        // Prefer CSS page size when provided; otherwise Playwright uses the
-        // format above. Keeping this true helps if templates specify @page.
         preferCSSPageSize: true,
         tagged: true,
         outline: false,
@@ -438,7 +439,7 @@ export class PlaywrightPDFGenerator {
     throw lastError!;
   }
 
-  private async generatePDFFromHTMLInternal(htmlContent: string, options: { format?: 'A4' | 'Letter', margin?: any }): Promise<Buffer> {
+  private async generatePDFFromHTMLInternal(htmlContent: string, options: { format?: 'A4' | 'Letter', margin?: any, landscape?: boolean }): Promise<Buffer> {
     let page: Page | null = null;
 
     try {
@@ -451,10 +452,10 @@ export class PlaywrightPDFGenerator {
       const viewportByFormat = (format: 'A4' | 'Letter' | undefined) => {
         switch (format) {
           case 'Letter':
-            return { width: 816, height: 1056 };
+            return { width: 1056, height: 816 }; // default to landscape viewport
           case 'A4':
           default:
-            return { width: 794, height: 1123 };
+            return { width: 1123, height: 794 }; // landscape viewport
         }
       };
       const vp = viewportByFormat(options.format);
@@ -463,17 +464,50 @@ export class PlaywrightPDFGenerator {
       // Setup enhanced asset routing
       await setupAssetRouting(page);
       
-      // Ensure the provided HTML has zero default margins and a full document wrapper
+      // Ensure the provided HTML has zero default margins, landscape @page, and a full document wrapper
       const isFullDocument = /<html[\s\S]*>/i.test(htmlContent);
+      // Try to capture a background from the template's top-level element
+      const bgMatch = htmlContent.match(/style=\"[^\"]*background:\s*([^;\"]+)[;\"][^>]*>/i);
+      const templateBackground = bgMatch ? bgMatch[1].trim() : 'transparent';
       const wrappedHtml = isFullDocument
         ? htmlContent
-        : `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>html,body{margin:0;padding:0} @page{margin:0}</style></head><body style="margin:0;padding:0">${htmlContent}</body></html>`;
+        : `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+            html,body{margin:0;padding:0;height:100%;}
+            @page{size:A4 landscape;margin:0;}
+            /* Full-bleed background fix using template background if found */
+            html,body{background:${templateBackground};-webkit-print-color-adjust:exact;print-color-adjust:exact}
+            .pdf-page{min-height:100vh;width:100vw;display:flex;flex-direction:column;background:${templateBackground}}
+          </style></head><body><div class="pdf-page">${htmlContent}</div></body></html>`;
 
       // Set content with timeout handling
       await page.setContent(wrappedHtml, { 
         waitUntil: 'domcontentloaded',
         timeout: envConfig.pdfTimeout || 30000
       });
+
+      // Ensure global print CSS is present for any full-document HTML
+      try {
+        await page.addStyleTag({ content: `html,body{margin:0;padding:0;height:100%} @page{size:A4 landscape;margin:0} *{-webkit-print-color-adjust:exact;print-color-adjust:exact}` });
+      } catch {}
+
+      // If the template sets background on an inner container, propagate it to html/body for full-bleed
+      try {
+        await page.evaluate(() => {
+          const pickBackground = (el) => {
+            if (!el) return null;
+            const cs = getComputedStyle(el);
+            const img = cs.backgroundImage && cs.backgroundImage !== 'none' ? cs.backgroundImage : '';
+            const color = cs.backgroundColor && cs.backgroundColor !== 'rgba(0, 0, 0, 0)' ? cs.backgroundColor : '';
+            return img || color || null;
+          };
+          const candidate = document.querySelector('.pdf-page') || document.body.firstElementChild || document.body;
+          const bg = pickBackground(candidate);
+          if (bg) {
+            document.documentElement.style.background = bg;
+            document.body.style.background = bg;
+          }
+        });
+      } catch {}
 
       try {
         await page.evaluate(() => document.fonts.ready);
@@ -484,10 +518,14 @@ export class PlaywrightPDFGenerator {
         new Promise(resolve => setTimeout(resolve, 10000))
       ]);
 
+      // Align rendering with preview CSS rules
+      await page.emulateMedia({ media: 'screen' });
+
       const pdfBuffer = await page.pdf({
         format: options.format || 'A4',
+        landscape: options.landscape !== false,
         printBackground: true,
-        margin: options.margin || { top: '0px', right: '0px', bottom: '0px', left: '0px' },
+        margin: options.margin || { top: '0', right: '0', bottom: '0', left: '0' },
         preferCSSPageSize: true,
       });
 

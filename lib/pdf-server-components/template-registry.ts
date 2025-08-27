@@ -6,22 +6,18 @@ import fs from 'fs'
 // build so they can be resolved at runtime. The keys correspond to
 // template IDs defined in `pdf-templates-metadata.json`.
 const templateImporters: Record<string, () => Promise<any>> = {
-  'classic': () => import('@/lib/pdf-server-components/templates/ClassicPDFTemplate'),
   'cafe': () => import('@/lib/pdf-server-components/templates/CafePDFTemplate'),
   'modern': () => import('@/lib/pdf-server-components/templates/ModernPDFTemplate'),
   'modern-coffee': () => import('@/lib/pdf-server-components/templates/ModernCoffeePDFTemplateUnified'),
   'painting': () => import('@/lib/pdf-server-components/templates/PaintingStylePDFTemplate'),
-  'vintage': () => import('@/lib/pdf-server-components/templates/VintagePDFTemplate'),
   'fast-food': () => import('@/lib/pdf-server-components/templates/FastFoodPDFTemplate'),
   'elegant-cocktail': () => import('@/lib/pdf-server-components/templates/ElegantCocktailPDFTemplate'),
   'sweet-treats': () => import('@/lib/pdf-server-components/templates/SweetTreatsPDFTemplate'),
-  'simple-coffee': () => import('@/lib/pdf-server-components/templates/SimpleCoffeePDFTemplate'),
   'borcelle-coffee': () => import('@/lib/pdf-server-components/templates/BorcelleCoffeePDFTemplate'),
   'luxury-menu': () => import('@/lib/pdf-server-components/templates/LuxuryMenuPDFTemplate'),
   'chalkboard-coffee': () => import('@/lib/pdf-server-components/templates/ChalkboardCoffeePDFTemplate'),
   'botanical-cafe': () => import('@/lib/pdf-server-components/templates/BotanicalCafePDFTemplate'),
   'cocktail-menu': () => import('@/lib/pdf-server-components/templates/CocktailMenuPDFTemplate'),
-  'vintage-bakery': () => import('@/lib/pdf-server-components/templates/VintageBakeryPDFTemplate'),
   'vintage-coffee': () => import('@/lib/pdf-server-components/templates/VintageCoffeePDFTemplate'),
   'interactive-menu': () => import('@/lib/pdf-server-components/templates/InteractiveMenuPDFTemplate'),
 }

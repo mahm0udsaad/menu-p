@@ -74,7 +74,7 @@ export default function ModernCoffeePDFTemplateUnified({
   const currency = restaurant.currency || '$'
   
   return (
-    <div style={{ 
+    <div className="pdf-page" style={{ 
       backgroundColor: TEMPLATE_DESIGN_TOKENS.modern.colors.background, 
       minHeight: '100vh', 
       position: 'relative',

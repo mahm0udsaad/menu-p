@@ -99,7 +99,7 @@ export default function BorcelleCoffeePDFTemplate({
   }
 
   return (
-    <div style={page}>
+    <div className="pdf-page" style={page}>
       <div style={{ maxWidth: 1024, margin: "0 auto" }}>
         {/* Header - matching preview layout exactly */}
         <div

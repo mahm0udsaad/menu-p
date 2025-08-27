@@ -128,7 +128,7 @@ export default function CocktailMenuPDFTemplate({
   const currency = restaurant.currency || '$'
   
   return (
-    <div style={{ 
+    <div className="pdf-page" style={{ 
       minHeight: '100vh', 
       backgroundColor: '#f3f4f6', 
       display: 'flex',

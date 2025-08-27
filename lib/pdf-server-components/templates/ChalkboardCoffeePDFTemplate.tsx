@@ -94,7 +94,7 @@ export default function ChalkboardCoffeePDFTemplate({
   const currency = restaurant.currency || '$'
   
   return (
-    <div style={{
+    <div className="pdf-page" style={{
       background: `
         radial-gradient(circle at 20% 30%, rgba(64,64,64,0.3) 0%, transparent 50%),
         radial-gradient(circle at 80% 70%, rgba(96,96,96,0.2) 0%, transparent 50%),

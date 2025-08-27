@@ -89,7 +89,7 @@ export default function BotanicalCafePDFTemplate({
   }
   
   return (
-    <div style={{ ...backgroundStyle, minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+    <div className="pdf-page" style={{ ...backgroundStyle, minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
       {/* Background Illustrations */}
       <div style={{ position: 'absolute', top: '80px', left: '40px' }}>
         <FeatherIllustration />

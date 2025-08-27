@@ -80,7 +80,7 @@ export default function PaintingStylePDFTemplate({
   }
   
   return (
-    <div style={{ 
+    <div className="pdf-page" style={{ 
       minHeight: '100vh',
       fontFamily: 'Oswald, Arial, sans-serif',
       padding: hasBgImage ? '48px 16px' : '16px 64px',

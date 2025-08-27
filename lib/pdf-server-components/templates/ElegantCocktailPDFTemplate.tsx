@@ -51,6 +51,10 @@ export default function ElegantCocktailPDFTemplate({
 }: ElegantCocktailPDFTemplateProps) {
   const currency = restaurant.currency || '$'
   
+  // Use a single source of truth for the page background so html/body and the
+  // wrapper render identically (avoids subtle color mismatches at page edges)
+  const pageBackground = `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='wood' patternUnits='userSpaceOnUse' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23654321'/%3E%3Cpath d='M0 0L100 100M100 0L0 100' stroke='%238B4513' strokeWidth='0.5' opacity='0.3'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100' height='100' fill='url(%23wood)'/%3E%3C/svg%3E"), linear-gradient(to bottom right, rgba(157, 139, 20, 0.2), rgba(217, 119, 6, 0.3))`
+
   // Inline SVG illustrations to mirror preview design
   const GinBottleIllustration = () => (
     <svg width="64" height="96" viewBox="0 0 120 200">
@@ -97,8 +101,10 @@ export default function ElegantCocktailPDFTemplate({
   )
 
   return (
-    <div style={{
-      background: `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='wood' patternUnits='userSpaceOnUse' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23654321'/%3E%3Cpath d='M0 0L100 100M100 0L0 100' stroke='%238B4513' strokeWidth='0.5' opacity='0.3'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100' height='100' fill='url(%23wood)'/%3E%3C/svg%3E"), linear-gradient(to bottom right, rgba(157, 139, 20, 0.2), rgba(217, 119, 6, 0.3))`,
+    <>
+    <style>{`html,body{background-color:#3D2914 !important;background:${pageBackground} !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}`}</style>
+    <div className="pdf-page" style={{
+      background: pageBackground,
       backgroundColor: '#3D2914',
       minHeight: '100vh',
       padding: '32px',
@@ -392,5 +398,6 @@ export default function ElegantCocktailPDFTemplate({
         </div>
       </div>
     </div>
+    </>
   )
 }

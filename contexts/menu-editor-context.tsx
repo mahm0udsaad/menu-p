@@ -60,23 +60,18 @@ export interface Restaurant {
 }
 
 export type TemplateId = 
-  | 'classic' 
   | 'cafe' 
   | 'modern' 
   | 'painting' 
-  | 'vintage' 
   | 'modern-coffee'
   | 'fast-food'
   | 'elegant-cocktail'
   | 'sweet-treats'
   | 'luxury-menu'
-  | 'simple-coffee'
   | 'borcelle-coffee'
   | 'chalkboard-coffee'
   | 'botanical-cafe'
   | 'cocktail-menu'
-  | 'vintage-bakery'
-  | 'vintage-coffee'
   | 'interactive-menu'
 
 export interface SimplifiedFontSettings {

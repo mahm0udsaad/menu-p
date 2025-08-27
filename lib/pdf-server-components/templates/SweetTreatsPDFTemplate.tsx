@@ -52,7 +52,9 @@ export default function SweetTreatsPDFTemplate({
   const currency = restaurant.currency || '$'
   
   return (
-    <div style={{
+    <>
+    <style>{`html,body{background:#fdf2f8 !important;}`}</style>
+    <div className="pdf-page" style={{
       minHeight: '100vh',
       backgroundColor: '#fdf2f8'
     }}>
@@ -200,5 +202,6 @@ export default function SweetTreatsPDFTemplate({
         </p>
       </div>
     </div>
+    </>
   )
 }
