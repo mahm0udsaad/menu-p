@@ -4,6 +4,9 @@ import { generatePDFFromMenuData, checkBrowserHealth, resetBrowserInstance } fro
 import { PDFReactRenderer } from "@/lib/pdf-server-components/pdf-renderer"
 import PDFTemplateFactory from "@/lib/pdf-server-components/pdf-template-factory"
 
+export const runtime = "nodejs"
+export const maxDuration = 90
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
