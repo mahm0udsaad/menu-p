@@ -65,21 +65,6 @@ export const MenuHeader: React.FC<MenuHeaderProps> = ({ isEmpty }) => {
         </div>
       </div>
 
-      {/* Content Section - Takes remaining space */}
-      <div className="flex-1 flex items-center justify-center">
-        {isEmpty && (
-          <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 w-full max-w-2xl">
-            <div className="max-w-md mx-auto">
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                ابدأ في إنشاء قائمتك
-              </h3>
-              <p className="text-gray-600 text-base leading-relaxed">
-                لا توجد أقسام في قائمتك بعد. استخدم الأزرار الجانبية لتخصيص التصميم أو إضافة بيانات تجريبية للبدء.
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   )
 }

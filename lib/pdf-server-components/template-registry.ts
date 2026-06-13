@@ -15,6 +15,7 @@ const templateImporters: Record<string, () => Promise<any>> = {
   'sweet-treats': () => import('@/lib/pdf-server-components/templates/SweetTreatsPDFTemplate'),
   'borcelle-coffee': () => import('@/lib/pdf-server-components/templates/BorcelleCoffeePDFTemplate'),
   'luxury-menu': () => import('@/lib/pdf-server-components/templates/LuxuryMenuPDFTemplate'),
+  'mena-hospitality': () => import('@/lib/pdf-server-components/templates/MenaHospitalityPDFTemplate'),
   'chalkboard-coffee': () => import('@/lib/pdf-server-components/templates/ChalkboardCoffeePDFTemplate'),
   'botanical-cafe': () => import('@/lib/pdf-server-components/templates/BotanicalCafePDFTemplate'),
   'cocktail-menu': () => import('@/lib/pdf-server-components/templates/CocktailMenuPDFTemplate'),
@@ -266,4 +267,4 @@ export class TemplateRegistryService {
 }
 
 // Export singleton instance
-export const templateRegistry = TemplateRegistryService.getInstance() 
+export const templateRegistry = TemplateRegistryService.getInstance()

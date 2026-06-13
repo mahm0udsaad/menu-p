@@ -14,6 +14,7 @@ import { useActionState } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { pdf } from "@react-pdf/renderer"
 import { qrCardTemplates, QrCardTemplateId } from "@/components/qr-card-templates"
+import { QrTemplateExampleCard, qrTemplatePreviewPresets } from "@/components/qr-card-template-preview"
 import { fontOptions, resolveFontFamily } from "@/lib/font-config"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { toast } from "sonner"
@@ -77,17 +78,6 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
   const [previewQrDataUrl, setPreviewQrDataUrl] = useState<string | null>(null)
   const supabase = createClientComponentClient()
 
-  const restaurantData = {
-    id: restaurant.id,
-    name: restaurant.name,
-    logo_url: restaurant.logo_url || undefined,
-    color_palette: {
-      primary: '#10b981',
-      secondary: '#059669',
-      accent: '#34d399'
-    }
-  }
-
   // Define predefined color options
   const colorOptions = [
     { name: "أبيض", value: "#FFFFFF" },
@@ -106,6 +96,16 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
     { name: "منتصف كود QR", value: "middle" },
     { name: "كلاهما (أعلى ومنتصف)", value: "both" },
   ]
+
+  const applyTemplatePreset = (templateId: QrCardTemplateId) => {
+    const preset = qrTemplatePreviewPresets[templateId]
+    setSelectedTemplate(templateId)
+    setCardBgColor(preset.bg)
+    setTextColor(preset.text)
+    setBorderColor(preset.border)
+    setShowBorder(preset.borderOn)
+    setLogoPosition(preset.logo)
+  }
 
   // Fetch published menus when component mounts
   useEffect(() => {
@@ -247,33 +247,48 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
   }
 
   return (
-    <Card className="bg-slate-800/50 border-slate-700 backdrop-blur rounded-xl">
-      <CardHeader className="px-4 sm:px-6">
-        <CardTitle className="text-white text-lg sm:text-xl">إنشاء بطاقة QR قابلة للطباعة</CardTitle>
-        <CardDescription className="text-slate-300 text-sm sm:text-base">صمم بطاقة QR مخصصة لطاولات مطعمك أو مقهاك.</CardDescription>
+    <Card className="overflow-hidden rounded-[18px] border-[#e8ded2] bg-white shadow-sm">
+      <CardHeader className="border-b border-[#eee4d8] bg-[#fbf8f4] px-4 sm:px-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <CardTitle className="text-lg text-[#2f2923] sm:text-xl">إنشاء بطاقة QR قابلة للطباعة</CardTitle>
+            <CardDescription className="mt-1 text-sm text-[#827466] sm:text-base">
+              اختر قالباً ثم عدّل النص، الشعار، والألوان قبل حفظ ملف PDF.
+            </CardDescription>
+          </div>
+          <div className="hidden rounded-full border border-[#ddc9a6] bg-white px-3 py-1 text-xs font-semibold text-[#7a4a2b] sm:block">
+            A6 Print
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
-        <form onSubmit={handleGeneratePdf} className="space-y-4 sm:space-y-6">
+      <CardContent className="px-4 py-5 sm:px-6">
+        <form onSubmit={handleGeneratePdf} className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="space-y-5">
+            <div className="rounded-[16px] border border-[#e8ded2] bg-white p-4">
+              <div className="mb-3 flex items-center gap-2 text-sm font-bold text-[#463d35]">
+                <LinkIcon className="h-4 w-4 text-[#b03a2e]" />
+                الربط والمحتوى
+              </div>
           {/* Menu Selection */}
-          <div className="space-y-2 sm:space-y-4">
-            <Label htmlFor="menuSelect" className="text-slate-300 text-sm">
+          <div className="space-y-2 sm:space-y-3">
+            <Label htmlFor="menuSelect" className="text-sm font-semibold text-[#6f6257]">
               اختر القائمة المراد ربطها بكود QR
             </Label>
             {loadingMenus ? (
-              <div className="flex items-center gap-2 p-3 bg-slate-700/50 border border-slate-600 rounded-xl">
-                <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
-                <span className="text-slate-300 text-sm">جاري تحميل القوائم...</span>
+              <div className="flex items-center gap-2 rounded-[11px] border border-[#e2d3c1] bg-[#fbf8f4] p-3">
+                <Loader2 className="w-4 h-4 animate-spin text-[#b03a2e]" />
+                <span className="text-sm text-[#6f6257]">جاري تحميل القوائم...</span>
               </div>
             ) : publishedMenus.length > 0 ? (
               <Select value={selectedMenuId} onValueChange={handleMenuSelection}>
-                <SelectTrigger className="w-full bg-slate-700/50 border-slate-600 text-white rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 text-sm">
+                <SelectTrigger className="w-full rounded-[11px] border-[#d9cbb9] bg-white text-[#2f2923] focus:border-[#b03a2e] focus:ring-[#b03a2e]/20">
                   <SelectValue placeholder="اختر قائمة" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700 text-white">
+                <SelectContent>
                   {publishedMenus.map((menu) => (
                     <SelectItem key={menu.id} value={menu.id}>
                       <div className="flex items-center gap-2">
-                        <LinkIcon className="w-4 h-4 text-emerald-500" />
+                        <LinkIcon className="w-4 h-4 text-[#b03a2e]" />
                         <span className="text-sm">{menu.menu_name}</span>
                       </div>
                     </SelectItem>
@@ -281,14 +296,14 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
                 </SelectContent>
               </Select>
             ) : (
-              <div className="p-3 bg-amber-900/20 border border-amber-400/30 rounded-xl text-amber-400 text-sm">
+              <div className="rounded-[11px] border border-[#e2d3c1] bg-[#fff8eb] p-3 text-sm text-[#8a5a12]">
                 لا توجد قوائم منشورة. يرجى نشر قائمة أولاً لإنشاء كود QR.
               </div>
             )}
           </div>
 
-          <div className="space-y-2 sm:space-y-4">
-            <Label htmlFor="cardName" className="text-slate-300 text-sm">
+          <div className="mt-4 space-y-2 sm:space-y-3">
+            <Label htmlFor="cardName" className="text-sm font-semibold text-[#6f6257]">
               اسم البطاقة
             </Label>
             <Input
@@ -296,11 +311,11 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
               value={cardName}
               onChange={(e) => setCardName(e.target.value)}
               placeholder="اسم البطاقة (مثل: بطاقة QR - مطعم الورد)"
-              className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 transition-all duration-200 text-sm"
+              className="rounded-[11px] border-[#d9cbb9] bg-white text-[#2f2923] placeholder:text-[#b5a797] focus:border-[#b03a2e] focus:ring-[#b03a2e]/20"
             />
           </div>
-          <div className="space-y-2 sm:space-y-4">
-            <Label htmlFor="customText" className="text-slate-300 text-sm">
+          <div className="mt-4 space-y-2 sm:space-y-3">
+            <Label htmlFor="customText" className="text-sm font-semibold text-[#6f6257]">
               نص مخصص للبطاقة
             </Label>
           <Textarea
@@ -308,32 +323,45 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
             value={customText}
             onChange={(e) => setCustomText(e.target.value)}
             placeholder="اكتب نصًا هنا ليظهر على بطاقة QR الخاصة بك..."
-            className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 transition-all duration-200 min-h-[80px] text-sm"
+            className="min-h-[80px] rounded-[11px] border-[#d9cbb9] bg-white text-[#2f2923] placeholder:text-[#b5a797] focus:border-[#b03a2e] focus:ring-[#b03a2e]/20"
           />
+          </div>
         </div>
 
+            <div className="rounded-[16px] border border-[#e8ded2] bg-white p-4">
+              <div className="mb-3 flex items-center gap-2 text-sm font-bold text-[#463d35]">
+                <Check className="h-4 w-4 text-[#b03a2e]" />
+                القوالب الجاهزة
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {qrCardTemplates.map((t) => {
+                  const selected = selectedTemplate === t.id
+                  return (
+                    <QrTemplateExampleCard
+                      key={t.id}
+                      templateId={t.id}
+                      name={t.name}
+                      restaurantName={restaurant.name}
+                      selected={selected}
+                      compact
+                      onClick={() => applyTemplatePreset(t.id)}
+                    />
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="rounded-[16px] border border-[#e8ded2] bg-white p-4">
+              <div className="mb-3 text-sm font-bold text-[#463d35]">التخصيص</div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-          <div className="space-y-2">
-            <Label className="text-slate-300 text-sm">القالب</Label>
-            <Select value={selectedTemplate} onValueChange={(v: QrCardTemplateId) => setSelectedTemplate(v)}>
-              <SelectTrigger className="w-full bg-slate-700/50 border-slate-600 text-white rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700 text-white">
-                {qrCardTemplates.map(t => (
-                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
 
           <div className="space-y-2">
-            <Label className="text-slate-300 text-sm">الخط</Label>
+            <Label className="text-sm font-semibold text-[#6f6257]">الخط</Label>
             <Select value={selectedFont} onValueChange={setSelectedFont}>
-              <SelectTrigger className="w-full bg-slate-700/50 border-slate-600 text-white rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 text-sm">
+              <SelectTrigger className="w-full rounded-[11px] border-[#d9cbb9] bg-white text-[#2f2923] focus:border-[#b03a2e] focus:ring-[#b03a2e]/20">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700 text-white">
+              <SelectContent>
                 {fontOptions.map(f => (
                   <SelectItem key={f.id} value={f.id} style={{ fontFamily: resolveFontFamily(f.id) }}>
                     {f.arabicName || f.name}
@@ -342,23 +370,21 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
               </SelectContent>
             </Select>
           </div>
-        </div>
           {/* Design Controls */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
-              <Label htmlFor="cardBgColor" className="text-slate-300 text-sm">
+              <Label htmlFor="cardBgColor" className="text-sm font-semibold text-[#6f6257]">
                 لون خلفية البطاقة
               </Label>
               <Select value={cardBgColor} onValueChange={setCardBgColor}>
-                <SelectTrigger className="w-full bg-slate-700/50 border-slate-600 text-white rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 text-sm">
+                <SelectTrigger className="w-full rounded-[11px] border-[#d9cbb9] bg-white text-[#2f2923] focus:border-[#b03a2e] focus:ring-[#b03a2e]/20">
                   <SelectValue placeholder="اختر لون الخلفية" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700 text-white">
+                <SelectContent>
                   {colorOptions.map((color) => (
                     <SelectItem key={color.value} value={color.value}>
                       <div className="flex items-center gap-2">
                         <div
-                          className="w-4 h-4 rounded-full border border-slate-600"
+                          className="w-4 h-4 rounded-full border border-[#d9cbb9]"
                           style={{ backgroundColor: color.value }}
                         ></div>
                         <span className="text-sm">{color.name}</span>
@@ -370,19 +396,19 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="textColor" className="text-slate-300 text-sm">
+              <Label htmlFor="textColor" className="text-sm font-semibold text-[#6f6257]">
                 لون النص
               </Label>
               <Select value={textColor} onValueChange={setTextColor}>
-                <SelectTrigger className="w-full bg-slate-700/50 border-slate-600 text-white rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 text-sm">
+                <SelectTrigger className="w-full rounded-[11px] border-[#d9cbb9] bg-white text-[#2f2923] focus:border-[#b03a2e] focus:ring-[#b03a2e]/20">
                   <SelectValue placeholder="اختر لون النص" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700 text-white">
+                <SelectContent>
                   {colorOptions.map((color) => (
                     <SelectItem key={color.value} value={color.value}>
                       <div className="flex items-center gap-2">
                         <div
-                          className="w-4 h-4 rounded-full border border-slate-600"
+                          className="w-4 h-4 rounded-full border border-[#d9cbb9]"
                           style={{ backgroundColor: color.value }}
                         ></div>
                         <span className="text-sm">{color.name}</span>
@@ -394,14 +420,14 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="logoPosition" className="text-slate-300 text-sm">
+              <Label htmlFor="logoPosition" className="text-sm font-semibold text-[#6f6257]">
                 موضع الشعار
               </Label>
               <Select value={logoPosition} onValueChange={setLogoPosition}>
-                <SelectTrigger className="w-full bg-slate-700/50 border-slate-600 text-white rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 text-sm">
+                <SelectTrigger className="w-full rounded-[11px] border-[#d9cbb9] bg-white text-[#2f2923] focus:border-[#b03a2e] focus:ring-[#b03a2e]/20">
                   <SelectValue placeholder="اختر موضع الشعار" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700 text-white">
+                <SelectContent>
                   {logoPositionOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       <span className="text-sm">{option.name}</span>
@@ -412,7 +438,7 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="qrCodeSize" className="text-slate-300 text-sm">
+              <Label htmlFor="qrCodeSize" className="text-sm font-semibold text-[#6f6257]">
                 حجم كود QR ({qrCodeSize}px)
               </Label>
               <Input
@@ -423,14 +449,14 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
                 step="10"
                 value={qrCodeSize}
                 onChange={(e) => setQrCodeSize(parseInt(e.target.value))}
-                className="bg-slate-700/50 border-slate-600 rounded-xl"
+                className="rounded-[11px] border-[#d9cbb9] bg-white"
               />
             </div>
 
             {/* Border Controls */}
             <div className="space-y-2 sm:col-span-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="showBorder" className="text-slate-300 text-sm">
+                <Label htmlFor="showBorder" className="text-sm font-semibold text-[#6f6257]">
                   إضافة حدود للبطاقة
                 </Label>
                 <Switch
@@ -441,19 +467,19 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
               </div>
               {showBorder && (
                 <div className="mt-2">
-                  <Label htmlFor="borderColor" className="text-slate-300 text-sm">
+                  <Label htmlFor="borderColor" className="text-sm font-semibold text-[#6f6257]">
                     لون الحدود
                   </Label>
                   <Select value={borderColor} onValueChange={setBorderColor}>
-                    <SelectTrigger className="w-full bg-slate-700/50 border-slate-600 text-white rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 text-sm mt-1">
+                    <SelectTrigger className="mt-1 w-full rounded-[11px] border-[#d9cbb9] bg-white text-[#2f2923] focus:border-[#b03a2e] focus:ring-[#b03a2e]/20">
                       <SelectValue placeholder="اختر لون الحدود" />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-slate-700 text-white">
+                    <SelectContent>
                       {colorOptions.map((color) => (
                         <SelectItem key={color.value} value={color.value}>
                           <div className="flex items-center gap-2">
                             <div
-                              className="w-4 h-4 rounded-full border border-slate-600"
+                              className="w-4 h-4 rounded-full border border-[#d9cbb9]"
                               style={{ backgroundColor: color.value }}
                             ></div>
                             <span className="text-sm">{color.name}</span>
@@ -466,45 +492,55 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
             )}
             </div>
           </div>
-
-          {/* Preview Section */}
-          <div className="space-y-3 sm:space-y-4">
-            <h3 className="text-white font-semibold text-base sm:text-lg">معاينة البطاقة</h3>
-            <div className="mx-auto w-full max-w-sm aspect-[3/4] rounded-xl overflow-hidden shadow-lg">
-              {previewQrDataUrl ? (
-                React.createElement(
-                  qrCardTemplates.find(t => t.id === selectedTemplate)?.Component || qrCardTemplates[0].Component,
-                  {
-                    restaurant: restaurantData,
-                    qrCodeDataUrl: previewQrDataUrl,
-                    qrCodeUrl: selectedMenuUrl || menuPublicUrl,
-                    options: {
-                      customText,
-                      cardBgColor,
-                      textColor,
-                      qrCodeSize,
-                      showBorder,
-                      borderColor,
-                      logoPosition: logoPosition as 'none' | 'top' | 'middle' | 'both',
-                      fontFamily: selectedFont,
-                      templateId: selectedTemplate
-                    }
-                  }
-                )
-              ) : (
-                <div className="flex items-center justify-center h-full bg-slate-200 text-slate-500">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                </div>
-              )}
             </div>
           </div>
 
+          {/* Preview Section */}
+          <div className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+            <div className="rounded-[18px] border border-[#e8ded2] bg-[#fbf8f4] p-4 shadow-sm">
+              <h3 className="mb-3 text-base font-bold text-[#2f2923]">معاينة حيّة</h3>
+            <div
+              className="mx-auto flex aspect-[3/4] w-full max-w-[260px] flex-col items-center justify-center overflow-hidden rounded-[18px] p-6 shadow-sm"
+              style={{
+                backgroundColor: cardBgColor,
+                color: textColor,
+                border: showBorder ? `2px solid ${borderColor}` : "1px solid rgba(0,0,0,.08)",
+              }}
+            >
+              {(logoPosition === "top" || logoPosition === "both") && (
+                restaurant.logo_url ? (
+                  <img src={restaurant.logo_url} alt={restaurant.name} className="mb-3 h-14 w-14 rounded-[14px] object-contain" />
+                ) : (
+                  <div className="mb-3 grid h-14 w-14 place-items-center rounded-[14px] bg-white/85 text-lg font-bold shadow-sm">{restaurant.name.slice(0, 1)}</div>
+                )
+              )}
+              <div className="mb-3 text-center">
+                <div className="text-lg font-extrabold">{restaurant.name}</div>
+                <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.28em] opacity-60">MENU-P</div>
+              </div>
+              <div className="relative rounded-[18px] bg-white p-4 shadow-sm">
+              {previewQrDataUrl ? (
+                <img src={previewQrDataUrl} alt="QR preview" className="h-36 w-36 object-contain" />
+              ) : (
+                <div className="grid h-36 w-36 place-items-center text-[#827466]">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                </div>
+              )}
+                {(logoPosition === "middle" || logoPosition === "both") && restaurant.logo_url && (
+                  <div className="absolute inset-0 grid place-items-center">
+                    <img src={restaurant.logo_url} alt={restaurant.name} className="h-10 w-10 rounded-[10px] bg-white object-contain p-1 shadow-sm" />
+                  </div>
+                )}
+              </div>
+              <p className="mt-4 text-center text-sm font-semibold leading-6">{customText}</p>
+            </div>
+
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
+          <div className="flex flex-col gap-3 pt-4">
           <Button
             type="submit"
             disabled={isPending}
-              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-12 sm:h-14 text-sm sm:text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+              className="h-12 flex-1 rounded-[11px] bg-[#b03a2e] text-sm font-semibold text-white shadow-sm hover:bg-[#962f26] sm:text-base"
           >
             {isPending ? (
               <>
@@ -518,11 +554,10 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
               </>
             )}
           </Button>
-          </div>
 
           {/* Success/Error Messages */}
           {state?.pdfUrl && (
-            <div className="space-y-3 p-3 sm:p-4 bg-emerald-900/20 border border-emerald-400/30 rounded-xl text-emerald-400">
+            <div className="space-y-3 rounded-[14px] border border-[#bfe0cd] bg-[#eef9f2] p-3 text-[#2f8f5b] sm:p-4">
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 <p className="text-sm sm:text-base">تم إنشاء بطاقة QR بنجاح!</p>
@@ -530,7 +565,7 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
               <div className="flex flex-col sm:flex-row gap-2">
                 <Button
                   size="sm"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1"
+                  className="flex-1 bg-[#2f8f5b] text-white hover:bg-[#26784c]"
                   asChild
                 >
                   <a href={state.pdfUrl} target="_blank" rel="noopener noreferrer">
@@ -541,7 +576,7 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
                                  <Button
                    size="sm"
                    variant="outline"
-                   className="border-emerald-400 text-emerald-400 hover:bg-emerald-400/10 flex-1"
+                   className="flex-1 border-[#9ccfb1] text-[#2f8f5b] hover:bg-white"
                    onClick={() => {
                      // Reset form and refetch data
                      setCardName("QR Card")
@@ -556,10 +591,13 @@ export default function QrCardGenerator({ restaurant, menuPublicUrl }: QrCardGen
           )}
 
           {state?.error && (
-            <div className="p-3 sm:p-4 bg-red-900/20 border border-red-400/30 rounded-xl text-red-400 text-sm sm:text-base">
+            <div className="rounded-[14px] border border-[#e4c7c2] bg-[#fff3f1] p-3 text-sm text-[#b03a2e] sm:p-4">
               {state.error}
             </div>
           )}
+          </div>
+            </div>
+          </div>
         </form>
       </CardContent>
     </Card>

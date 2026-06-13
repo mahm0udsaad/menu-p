@@ -3,17 +3,20 @@ export interface MenuItem {
   name: string
   description: string | null
   price: number | null
+  image_url: string | null
   is_available: boolean
   is_featured: boolean
+  dietary_info: string[]
   isTemporary?: boolean
 }
 
 export interface MenuCategory {
   id: string
   name: string
-  description: string
-  items: MenuItem[]
-  isSpecial: boolean
+  description: string | null
+  items?: MenuItem[]
+  menu_items: MenuItem[]
+  isSpecial?: boolean
 }
 
 export interface Menu {
@@ -83,4 +86,4 @@ export interface MenuDesign {
     spacing?: number
     showItemImages?: boolean
   }
-} 
+}

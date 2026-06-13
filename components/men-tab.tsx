@@ -3,7 +3,6 @@ import { Eye, Download, ExternalLink, Trash2, Plus, CheckCircle, MenuIcon, Langu
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { TabsContent } from '@/components/ui/tabs';
 import PDFPreview from '@/components/pdf-preview';
 import MenuTranslationDrawer from '@/components/menu-translation-drawer';
 import Link from 'next/link';
@@ -157,11 +156,11 @@ const MenuTabWithPreviews: React.FC<MenuTabProps> = ({
   };
 
   return (
-    <TabsContent value="menus" className="space-y-6">
-      <Card>
+    <div className="space-y-6">
+      <Card className="rounded-[18px] border-[#e8ded2] bg-white shadow-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MenuIcon className="h-5 w-5 text-red-600" />
+          <CardTitle className="flex items-center gap-2 text-base text-[#2f2923]">
+            <MenuIcon className="h-5 w-5 text-[#b03a2e]" />
             القوائم المنشورة
           </CardTitle>
         </CardHeader>
@@ -174,23 +173,23 @@ const MenuTabWithPreviews: React.FC<MenuTabProps> = ({
                   const hasMultipleLanguages = languageVersions.length > 1;
                   
                   return (
-                    <div key={menu.id} className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
+                    <div key={menu.id} className="overflow-hidden rounded-[16px] border border-[#e8ded2] bg-white shadow-sm transition-shadow hover:shadow-md">
                     {/* WhatsApp-style PDF Preview */}
                     <div className="relative group cursor-pointer">
                       <PDFPreview 
                         pdfUrl={menu.pdf_url}
-                        className="border-b border-gray-200"
+                        className="border-b border-[#e8ded2]"
                       />
                       
                       {/* PDF Badge */}
                       <div className="absolute top-2 left-2">
-                        <Badge className="bg-red-600 text-white text-xs">PDF</Badge>
+                        <Badge className="bg-[#b03a2e] text-white text-xs">PDF</Badge>
                       </div>
                         
                         {/* Language indicator */}
                         {languageVersions.length > 0 && (
                           <div className="absolute top-2 right-2">
-                            <Badge className="bg-purple-600 text-white text-xs">
+                            <Badge className="bg-[#143229] text-white text-xs">
                               <Languages className="h-3 w-3 mr-1" />
                               {languageVersions.length} {languageVersions.length === 1 ? 'لغة' : 'لغات'}
                             </Badge>
@@ -201,8 +200,8 @@ const MenuTabWithPreviews: React.FC<MenuTabProps> = ({
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center">
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                           <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 shadow-lg">
-                            <Eye className="h-4 w-4 text-gray-600" />
-                            <span className="text-sm text-gray-600">معاينة</span>
+                            <Eye className="h-4 w-4 text-[#463d35]" />
+                            <span className="text-sm text-[#463d35]">معاينة</span>
                           </div>
                         </div>
                       </div>
@@ -211,8 +210,8 @@ const MenuTabWithPreviews: React.FC<MenuTabProps> = ({
                     {/* Menu Info */}
                     <div className="p-4">
                       <div className="flex items-start justify-between gap-2 mb-2">
-                        <h3 className="font-semibold text-gray-900 text-sm line-clamp-1">{menu.menu_name}</h3>
-                        <Badge className="bg-green-100 text-green-800 border-green-200 text-xs flex-shrink-0">
+                        <h3 className="font-semibold text-[#2f2923] text-sm line-clamp-1">{menu.menu_name}</h3>
+                        <Badge className="bg-[#eef9f2] text-[#2f8f5b] border-[#bfe0cd] text-xs flex-shrink-0">
                           <CheckCircle className="ml-1 h-3 w-3" />
                           نشط
                         </Badge>
@@ -324,7 +323,7 @@ const MenuTabWithPreviews: React.FC<MenuTabProps> = ({
           onTranslationComplete={handleTranslationComplete}
         />
       )}
-    </TabsContent>
+    </div>
   );
 };
 

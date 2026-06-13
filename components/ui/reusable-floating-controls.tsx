@@ -1,15 +1,17 @@
 "use client"
 
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { 
-  Type, 
-  Layers, 
-  Image, 
-  Plus, 
-  LayoutTemplate, 
+import {
+  Type,
+  Layers,
+  Image,
+  Plus,
+  LayoutTemplate,
   Palette,
-  Settings 
+  FileUp,
+  Settings
 } from 'lucide-react'
 import { useMenuEditor } from '@/contexts/menu-editor-context'
 import { cn } from '@/lib/utils'
@@ -37,9 +39,8 @@ const FloatingControlButton: React.FC<FloatingControlButtonProps> = ({
         variant="ghost"
         size="sm"
         className={cn(
-          'rounded-full w-12 h-12 flex items-center justify-center',
-          'transition-all duration-200',
-          'hover:scale-110 active:scale-95',
+          'h-11 w-11 rounded-full flex items-center justify-center',
+          'transition-colors duration-200',
           'disabled:opacity-50 disabled:cursor-not-allowed',
           className
         )}
@@ -49,9 +50,9 @@ const FloatingControlButton: React.FC<FloatingControlButtonProps> = ({
       </Button>
       
       {/* Tooltip */}
-      <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+      <div className="absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-[8px] bg-[#2f2923] px-3 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-200 pointer-events-none group-hover:opacity-100">
         {title}
-        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900" />
+        <div className="absolute top-full left-1/2 h-0 w-0 -translate-x-1/2 border-l-4 border-r-4 border-t-4 border-transparent border-t-[#2f2923]" />
       </div>
     </div>
   )
@@ -67,42 +68,50 @@ export const ReusableFloatingControls: React.FC = () => {
     handleLoadDummyData,
     isLoadingDummy,
   } = useMenuEditor()
+  const router = useRouter()
 
   const controls = [
+    {
+      id: 'import',
+      title: 'استيراد من ملف',
+      icon: <FileUp className="h-5 w-5" />,
+      onClick: () => router.push('/dashboard/import'),
+      className: 'text-[#b03a2e] hover:text-[#962f26] hover:bg-[#fff3f1]',
+    },
     {
       id: 'design',
       title: 'إعدادات الخط',
       icon: <Type className="h-5 w-5" />,
       onClick: () => setShowDesignModal(true),
-      className: 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-100/50',
+      className: 'text-[#2f8f5b] hover:text-[#26784c] hover:bg-[#eef9f2]',
     },
     {
       id: 'styling',
       title: 'تصميم العناصر',
       icon: <Layers className="h-5 w-5" />,
       onClick: () => setShowRowStylingModal(true),
-      className: 'text-blue-600 hover:text-blue-700 hover:bg-blue-100/50',
+      className: 'text-[#365f7d] hover:text-[#294962] hover:bg-[#eef5fa]',
     },
     {
       id: 'background',
       title: 'خلفية الصفحة',
       icon: <Image className="h-5 w-5" />,
       onClick: () => setShowPageBackgroundModal(true),
-      className: 'text-orange-600 hover:text-orange-700 hover:bg-orange-100/50',
+      className: 'text-[#a8763a] hover:text-[#805926] hover:bg-[#f7efe3]',
     },
     {
       id: 'template',
       title: 'تغيير القالب',
       icon: <LayoutTemplate className="h-5 w-5" />,
       onClick: () => setShowTemplateSwitcherModal(true),
-      className: 'text-purple-600 hover:text-purple-700 hover:bg-purple-100/50',
+      className: 'text-[#5b4a8b] hover:text-[#44366d] hover:bg-[#f1eef8]',
     },
     {
       id: 'colors',
       title: 'لوحة الألوان',
       icon: <Palette className="h-5 w-5" />,
       onClick: () => setShowColorModal(true),
-      className: 'text-pink-600 hover:text-pink-700 hover:bg-pink-100/50',
+      className: 'text-[#8b3f58] hover:text-[#6e3045] hover:bg-[#faeef2]',
     },
     {
       id: 'dummy-data',
@@ -114,13 +123,13 @@ export const ReusableFloatingControls: React.FC = () => {
       ),
       onClick: handleLoadDummyData,
       disabled: isLoadingDummy,
-      className: 'text-gray-600 hover:text-gray-700 hover:bg-gray-100/50',
+      className: 'text-[#6f6257] hover:text-[#2f2923] hover:bg-[#f4eee7]',
     },
   ]
 
   return (
-    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
-      <div className="flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm p-3 rounded-full border border-gray-200/50 shadow-lg">
+    <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2">
+      <div className="flex items-center justify-center gap-1 rounded-full border border-[#e8ded2] bg-white/95 p-2 shadow-lg backdrop-blur-xl">
         {controls.map((control) => (
           <FloatingControlButton
             key={control.id}

@@ -303,6 +303,42 @@
       },
       "previewImageUrl": "/previews/luxury-menu-preview.png"
     },
+    "mena-hospitality": {
+      "id": "mena-hospitality",
+      "name": "MENA Hospitality",
+      "description": "Portrait Arabic menu with an arched hero image, Amiri typography, and premium pomegranate accents",
+      "componentPath": "./templates/MenaHospitalityPDFTemplate",
+      "previewComponentPath": "../components/templates/mena-hospitality-preview",
+      "category": "premium",
+      "features": [
+        "rtl",
+        "portrait-a4",
+        "header",
+        "sections",
+        "footer",
+        "images",
+        "mena-typography",
+        "paginated-menu"
+      ],
+      "defaultSettings": {
+        "fontSettings": {
+          "arabic": {
+            "font": "Amiri",
+            "weight": "normal"
+          },
+          "english": {
+            "font": "Cairo",
+            "weight": "normal"
+          }
+        },
+        "colorPalette": {
+          "primary": "#1D1914",
+          "secondary": "#786F63",
+          "accent": "#8E2A3C"
+        }
+      },
+      "previewImageUrl": "/previews/mena-hospitality-preview.png"
+    },
     "chalkboard-coffee": {
       "id": "chalkboard-coffee",
       "name": "Chalkboard Style",

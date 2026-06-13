@@ -10,6 +10,8 @@ import { MenuFooter } from "./menu-footer"
 import PaintingStylePreview from './templates/painting-style/PaintingStylePreview'
 import VintagePreview from './templates/vintage/VintagePreview'
 import ModernPreview from './templates/modern/ModernPreview'
+import { useRouter } from "next/navigation"
+import { FileText, PenLine } from "lucide-react"
 
 interface ProfessionalCafeMenuPreviewProps {
   restaurant: Restaurant
@@ -20,6 +22,7 @@ interface ProfessionalCafeMenuPreviewProps {
 const ClassicMenuContent: React.FC = () => {
     const { categories, appliedFontSettings, showRowStylingModal, setShowRowStylingModal, rowStyleSettings, handleSaveRowStyles, appliedPageBackgroundSettings, showDesignModal, showPageBackgroundModal, setShowPageBackgroundModal, } = useMenuEditor();
     const isEmpty = categories.length === 0;
+    const router = useRouter();
 
     const getPageBackgroundStyle = () => {
         const { backgroundType, backgroundColor, backgroundImage, gradientFrom, gradientTo, gradientDirection } = appliedPageBackgroundSettings
@@ -44,14 +47,35 @@ const ClassicMenuContent: React.FC = () => {
                 <MenuHeader isEmpty={isEmpty} />
                 <div className="p-6 space-y-8">
                     {isEmpty ? (
-                        <div className="text-center py-12">
-                            <div className="text-gray-400 mb-4">
-                                <svg className="mx-auto h-24 w-24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
+                        <div className="flex items-center justify-center py-12" dir="rtl">
+                            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8 max-w-sm w-full text-center">
+                                <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                                    <FileText className="h-7 w-7 text-gray-400" />
+                                </div>
+                                <h3 className="text-lg font-semibold text-gray-900 mb-2">قائمتك فارغة</h3>
+                                <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+                                    استورد قائمتك من PDF أو صورة بالذكاء الاصطناعي، أو أضف أول طبق يدوياً
+                                </p>
+                                <div className="space-y-3">
+                                    <button
+                                        onClick={() => router.push("/dashboard/import")}
+                                        className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium py-2.5 px-4 rounded-xl transition-colors text-sm"
+                                    >
+                                        <FileText className="h-4 w-4" />
+                                        استيراد من PDF أو صورة
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            const firstSection = document.querySelector('[data-add-item]') as HTMLButtonElement | null
+                                            firstSection?.click()
+                                        }}
+                                        className="w-full flex items-center justify-center gap-2 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium py-2.5 px-4 rounded-xl transition-colors text-sm"
+                                    >
+                                        <PenLine className="h-4 w-4" />
+                                        إضافة طبق يدوياً
+                                    </button>
+                                </div>
                             </div>
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">لا توجد أقسام في القائمة</h3>
-                            <p className="text-gray-500 mb-6">ابدأ بإضافة أقسام وعناصر لقائمتك</p>
                         </div>
                     ) : (
                         categories.map((category: MenuCategory) => (

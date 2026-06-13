@@ -1,6 +1,8 @@
 import { createServerComponentClient, type SupabaseClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 
+type CookieStore = Awaited<ReturnType<typeof cookies>>
+
 // Check if Supabase environment variables are available
 export const isSupabaseConfigured =
   typeof process.env.NEXT_PUBLIC_SUPABASE_URL === "string" &&
@@ -9,12 +11,9 @@ export const isSupabaseConfigured =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.length > 0
 
 // Create a Supabase client in server components/route handlers.
-// In Next.js 15 the `cookies()` API is asynchronous, so instead of
-// reading the cookie store synchronously we pass the `cookies` function
-// directly to the Supabase helper. The helper will call it and await the
-// result internally, avoiding the "cookies() should be awaited" runtime
-// error.
-export const createClient = (): SupabaseClient | any => {
+// @supabase/auth-helpers-nextjs reads `context.cookies().get(...)`
+// synchronously, so Next 15 call sites can pass an awaited cookie store.
+export const createClient = (cookieStore?: CookieStore): SupabaseClient | any => {
   if (!isSupabaseConfigured) {
     // Return a minimal stub with the methods used in the app so that pages
     // can still be evaluated during build without real Supabase credentials.
@@ -44,6 +43,6 @@ export const createClient = (): SupabaseClient | any => {
   }
 
   return createServerComponentClient({
-    cookies,
+    cookies: (() => cookieStore ?? cookies()) as unknown as typeof cookies,
   })
 }

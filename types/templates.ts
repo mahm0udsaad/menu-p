@@ -7,6 +7,7 @@ export type TemplateId =
   | 'elegant-cocktail'
   | 'sweet-treats'
   | 'luxury-menu'
+  | 'mena-hospitality'
   | 'borcelle-coffee'
   | 'chalkboard-coffee'
   | 'botanical-cafe'

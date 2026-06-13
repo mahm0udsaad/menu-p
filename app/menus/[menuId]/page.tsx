@@ -1,114 +1,89 @@
-import { createClient } from "@/lib/supabase/server"
-import { notFound, redirect } from "next/navigation"
-import MenuClient from "./menu-client"
+import type { Metadata } from "next"
+import { notFound } from "next/navigation"
+import PublicMenuView from "@/components/public-menu/public-menu-view"
+import type { LanguageOption } from "@/components/public-menu/language-control"
+import { languageLabel, resolveLanguage } from "@/components/public-menu/i18n"
+import { categoriesForLanguage } from "@/components/public-menu/types"
+import { resolveMenuTheme } from "@/lib/theming/theme"
+import { loadPublicMenu } from "./_lib/load"
+
+/**
+ * Public menu — the page existing QR codes point at (/menus/{publishedMenuId}).
+ * Renders the live HTML menu (no PDF embed) themed from the restaurant brand.
+ */
 
 interface MenuPageProps {
   params: Promise<{ menuId: string }>
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-// Generate metadata for SEO
-export async function generateMetadata({ params }: { params: Promise<{ menuId: string }> }) {
-  const resolvedParams = await params
-  const { menuId } = resolvedParams
-  const supabase = createClient()
-
-  const { data: menu } = await supabase
-    .from("published_menus")
-    .select(`
-      menu_name,
-      restaurant_id
-    `)
-    .eq("id", menuId)
-    .single()
-
-  if (!menu) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ menuId: string }>
+}): Promise<Metadata> {
+  const { menuId } = await params
+  const data = await loadPublicMenu(menuId)
+  if (!data) {
     return {
-      title: "Menu Not Found",
-      description: "The requested menu could not be found."
+      title: "القائمة غير موجودة | Menu-P",
+      description: "تعذّر العثور على هذه القائمة.",
+      robots: { index: false },
     }
   }
-
-  // Get restaurant info separately
-  const { data: restaurant } = await supabase
-    .from("restaurants")
-    .select("name")
-    .eq("id", menu.restaurant_id)
-    .single()
-
-  const restaurantName = restaurant?.name || "Restaurant"
-
+  const title = `${data.restaurant.name} — ${data.menu.name || "القائمة"}`
+  const description = `تصفّح قائمة ${data.restaurant.name}: الأصناف والأسعار محدّثة دائماً. ${
+    data.restaurant.category ? `(${data.restaurant.category}) ` : ""
+  }عبر Menu-P.`
   return {
-    title: `${menu.menu_name} - ${restaurantName}`,
-    description: `View ${menu.menu_name} from ${restaurantName}. Digital menu with easy navigation.`
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      ...(data.restaurant.logo_url ? { images: [{ url: data.restaurant.logo_url }] } : {}),
+    },
   }
 }
 
 export default async function MenuPage({ params, searchParams }: MenuPageProps) {
-  const resolvedParams = await params
-  const resolvedSearchParams = await searchParams
-  const { menuId } = resolvedParams
-  const supabase = createClient()
-      
-  // Get the current menu info
-  const { data: currentMenu, error: currentError } = await supabase
-    .from("published_menus")
-    .select(`
-      id,
-      menu_name,
-      language_code,
-      pdf_url,
-      restaurant_id
-    `)
-    .eq("id", menuId)
-    .single()
+  const [{ menuId }, query] = await Promise.all([params, searchParams])
+  const data = await loadPublicMenu(menuId)
+  if (!data) notFound()
 
-  if (currentError || !currentMenu) {
-    console.error("Menu not found:", currentError)
-    notFound()
-  }
+  const langParam = typeof query.lang === "string" ? query.lang : undefined
+  const available = data.languages.map((l) => l.code)
+  const lang = resolveLanguage(langParam, undefined, available, data.sourceLanguage)
+  const hasExplicitLang = Boolean(langParam && available.includes(langParam))
 
-  // Get restaurant info separately
-  const { data: restaurant, error: restaurantError } = await supabase
-    .from("restaurants")
-    .select("id, name")
-    .eq("id", currentMenu.restaurant_id)
-    .single()
+  const categories = categoriesForLanguage(
+    data.categories,
+    data.translations,
+    data.sourceLanguage,
+    lang,
+  )
+  const theme = await resolveMenuTheme(data.restaurant, data.customizations)
 
-  if (restaurantError || !restaurant) {
-    console.error("Restaurant not found:", restaurantError)
-    notFound()
-  }
-
-  // Check for other language versions (including current menu)
-  const { data: allLanguageVersions, error: versionsError } = await supabase
-    .from("published_menus")
-    .select("id, language_code, menu_name")
-    .eq("restaurant_id", restaurant.id)
-    .eq("menu_name", currentMenu.menu_name)
-
-  if (versionsError) {
-    console.error("Error checking language versions:", versionsError)
-  }
-
-  // Filter out current menu to get other versions
-  const languageVersions = allLanguageVersions?.filter(v => v.id !== menuId) || []
-  const hasMultipleLanguages = allLanguageVersions && allLanguageVersions.length > 1
-  const preSelectedLang = resolvedSearchParams.lang as string
-
-  // Remove redirect - let menu-client handle language selection
-  const enrichedCurrentMenu = {
-    ...currentMenu,
-    restaurants: restaurant
-  }
+  // Sibling published_menus rows keep their own URL (their PDF lives there);
+  // translation-only languages render on this row via ?lang=.
+  const languageOptions: LanguageOption[] = data.languages.map((l) => ({
+    code: l.code,
+    label: languageLabel(l.code),
+    href: `/menus/${l.menuId ?? menuId}?lang=${encodeURIComponent(l.code)}`,
+  }))
+  const pdfUrl = data.languages.find((l) => l.code === lang)?.pdfUrl ?? data.menu.pdfUrl
 
   return (
-    <MenuClient
-      menuId={menuId}
-      currentMenu={enrichedCurrentMenu}
-      languageVersions={languageVersions}
-      hasMultipleLanguages={hasMultipleLanguages}
-      preSelectedLang={preSelectedLang}
+    <PublicMenuView
+      theme={theme}
+      restaurant={data.restaurant}
+      menuName={data.menu.name}
+      pdfUrl={pdfUrl}
+      categories={categories}
+      lang={lang}
+      languageOptions={languageOptions}
+      hasExplicitLang={hasExplicitLang}
     />
   )
 }

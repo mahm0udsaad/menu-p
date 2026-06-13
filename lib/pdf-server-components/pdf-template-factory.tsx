@@ -158,6 +158,13 @@ export class PDFTemplateFactory {
   }
 
   /**
+   * Gets the default template ID from the registry.
+   */
+  static async getDefaultTemplateId(): Promise<string> {
+    return await templateRegistry.getDefaultTemplateId()
+  }
+
+  /**
    * Validates if a template ID is supported
    */
   static async isValidTemplateId(templateId: string): Promise<boolean> {
@@ -311,4 +318,4 @@ const PDFTemplateContextProvider: React.FC<{
   }, childrenWithProps)
 }
 
-export default PDFTemplateFactory 
+export default PDFTemplateFactory

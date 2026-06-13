@@ -116,6 +116,13 @@ async function generateMenuPdfWithTemplates(
       }
     }
 
+    const contentType = response.headers.get('content-type')
+    if (contentType && contentType.includes('application/pdf')) {
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      return { pdfUrl: url, menuId: 'local-only-id' }
+    }
+
     const { pdfUrl } = await response.json()
 
     // Step 2: Save to published_menus table for menu management
@@ -632,7 +639,7 @@ export default function LiveMenuEditor({
     <>
       <div className="space-y-4 h-full flex flex-col">
         {/* Unified Control Bar */}
-        <div className="w-11/12 mx-auto sticky top-1 z-50 flex items-center justify-between gap-3 bg-white/80 backdrop-blur-md border border-red-200 rounded-xl p-2 shadow-lg">
+        <div className="w-11/12 mx-auto sticky top-2 z-50 flex items-center justify-between gap-3 rounded-[16px] border border-[#e8ded2] bg-white/90 p-2 shadow-lg backdrop-blur-xl">
           
           {/* Left Side: Publish Button */}
           <div className="flex-shrink-0 relative">
@@ -642,8 +649,8 @@ export default function LiveMenuEditor({
               size="sm"
               className={`h-8 px-4 transition-colors flex items-center ${
                 isPublishing 
-                  ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                  : 'bg-green-500 hover:bg-green-600 text-white'
+                  ? 'bg-[#143229] hover:bg-[#0f261f] text-white'
+                  : 'bg-[#b03a2e] hover:bg-[#962f26] text-white'
               }`}
               title={!planInfo?.canPublish && planInfo ? `لقد وصلت إلى الحد الأقصى (${planInfo.currentMenus}/${planInfo.maxMenus}) للقوائم في خطتك.` : "نشر القائمة"}
             >
@@ -678,8 +685,8 @@ export default function LiveMenuEditor({
                         size="sm"
                         className={`whitespace-nowrap transition-all text-xs h-8 px-3 ${
                           isActive 
-                            ? 'bg-red-500 text-white shadow-sm'
-                            : 'border-red-200 text-gray-600 hover:text-red-600 hover:bg-red-50'
+                            ? 'bg-[#b03a2e] text-white shadow-sm'
+                            : 'border-[#d9cbb9] text-[#6f6257] hover:text-[#b03a2e] hover:bg-[#f7f2ed]'
                         }`}
                       >
                         {versionName}
@@ -687,7 +694,7 @@ export default function LiveMenuEditor({
                       {langCode !== 'ar' && (
                         <button
                           type="button"
-                          className="absolute -top-1.5 -right-1.5 bg-white border border-red-300 rounded-full w-4 h-4 flex items-center justify-center shadow-md z-10 hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute -top-1.5 -right-1.5 z-10 flex h-4 w-4 items-center justify-center rounded-full border border-[#e4c7c2] bg-white opacity-0 shadow-md transition-opacity hover:bg-[#fff3f1] group-hover:opacity-100"
                           onClick={() => { setLanguageToDelete(langCode); setShowDeleteLangModal(true); }}
                           aria-label={`Delete ${versionName} language`}
                         >
@@ -704,7 +711,7 @@ export default function LiveMenuEditor({
               onClick={() => setShowTranslationDrawer(true)}
               disabled={categories.length === 0}
               size="sm"
-              className="flex items-center hover:bg-purple-50 border-purple-200 hover:text-purple-600 bg-purple-50 text-purple-600 h-8 px-3 transition-colors flex-shrink-0"
+              className="flex h-8 shrink-0 items-center border-[#d9cbb9] bg-[#fbf8f4] px-3 text-[#7a4a2b] transition-colors hover:bg-[#f4eee7] hover:text-[#b03a2e]"
               title="ترجمة القائمة بالذكاء الاصطناعي"
             >
               <Languages className="h-4 w-4 sm:mr-2" />
@@ -715,8 +722,8 @@ export default function LiveMenuEditor({
           {/* Right Side: Action Buttons & Plan Info */}
           <div className="flex items-center gap-2 flex-shrink-0">
             {planInfo && (
-              <div className="hidden md:flex items-center gap-2 px-2 py-1 bg-red-50 rounded-lg border border-red-200">
-                <span className="text-xs text-red-600 font-medium whitespace-nowrap">
+                <div className="hidden items-center gap-2 rounded-[10px] border border-[#e8ded2] bg-[#fbf8f4] px-2 py-1 md:flex">
+                <span className="whitespace-nowrap text-xs font-medium text-[#7a4a2b]">
                   {planInfo.currentMenus}/{planInfo.maxMenus} قائمة
                 </span>
               </div>
@@ -726,7 +733,7 @@ export default function LiveMenuEditor({
               onClick={handleRefresh}
               disabled={refreshing || isPreviewMode}
               size="sm"
-              className={`border-red-200 text-gray-600 hover:text-red-600 hover:bg-red-50 h-8 w-8 p-0 transition-colors flex-shrink-0 ${isPreviewMode ? 'opacity-50' : ''}`}
+              className={`h-8 w-8 flex-shrink-0 border-[#d9cbb9] p-0 text-[#6f6257] transition-colors hover:bg-[#f7f2ed] hover:text-[#b03a2e] ${isPreviewMode ? 'opacity-50' : ''}`}
               title="تحديث"
             >
               <RefreshCw className="h-4 w-4" />
@@ -736,7 +743,7 @@ export default function LiveMenuEditor({
                 variant="outline"
                 onClick={handlePdfPreview}
                 size="sm"
-                className={`border-red-200 text-gray-600 hover:text-red-600 hover:bg-red-50 h-8 w-8 p-0 transition-colors flex-shrink-0 ${!hasPaidPlan && !paymentLoading ? 'opacity-75' : ''}`}
+                className={`h-8 w-8 flex-shrink-0 border-[#d9cbb9] p-0 text-[#6f6257] transition-colors hover:bg-[#f7f2ed] hover:text-[#b03a2e] ${!hasPaidPlan && !paymentLoading ? 'opacity-75' : ''}`}
                 title={!hasPaidPlan && !paymentLoading ? 'الترقية للمعاينة' : 'معاينة PDF'}
                 disabled={paymentLoading}
               >
@@ -747,7 +754,7 @@ export default function LiveMenuEditor({
               variant="outline"
               onClick={handleTogglePreviewMode}
               size="sm"
-              className={`border-red-200 text-gray-600 hover:text-red-600 hover:bg-red-50 h-8 px-3 transition-colors flex-shrink-0 ${isPreviewMode ? 'bg-red-50 text-red-600' : ''}`}
+              className={`h-8 flex-shrink-0 border-[#d9cbb9] px-3 text-[#6f6257] transition-colors hover:bg-[#f7f2ed] hover:text-[#b03a2e] ${isPreviewMode ? 'bg-[#fff3f1] text-[#b03a2e]' : ''}`}
               title={isPreviewMode ? 'العودة للتحرير' : 'معاينة القائمة'}
             >
               <Eye className="h-4 w-4 sm:mr-2" />
@@ -839,6 +846,10 @@ export default function LiveMenuEditor({
               case 'modern': {
                 const ModernPreview = require("@/components/editor/templates/modern/ModernPreview").default;
                 return <ModernPreview />;
+              }
+              case 'mena-hospitality': {
+                const MenaHospitalityPreview = require("@/components/editor/templates/mena-hospitality/MenaHospitalityPreview").default;
+                return <MenaHospitalityPreview key={selectedTemplate} />;
               }
               case 'classic':
               case 'cafe':

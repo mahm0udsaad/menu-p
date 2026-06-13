@@ -1,4 +1,13 @@
 import React from 'react'
+import {
+  type PageCategory,
+  type MenuPage,
+  paginateCategories,
+  A4_PAGE_WIDTH as PAGE_WIDTH,
+  A4_PAGE_HEIGHT as PAGE_HEIGHT,
+  toArabicDigits,
+  formatPrice
+} from '../pagination-utils'
 
 interface MenuItem {
   id: string
@@ -42,26 +51,223 @@ interface ModernPDFTemplateUnifiedProps {
   pdfMode?: boolean
 }
 
-export default function ModernPDFTemplateUnified({ 
-  restaurant, 
-  categories, 
-  language = 'ar',
-  customizations,
-  pdfMode = false
-}: ModernPDFTemplateUnifiedProps) {
-  const currency = restaurant.currency || '$'
+function clampStyle(lines: number): React.CSSProperties {
+  return {
+    display: '-webkit-box',
+    WebkitLineClamp: lines,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+  }
+}
+
+function getAvailableCategories(categories: MenuCategory[]) {
+  return categories
+    .map((category) => ({
+      ...category,
+      menu_items: (category.menu_items || []).filter((item) => item.is_available !== false),
+    }))
+    .filter((category) => category.menu_items.length > 0)
+}
+
+function Header({ restaurant, language, compact = false }: { restaurant: Restaurant; language: string; compact?: boolean }) {
   const isArabic = language === 'ar'
-  
   return (
-    <div className="pdf-page" style={{ 
-      minHeight: '1123px',
-      padding: '64px',
+    <div style={{ 
+      textAlign: isArabic ? 'right' : 'left', 
+      marginBottom: compact ? '40px' : '80px',
       position: 'relative',
-      background: 'linear-gradient(135deg, #fef7ed 0%, #fef3c7 50%, #fed7aa 100%)',
-      fontFamily: 'Arial, sans-serif',
-      direction: isArabic ? 'rtl' : 'ltr'
+      flex: 'none'
     }}>
-      {/* Decorative Elements */}
+      <div style={{ marginBottom: compact ? '24px' : '48px' }}>
+        <h1 style={{ 
+          fontSize: compact ? '24px' : '36px', 
+          fontWeight: '700', 
+          color: '#111827',
+          marginBottom: '8px',
+          letterSpacing: '0.1em',
+          margin: '0 0 8px 0'
+        }}>
+          {restaurant?.name?.toUpperCase() || 'BORCELLE'}
+        </h1>
+        <p style={{ 
+          fontSize: compact ? '14px' : '18px', 
+          color: '#374151', 
+          fontWeight: '500',
+          letterSpacing: '0.1em',
+          margin: 0
+        }}>
+          {restaurant.category || 'COFFEESHOP'}
+        </p>
+      </div>
+      {!compact && (
+        <div style={{ 
+          textAlign: isArabic ? 'left' : 'right'
+        }}>
+          <h2 style={{ 
+            fontSize: '96px', 
+            fontWeight: '900', 
+            color: '#111827',
+            letterSpacing: '0',
+            margin: 0,
+            lineHeight: '0.9'
+          }}>
+            {isArabic ? 'قائمة الطعام' : 'MENU'}
+          </h2>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function MenuRow({ item, currency, language }: { item: MenuItem; currency?: string; language: string }) {
+  const isArabic = language === 'ar'
+  return (
+    <div style={{
+      display: 'flex',
+      gap: '24px',
+      alignItems: 'center',
+      padding: '20px 24px',
+      backgroundColor: 'rgba(255, 255, 255, 0.8)',
+      borderRadius: '16px',
+      border: '1px solid rgba(251, 146, 60, 0.1)',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
+    }}>
+      {item.image_url && (
+        <img
+          src={item.image_url}
+          alt={item.name}
+          style={{
+            width: 64,
+            height: 64,
+            flex: 'none',
+            objectFit: 'cover',
+            borderRadius: '12px',
+          }}
+        />
+      )}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <h4 style={{ 
+          fontSize: '18px', 
+          fontWeight: '700', 
+          color: '#111827',
+          margin: '0 0 4px 0'
+        }}>
+          {item.name}
+        </h4>
+        {item.description && (
+          <p style={{ 
+            fontSize: '14px', 
+            color: '#6b7280', 
+            lineHeight: '1.4',
+            margin: 0,
+            ...clampStyle(2)
+          }}>
+            {item.description}
+          </p>
+        )}
+      </div>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        marginLeft: isArabic ? '0' : '24px',
+        marginRight: isArabic ? '24px' : '0'
+      }}>
+        <div style={{ 
+          fontSize: '20px', 
+          fontWeight: '700', 
+          color: '#ea580c',
+          whiteSpace: 'nowrap'
+        }}>
+          {formatPrice(item.price, currency)}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function CategoryBlock({
+  category,
+  currency,
+  language
+}: {
+  category: PageCategory
+  currency?: string
+  language: string
+}) {
+  return (
+    <div style={{
+      position: 'relative',
+      backgroundColor: 'rgba(255, 255, 255, 0.6)',
+      backdropFilter: 'blur(8px)',
+      borderRadius: '32px',
+      padding: '40px',
+      boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.05)',
+      border: '1px solid rgba(251, 146, 60, 0.2)',
+      marginBottom: '48px',
+      breakInside: 'avoid'
+    }}>
+      <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <h3 style={{ 
+          fontSize: '28px', 
+          fontWeight: '900', 
+          color: '#111827',
+          margin: 0,
+          textTransform: 'uppercase',
+          letterSpacing: '0.1em'
+        }}>
+          {category.name}
+        </h3>
+        {category.continued && (
+          <span style={{ border: '2px solid #ea580c', color: '#ea580c', borderRadius: 999, padding: '2px 10px', fontSize: 10, fontWeight: 900 }}>
+            تتمة
+          </span>
+        )}
+      </div>
+
+      <div style={{ 
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '20px'
+      }}>
+        {category.items.map((item) => (
+          <MenuRow key={item.id} item={item} currency={currency} language={language} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function Footer({ pageNumber, totalPages, restaurant, language }: { pageNumber: number; totalPages: number; restaurant: Restaurant; language: string }) {
+  const isArabic = language === 'ar'
+  return (
+    <div style={{ 
+      marginTop: 'auto',
+      textAlign: 'center',
+      flex: 'none'
+    }}>
+      <div style={{
+        backgroundColor: 'rgba(255, 255, 255, 0.6)',
+        backdropFilter: 'blur(8px)',
+        borderRadius: '24px',
+        padding: '24px 48px',
+        border: '1px solid rgba(251, 146, 60, 0.2)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        fontSize: '14px',
+        color: '#374151',
+        fontWeight: '500'
+      }}>
+        <span style={{ direction: 'ltr' }}>{restaurant.website || 'menu-p.com'}</span>
+        <span>{`صفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`}</span>
+      </div>
+    </div>
+  )
+}
+
+function DecorativeBackground() {
+  return (
+    <>
       <div style={{
         position: 'absolute',
         top: '0',
@@ -84,244 +290,92 @@ export default function ModernPDFTemplateUnified({
         opacity: '0.2',
         transform: 'translate(-192px, 192px)'
       }}></div>
-
-      <div style={{ 
-        position: 'relative',
-        width: '100%',
-        minHeight: '100%',
-        maxWidth: '1024px',
-        margin: '0 auto'
+      <div style={{
+        position: 'absolute',
+        left: '32px',
+        top: '128px',
+        width: '128px',
+        height: '128px',
+        opacity: '0.2'
       }}>
-        
-        {/* Coffee Bean Decorations */}
-        <div style={{
-          position: 'absolute',
-          left: '32px',
-          top: '128px',
-          width: '128px',
-          height: '128px',
-          opacity: '0.2'
-        }}>
-          <div style={{
-            width: '100%',
-            height: '100%',
-            backgroundColor: '#92400e',
-            borderRadius: '50%',
-            position: 'relative'
-          }}>
-            <div style={{
-              position: 'absolute',
-              inset: '8px',
-              backgroundColor: '#78350f',
-              borderRadius: '50%'
-            }}></div>
-            <div style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              width: '4px',
-              height: '64px',
-              backgroundColor: '#d97706',
-              transform: 'translate(-50%, -50%) rotate(12deg)'
-            }}></div>
-          </div>
-        </div>
-        <div style={{
-          position: 'absolute',
-          left: '64px',
-          bottom: '128px',
-          width: '96px',
-          height: '96px',
-          opacity: '0.15'
-        }}>
-          <div style={{
-            width: '100%',
-            height: '100%',
-            backgroundColor: '#92400e',
-            borderRadius: '50%',
-            position: 'relative'
-          }}>
-            <div style={{
-              position: 'absolute',
-              inset: '8px',
-              backgroundColor: '#78350f',
-              borderRadius: '50%'
-            }}></div>
-            <div style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              width: '4px',
-              height: '48px',
-              backgroundColor: '#d97706',
-              transform: 'translate(-50%, -50%) rotate(45deg)'
-            }}></div>
-          </div>
-        </div>
-
-        {/* Menu Header */}
-        <div style={{ 
-          textAlign: isArabic ? 'right' : 'left', 
-          marginBottom: '96px',
-          position: 'relative'
-        }}>
-          <div style={{ marginBottom: '64px' }}>
-            <h1 style={{ 
-              fontSize: '36px', 
-              fontWeight: '700', 
-              color: '#111827',
-              marginBottom: '16px',
-              letterSpacing: '0.1em',
-              margin: '0 0 16px 0'
-            }}>
-              {restaurant?.name?.toUpperCase() || 'BORCELLE'}
-            </h1>
-            <p style={{ 
-              fontSize: '18px', 
-              color: '#374151', 
-              fontWeight: '500',
-              letterSpacing: '0.1em',
-              margin: 0
-            }}>
-              COFFEESHOP
-            </p>
-          </div>
-          <div style={{ 
-            textAlign: isArabic ? 'left' : 'right'
-          }}>
-            <h2 style={{ 
-              fontSize: '128px', 
-              fontWeight: '900', 
-              color: '#111827',
-              letterSpacing: '0',
-              margin: 0,
-              lineHeight: '0.9'
-            }}>
-              {isArabic ? 'قائمة الطعام' : 'MENU'}
-            </h2>
-          </div>
-        </div>
-
-        {/* Menu Content */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '96px' }}>
-          {categories.map((category) => (
-            <div key={category.id} style={{
-              position: 'relative',
-              backgroundColor: 'rgba(255, 255, 255, 0.6)',
-              backdropFilter: 'blur(8px)',
-              borderRadius: '32px',
-              padding: '64px',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.1)',
-              border: '1px solid rgba(251, 146, 60, 0.2)'
-            }}>
-              {/* Category Header */}
-              <div style={{ marginBottom: '48px' }}>
-                <h3 style={{ 
-                  fontSize: '36px', 
-                  fontWeight: '900', 
-                  color: '#111827',
-                  margin: 0,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em'
-                }}>
-                  {category.name}
-                </h3>
-              </div>
-
-              {/* Items */}
-              <div style={{ 
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '32px',
-                minHeight: '50px'
-              }}>
-                {category.menu_items.map((item) => (
-                  <div key={item.id} style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    padding: '24px 32px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                    borderRadius: '16px',
-                    border: '1px solid rgba(251, 146, 60, 0.1)',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
-                  }}>
-                    <div style={{ flex: 1 }}>
-                      <h4 style={{ 
-                        fontSize: '20px', 
-                        fontWeight: '700', 
-                        color: '#111827',
-                        margin: '0 0 8px 0'
-                      }}>
-                        {item.name}
-                      </h4>
-                      {item.description && (
-                        <p style={{ 
-                          fontSize: '16px', 
-                          color: '#6b7280', 
-                          lineHeight: '1.5',
-                          margin: 0
-                        }}>
-                          {item.description}
-                        </p>
-                      )}
-                    </div>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      marginLeft: isArabic ? '0' : '32px',
-                      marginRight: isArabic ? '32px' : '0'
-                    }}>
-                      <div style={{ 
-                        fontSize: '24px', 
-                        fontWeight: '700', 
-                        color: '#ea580c',
-                        background: 'linear-gradient(135deg, #ea580c 0%, #dc2626 100%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text'
-                      }}>
-                        {currency}{item.price?.toFixed(2) || '0.00'}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Footer */}
-        <div style={{ 
-          marginTop: '128px',
-          textAlign: 'center'
-        }}>
-          <div style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.6)',
-            backdropFilter: 'blur(8px)',
-            borderRadius: '24px',
-            padding: '48px',
-            border: '1px solid rgba(251, 146, 60, 0.2)'
-          }}>
-            <p style={{ 
-              color: '#374151', 
-              fontWeight: '500',
-              margin: '0 0 16px 0',
-              fontSize: '16px'
-            }}>
-              {isArabic ? 'متاح من' : 'Available at'}
-            </p>
-            <p style={{ 
-              color: '#111827', 
-              fontWeight: '700',
-              margin: 0,
-              fontSize: '24px'
-            }}>
-              9:00 am - 10:00 pm
-            </p>
-          </div>
+        <div style={{ width: '100%', height: '100%', backgroundColor: '#92400e', borderRadius: '50%', position: 'relative' }}>
+          <div style={{ position: 'absolute', inset: '8px', backgroundColor: '#78350f', borderRadius: '50%' }}></div>
+          <div style={{ position: 'absolute', top: '50%', left: '50%', width: '4px', height: '64px', backgroundColor: '#d97706', transform: 'translate(-50%, -50%) rotate(12deg)' }}></div>
         </div>
       </div>
-    </div>
+    </>
+  )
+}
+
+export default function ModernPDFTemplateUnified({ 
+  restaurant, 
+  categories, 
+  language = 'ar',
+  customizations,
+  pdfMode = false
+}: ModernPDFTemplateUnifiedProps) {
+  const currency = restaurant.currency || undefined
+  const cleanCategories = getAvailableCategories(categories)
+  // Large padding and large blocks mean low budget.
+  const pages = paginateCategories(cleanCategories, { itemsPerPage: 6, firstPageItems: 4, headingCost: 1.5 })
+  const totalPages = Math.max(pages.length, 1)
+  
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @page { size: A4 portrait; margin: 0; }
+        html, body { margin: 0; padding: 0; background: linear-gradient(135deg, #fef7ed 0%, #fef3c7 50%, #fed7aa 100%); }
+        * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      ` }} />
+
+      {pages.length === 0 ? (
+        <div className="pdf-page" dir={language === 'ar' ? 'rtl' : 'ltr'} lang={language} style={{
+          width: PAGE_WIDTH,
+          height: PAGE_HEIGHT,
+          padding: '64px',
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          fontFamily: 'Arial, sans-serif',
+          overflow: 'hidden',
+        }}>
+          <DecorativeBackground />
+          <Header restaurant={restaurant} language={language} />
+          <div style={{ flex: 1, display: 'grid', placeItems: 'center', color: '#6b7280', fontSize: '24px', position: 'relative' }}>
+            لا توجد أصناف متاحة حالياً
+          </div>
+          <Footer pageNumber={1} totalPages={1} restaurant={restaurant} language={language} />
+        </div>
+      ) : pages.map((page, index) => {
+        const isFirst = index === 0
+
+        return (
+          <div key={index} className="pdf-page" dir={language === 'ar' ? 'rtl' : 'ltr'} lang={language} style={{
+            width: PAGE_WIDTH,
+            height: PAGE_HEIGHT,
+            padding: '64px',
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            fontFamily: 'Arial, sans-serif',
+            overflow: 'hidden',
+            pageBreakAfter: index === pages.length - 1 ? 'auto' : 'always',
+            breakAfter: index === pages.length - 1 ? 'auto' : 'page',
+          }}>
+            <DecorativeBackground />
+            
+            <Header restaurant={restaurant} language={language} compact={!isFirst} />
+
+            <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
+              {page.categories.map((category) => (
+                <CategoryBlock key={category.id} category={category} currency={currency} language={language} />
+              ))}
+            </div>
+
+            <Footer pageNumber={index + 1} totalPages={totalPages} restaurant={restaurant} language={language} />
+          </div>
+        )
+      })}
+    </>
   )
 }

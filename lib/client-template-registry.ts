@@ -157,6 +157,7 @@ export class ClientTemplateRegistryService {
       'SimpleCoffeePDFTemplate': 'SimpleCoffeeTemplate',
       'BorcelleCoffeePDFTemplate': 'BorcelleCoffeeTemplate',
       'LuxuryMenuPDFTemplate': 'LuxuryMenuTemplate',
+      'MenaHospitalityPDFTemplate': 'CafeTemplate',
       'ChalkboardCoffeePDFTemplate': 'ChalkboardCoffeeTemplate',
       'BotanicalCafePDFTemplate': 'BotanicalCafeTemplate',
       'CocktailMenuPDFTemplate': 'CocktailMenuTemplate',
@@ -236,4 +237,4 @@ export class ClientTemplateRegistryService {
 }
 
 // Export singleton instance
-export const clientTemplateRegistry = ClientTemplateRegistryService.getInstance() 
+export const clientTemplateRegistry = ClientTemplateRegistryService.getInstance()

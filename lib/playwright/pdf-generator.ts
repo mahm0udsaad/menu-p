@@ -410,11 +410,11 @@ export class PlaywrightPDFGenerator {
     }
   }
 
-  public async generatePDFFromHTML(htmlContent: string, options: { format?: 'A4' | 'Letter', margin?: any }): Promise<Buffer> {
+  public async generatePDFFromHTML(htmlContent: string, options: { format?: 'A4' | 'Letter', margin?: any, landscape?: boolean }): Promise<Buffer> {
     return this.generatePDFFromHTMLWithRetry(htmlContent, options, 2);
   }
 
-  async generatePDFFromHTMLWithRetry(htmlContent: string, options: { format?: 'A4' | 'Letter', margin?: any }, maxRetries: number = 2): Promise<Buffer> {
+  async generatePDFFromHTMLWithRetry(htmlContent: string, options: { format?: 'A4' | 'Letter', margin?: any, landscape?: boolean }, maxRetries: number = 2): Promise<Buffer> {
     let lastError: Error;
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -449,13 +449,15 @@ export class PlaywrightPDFGenerator {
       page = await context.newPage();
 
       // Align viewport to requested output page size so 100vh equals one page.
+      const landscape = options.landscape !== false;
+      const pageOrientation = landscape ? 'landscape' : 'portrait';
       const viewportByFormat = (format: 'A4' | 'Letter' | undefined) => {
         switch (format) {
           case 'Letter':
-            return { width: 1056, height: 816 }; // default to landscape viewport
+            return landscape ? { width: 1056, height: 816 } : { width: 816, height: 1056 };
           case 'A4':
           default:
-            return { width: 1123, height: 794 }; // landscape viewport
+            return landscape ? { width: 1123, height: 794 } : { width: 794, height: 1123 };
         }
       };
       const vp = viewportByFormat(options.format);
@@ -464,7 +466,7 @@ export class PlaywrightPDFGenerator {
       // Setup enhanced asset routing
       await setupAssetRouting(page);
       
-      // Ensure the provided HTML has zero default margins, landscape @page, and a full document wrapper
+      // Ensure the provided HTML has zero default margins, correct @page orientation, and a full document wrapper
       const isFullDocument = /<html[\s\S]*>/i.test(htmlContent);
       // Try to capture a background from the template's top-level element
       const bgMatch = htmlContent.match(/style=\"[^\"]*background:\s*([^;\"]+)[;\"][^>]*>/i);
@@ -473,7 +475,7 @@ export class PlaywrightPDFGenerator {
         ? htmlContent
         : `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
             html,body{margin:0;padding:0;height:100%;}
-            @page{size:A4 landscape;margin:0;}
+            @page{size:A4 ${pageOrientation};margin:0;}
             /* Full-bleed background fix using template background if found */
             html,body{background:${templateBackground};-webkit-print-color-adjust:exact;print-color-adjust:exact}
             .pdf-page{min-height:100vh;width:100vw;display:flex;flex-direction:column;background:${templateBackground}}
@@ -487,13 +489,13 @@ export class PlaywrightPDFGenerator {
 
       // Ensure global print CSS is present for any full-document HTML
       try {
-        await page.addStyleTag({ content: `html,body{margin:0;padding:0;height:100%} @page{size:A4 landscape;margin:0} *{-webkit-print-color-adjust:exact;print-color-adjust:exact}` });
+        await page.addStyleTag({ content: `html,body{margin:0;padding:0;height:100%} @page{size:A4 ${pageOrientation};margin:0} *{-webkit-print-color-adjust:exact;print-color-adjust:exact}` });
       } catch {}
 
       // If the template sets background on an inner container, propagate it to html/body for full-bleed
       try {
         await page.evaluate(() => {
-          const pickBackground = (el) => {
+          const pickBackground = (el: Element | null) => {
             if (!el) return null;
             const cs = getComputedStyle(el);
             const img = cs.backgroundImage && cs.backgroundImage !== 'none' ? cs.backgroundImage : '';
@@ -523,7 +525,7 @@ export class PlaywrightPDFGenerator {
 
       const pdfBuffer = await page.pdf({
         format: options.format || 'A4',
-        landscape: options.landscape !== false,
+        landscape,
         printBackground: true,
         margin: options.margin || { top: '0', right: '0', bottom: '0', left: '0' },
         preferCSSPageSize: true,
@@ -574,7 +576,7 @@ export class PlaywrightPDFGenerator {
 }
 
 export async function generatePDFFromMenuData(options: GeneratePDFFromDataOptions): Promise<Buffer> {
-  const { htmlContent, format = 'A4', margin } = options;
+  const { htmlContent, format = 'A4', margin, landscape } = options;
   
   const generator = new PlaywrightPDFGenerator();
   
@@ -582,6 +584,7 @@ export async function generatePDFFromMenuData(options: GeneratePDFFromDataOption
     return await generator.generatePDFFromHTML(htmlContent, {
       format,
       margin,
+      landscape,
     });
   } catch (error) {
     console.error('Error generating PDF from HTML with Playwright:', error);
@@ -634,8 +637,72 @@ export async function checkBrowserHealth(): Promise<{ healthy: boolean; details:
   }
 
   const isHealthy = await isBrowserHealthy(_browserInstance);
-  return { 
-    healthy: isHealthy, 
+  return {
+    healthy: isHealthy,
     details: isHealthy ? 'Browser is healthy' : 'Browser is disconnected or unresponsive'
   };
+}
+
+/**
+ * Render an EXTERNAL URL (a restaurant's own web menu) to a paginated PDF so it
+ * can be fed to the existing multimodal AI extraction. Reuses the managed
+ * browser instance but runs in an ISOLATED, throwaway context — no shared
+ * cookies and, crucially, none of the local-asset route interception used for
+ * our own templates (that would break third-party pages).
+ *
+ * The caller MUST have validated `url` with assertSafeUrl() first. We create a
+ * dedicated context here rather than reuse getBrowserContext() to keep
+ * third-party browsing state separate from menu PDF generation.
+ */
+export async function renderUrlToPdf(url: string): Promise<Buffer> {
+  const browser = await getBrowserInstance();
+  const context = await browser.newContext({
+    viewport: { width: 1280, height: 1024 },
+    javaScriptEnabled: true,
+    ignoreHTTPSErrors: true,
+    userAgent:
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+  });
+
+  let page: Page | null = null;
+  try {
+    page = await context.newPage();
+
+    // Wait for the network to settle so JS-rendered menus have a chance to
+    // paint, but cap it — a slow page should not hang the request.
+    await page.goto(url, { waitUntil: 'networkidle', timeout: 30_000 }).catch(async (err) => {
+      // networkidle can time out on pages that keep long-poll connections open;
+      // fall back to domcontentloaded so we still capture what rendered.
+      console.warn('⚠️ renderUrlToPdf: networkidle wait failed, retrying with domcontentloaded:', err?.message);
+      await page!.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    });
+
+    // Trigger lazy-loaded images by scrolling to the bottom, then settle.
+    await page.evaluate(async () => {
+      await new Promise<void>((resolve) => {
+        let total = 0;
+        const step = 600;
+        const timer = setInterval(() => {
+          window.scrollBy(0, step);
+          total += step;
+          if (total >= document.body.scrollHeight) {
+            clearInterval(timer);
+            window.scrollTo(0, 0);
+            resolve();
+          }
+        }, 120);
+      });
+    }).catch(() => {});
+    await page.waitForTimeout(800);
+
+    const pdf = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: { top: '12mm', right: '10mm', bottom: '12mm', left: '10mm' },
+    });
+    return pdf as Buffer;
+  } finally {
+    try { await page?.close(); } catch {}
+    try { await context.close(); } catch {}
+  }
 }

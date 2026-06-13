@@ -1,4 +1,5 @@
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server"
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import LoginForm from "@/components/login-form"
 import { QrCode, Sparkles, Flame, Crown, Trophy, Star, CheckCircle, Zap, Shield, ChefHat, Coffee, Utensils } from "lucide-react"
@@ -14,7 +15,8 @@ export default async function LoginPage() {
   }
 
   // Check if user is already logged in
-  const supabase = createClient()
+  const cookieStore = await cookies()
+  const supabase = createClient(cookieStore)
   const {
     data: { session },
   } = await supabase.auth.getSession()

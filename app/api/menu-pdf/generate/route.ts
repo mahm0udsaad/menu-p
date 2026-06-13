@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
 
     // Validate template ID using the new async factory
     const normalizedTemplateId = await PDFTemplateFactory.normalizeTemplateId(templateId)
+    const isPortraitTemplate = normalizedTemplateId === 'mena-hospitality'
     console.log(`🎨 Generating PDF for menu ${menuId} with template '${normalizedTemplateId}'`)
 
     const supabase = createClient()
@@ -95,6 +96,7 @@ export async function POST(request: NextRequest) {
         htmlContent,
         format: format as 'A4' | 'Letter',
         language,
+        landscape: !isPortraitTemplate,
       })
       
       const pdfTimeoutPromise = new Promise<never>((_, reject) => {
@@ -117,6 +119,7 @@ export async function POST(request: NextRequest) {
           htmlContent: retryHtmlContent,
           format: format as 'A4' | 'Letter',
           language,
+          landscape: !isPortraitTemplate,
         })
         
         console.log('✅ PDF generation succeeded after retry')
@@ -264,7 +267,7 @@ export async function GET(request: NextRequest) {
         name: category.name,
         description: category.description
       })),
-      defaultTemplate: await PDFTemplateFactory.normalizeTemplateId(),
+      defaultTemplate: await PDFTemplateFactory.getDefaultTemplateId(),
       serverStatus: 'healthy'
     })
   } catch (error) {

@@ -6,10 +6,11 @@ import { useDrag, useDrop, type DropTargetMonitor } from "react-dnd"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Edit, Save, X, Trash2, Star, GripVertical, Eye, EyeOff } from "lucide-react"
+import { Edit, Save, X, Trash2, Star, GripVertical, Eye, EyeOff, ImageIcon } from "lucide-react"
 import { updateMenuItemData, quickUpdateItem } from "@/lib/actions/editor/quick-menu-actions"
 import { toast } from "sonner"
 import ConfirmationModal from "@/components/ui/confirmation-modal"
+import ImagePickerDialog from "@/components/image-picker/image-picker-dialog"
 import { useMenuEditor } from "@/contexts/menu-editor-context"
 
 const ItemTypes = {
@@ -21,6 +22,7 @@ interface MenuItem {
   name: string
   description: string | null
   price: number | null
+  image_url?: string | null
   is_available: boolean
   is_featured: boolean
   isTemporary?: boolean
@@ -64,6 +66,7 @@ export default function EditableMenuItem({
   })
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isImagePickerOpen, setIsImagePickerOpen] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const { appliedRowStyles, isPreviewMode } = useMenuEditor()
@@ -183,6 +186,16 @@ export default function EditableMenuItem({
         price: item.price?.toFixed(2) || "",
       })
       setIsEditing(false)
+    }
+  }
+
+  const handleImageSelected = async (url: string) => {
+    const result = await quickUpdateItem(item.id, "image_url", url)
+    if (result.success) {
+      onUpdate({ ...item, image_url: url })
+      toast.success("تم تحديث صورة الطبق")
+    } else {
+      toast.error(result.error || "فشل في تحديث صورة الطبق")
     }
   }
 
@@ -335,6 +348,34 @@ export default function EditableMenuItem({
                     rows={2}
                   />
                 </div>
+
+                {!item.isTemporary && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      صورة الطبق
+                    </label>
+                    <div className="flex items-center gap-3">
+                      {item.image_url && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={item.image_url}
+                          alt={item.name}
+                          className="w-14 h-14 rounded-lg object-cover border border-slate-200 flex-shrink-0"
+                        />
+                      )}
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setIsImagePickerOpen(true)}
+                        className="gap-2 border-rose-200 text-rose-600 hover:bg-rose-50"
+                      >
+                        <ImageIcon className="h-4 w-4" />
+                        {item.image_url ? "تغيير الصورة" : "إضافة صورة (مقترحة / معرض / AI)"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
@@ -384,6 +425,15 @@ export default function EditableMenuItem({
           )}
         </div>
       </div>
+      {!item.isTemporary && (
+        <ImagePickerDialog
+          open={isImagePickerOpen}
+          onOpenChange={setIsImagePickerOpen}
+          itemName={editData.name || item.name}
+          description={editData.description || item.description}
+          onSelect={handleImageSelected}
+        />
+      )}
       <ConfirmationModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}

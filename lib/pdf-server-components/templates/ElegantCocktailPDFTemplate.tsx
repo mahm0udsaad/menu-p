@@ -1,4 +1,14 @@
 import React from 'react'
+import {
+  type PageCategory,
+  type MenuPage,
+  paginateCategories,
+  splitColumns,
+  A4_PAGE_WIDTH as PAGE_WIDTH,
+  A4_PAGE_HEIGHT as PAGE_HEIGHT,
+  toArabicDigits,
+  formatPrice
+} from '../pagination-utils'
 
 interface MenuItem {
   id: string
@@ -42,6 +52,218 @@ interface ElegantCocktailPDFTemplateProps {
   pdfMode?: boolean
 }
 
+function clampStyle(lines: number): React.CSSProperties {
+  return {
+    display: '-webkit-box',
+    WebkitLineClamp: lines,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+  }
+}
+
+function getAvailableCategories(categories: MenuCategory[]) {
+  return categories
+    .map((category) => ({
+      ...category,
+      menu_items: (category.menu_items || []).filter((item) => item.is_available !== false),
+    }))
+    .filter((category) => category.menu_items.length > 0)
+}
+
+const GinBottleIllustration = () => (
+  <svg width="48" height="72" viewBox="0 0 120 200">
+    <rect x="35" y="60" width="50" height="120" fill="none" stroke="#2D1810" strokeWidth="2" />
+    <rect x="45" y="30" width="30" height="30" fill="none" stroke="#2D1810" strokeWidth="2" />
+    <rect x="42" y="20" width="36" height="15" fill="none" stroke="#2D1810" strokeWidth="2" />
+    <text x="60" y="110" textAnchor="middle" fontSize="12" fill="#2D1810" fontFamily="serif">Gin</text>
+  </svg>
+)
+
+const WineBottleIllustration = () => (
+  <svg width="48" height="72" viewBox="0 0 120 200">
+    <path d="M45 180 L45 80 Q45 70 50 65 L50 30 L70 30 L70 65 Q75 70 75 80 L75 180 Z" fill="none" stroke="#2D1810" strokeWidth="2" />
+    <rect x="48" y="20" width="24" height="15" fill="none" stroke="#2D1810" strokeWidth="2" />
+  </svg>
+)
+
+function Header({ restaurant, compact = false }: { restaurant: Restaurant; compact?: boolean }) {
+  return (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: compact ? '24px' : '48px',
+      flex: 'none'
+    }}>
+      {!compact && <GinBottleIllustration />}
+      
+      <div style={{ textAlign: 'center', flex: 1 }}>
+        {!compact && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+            <svg width="150" height="24" viewBox="0 0 200 32">
+              <polygon points="100,4 108,12 100,20 92,12" fill="#2D1810" />
+              <line x1="50" y1="12" x2="85" y2="12" stroke="#2D1810" strokeWidth="2" />
+              <line x1="115" y1="12" x2="150" y2="12" stroke="#2D1810" strokeWidth="2" />
+            </svg>
+          </div>
+        )}
+        
+        <h1 style={{
+          fontSize: compact ? '32px' : '48px',
+          fontWeight: '700',
+          color: '#92400e',
+          letterSpacing: '0.1em',
+          margin: 0
+        }}>
+          {compact ? restaurant.name?.toUpperCase() : 'MENU'}
+        </h1>
+
+        {!compact && (
+           <h2 style={{ fontSize: '18px', color: '#92400e', margin: '8px 0 0', fontWeight: '500' }}>
+             {restaurant.name}
+           </h2>
+        )}
+        
+        {!compact && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
+            <svg width="150" height="24" viewBox="0 0 200 32">
+              <polygon points="100,4 108,12 100,20 92,12" fill="#2D1810" />
+              <line x1="50" y1="12" x2="85" y2="12" stroke="#2D1810" strokeWidth="2" />
+              <line x1="115" y1="12" x2="150" y2="12" stroke="#2D1810" strokeWidth="2" />
+            </svg>
+          </div>
+        )}
+      </div>
+      
+      {!compact && <WineBottleIllustration />}
+    </div>
+  )
+}
+
+function MenuRow({ item, currency }: { item: MenuItem; currency?: string }) {
+  return (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: '8px 0',
+      borderBottom: '1px dotted #2D1810'
+    }}>
+      <div style={{ display: 'flex', gap: '12px', flex: 1, minWidth: 0 }}>
+        {item.image_url && (
+          <img
+            src={item.image_url}
+            alt={item.name}
+            style={{
+              width: 40,
+              height: 40,
+              flex: 'none',
+              objectFit: 'cover',
+              borderRadius: '4px',
+              border: '1px solid #92400e',
+            }}
+          />
+        )}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h4 style={{
+            fontSize: '15px',
+            fontWeight: '600',
+            color: '#1c1917',
+            margin: 0
+          }}>
+            {item.name}
+          </h4>
+          {item.description && (
+            <p style={{
+              fontSize: '11px',
+              color: '#57534e',
+              margin: '2px 0 0 0',
+              lineHeight: 1.3,
+              ...clampStyle(1)
+            }}>
+              {item.description}
+            </p>
+          )}
+        </div>
+      </div>
+      <div style={{
+        fontSize: '15px',
+        fontWeight: '700',
+        color: '#1c1917',
+        marginLeft: '12px',
+        whiteSpace: 'nowrap'
+      }}>
+        {formatPrice(item.price, currency)}
+      </div>
+    </div>
+  )
+}
+
+function CategoryBlock({
+  category,
+  currency,
+}: {
+  category: PageCategory
+  currency?: string
+}) {
+  return (
+    <div style={{ marginBottom: '32px', breakInside: 'avoid' }}>
+      <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+          <h3 style={{
+            fontSize: '24px',
+            fontWeight: '700',
+            color: '#92400e',
+            textTransform: 'uppercase',
+            letterSpacing: '0.15em',
+            margin: 0
+          }}>
+            {category.name}
+          </h3>
+          {category.continued && (
+            <span style={{ border: '1px solid #92400e', color: '#92400e', borderRadius: 999, padding: '1px 6px', fontSize: 8, fontWeight: 700 }}>
+              تتمة
+            </span>
+          )}
+        </div>
+        <svg width="180" height="24" viewBox="0 0 240 32" style={{ marginTop: '4px' }}>
+          <polygon points="120,8 126,14 120,20 114,14" fill="#2D1810" />
+          <line x1="60" y1="14" x2="110" y2="14" stroke="#2D1810" strokeWidth="2" />
+          <line x1="130" y1="14" x2="180" y2="14" stroke="#2D1810" strokeWidth="2" />
+        </svg>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {category.items.map((item) => (
+          <MenuRow key={item.id} item={item} currency={currency} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function Footer({ pageNumber, totalPages, restaurant, language }: { pageNumber: number; totalPages: number; restaurant: Restaurant; language: string }) {
+  return (
+    <div style={{ marginTop: 'auto', flex: 'none', zIndex: 10 }}>
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.5)',
+        borderRadius: '8px',
+        padding: '12px 24px',
+        border: '2px solid rgba(146, 64, 14, 0.2)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        fontSize: '12px',
+        color: '#92400e',
+        fontWeight: '600'
+      }}>
+        <span style={{ direction: 'ltr' }}>{restaurant.website || 'menu-p.com'}</span>
+        <span>{`صفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`}</span>
+      </div>
+    </div>
+  )
+}
+
 export default function ElegantCocktailPDFTemplate({ 
   restaurant, 
   categories, 
@@ -49,355 +271,108 @@ export default function ElegantCocktailPDFTemplate({
   customizations,
   pdfMode = false
 }: ElegantCocktailPDFTemplateProps) {
-  const currency = restaurant.currency || '$'
-  
-  // Use a single source of truth for the page background so html/body and the
-  // wrapper render identically (avoids subtle color mismatches at page edges)
-  const pageBackground = `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='wood' patternUnits='userSpaceOnUse' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23654321'/%3E%3Cpath d='M0 0L100 100M100 0L0 100' stroke='%238B4513' strokeWidth='0.5' opacity='0.3'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100' height='100' fill='url(%23wood)'/%3E%3C/svg%3E"), linear-gradient(to bottom right, rgba(157, 139, 20, 0.2), rgba(217, 119, 6, 0.3))`
+  const currency = restaurant.currency || undefined
+  const cleanCategories = getAvailableCategories(categories)
+  const pages = paginateCategories(cleanCategories, { itemsPerPage: 16, firstPageItems: 10, headingCost: 2 })
+  const totalPages = Math.max(pages.length, 1)
 
-  // Inline SVG illustrations to mirror preview design
-  const GinBottleIllustration = () => (
-    <svg width="64" height="96" viewBox="0 0 120 200">
-      <rect x="35" y="60" width="50" height="120" fill="none" stroke="#2D1810" strokeWidth="2" />
-      <rect x="45" y="30" width="30" height="30" fill="none" stroke="#2D1810" strokeWidth="2" />
-      <rect x="42" y="20" width="36" height="15" fill="none" stroke="#2D1810" strokeWidth="2" />
-      <rect x="40" y="80" width="40" height="60" fill="none" stroke="#2D1810" strokeWidth="1" />
-      <text x="60" y="110" textAnchor="middle" fontSize="8" fill="#2D1810" fontFamily="serif">Gin</text>
-      <g stroke="#2D1810" strokeWidth="0.5" opacity="0.3">
-        <line x1="35" y1="70" x2="85" y2="120" />
-        <line x1="35" y1="80" x2="85" y2="130" />
-        <line x1="35" y1="90" x2="85" y2="140" />
-        <line x1="35" y1="100" x2="85" y2="150" />
-        <line x1="35" y1="110" x2="85" y2="160" />
-        <line x1="35" y1="120" x2="85" y2="170" />
-      </g>
-      <rect x="5" y="140" width="25" height="35" fill="none" stroke="#2D1810" strokeWidth="2" />
-      <line x1="5" y1="160" x2="30" y2="160" stroke="#2D1810" strokeWidth="1" />
-    </svg>
-  )
-
-  const WineBottleIllustration = () => (
-    <svg width="64" height="96" viewBox="0 0 120 200">
-      <path d="M45 180 L45 80 Q45 70 50 65 L50 30 L70 30 L70 65 Q75 70 75 80 L75 180 Z" fill="none" stroke="#2D1810" strokeWidth="2" />
-      <rect x="48" y="20" width="24" height="15" fill="none" stroke="#2D1810" strokeWidth="2" />
-      <path d="M85 140 Q85 130 95 130 Q105 130 105 140 L105 160 Q105 170 95 170 Q85 170 85 160 Z" fill="none" stroke="#2D1810" strokeWidth="2" />
-      <line x1="95" y1="170" x2="95" y2="180" stroke="#2D1810" strokeWidth="2" />
-      <line x1="85" y1="180" x2="105" y2="180" stroke="#2D1810" strokeWidth="2" />
-      <g fill="none" stroke="#2D1810" strokeWidth="1">
-        <circle cx="110" cy="100" r="4" />
-        <circle cx="118" cy="105" r="4" />
-        <circle cx="102" cy="108" r="4" />
-        <circle cx="110" cy="115" r="4" />
-        <circle cx="118" cy="120" r="4" />
-      </g>
-      <g stroke="#2D1810" strokeWidth="0.5" opacity="0.3">
-        <line x1="45" y1="90" x2="75" y2="120" />
-        <line x1="45" y1="100" x2="75" y2="130" />
-        <line x1="45" y1="110" x2="75" y2="140" />
-        <line x1="45" y1="120" x2="75" y2="150" />
-        <line x1="45" y1="130" x2="75" y2="160" />
-      </g>
-    </svg>
-  )
+  const pageBackground = `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100' height='100' fill='%233D2914'/%3E%3Cpath d='M0 0L100 100M100 0L0 100' stroke='%238B4513' strokeWidth='0.5' opacity='0.3'/%3E%3C/svg%3E")`
 
   return (
     <>
-    <style>{`html,body{background-color:#3D2914 !important;background:${pageBackground} !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}`}</style>
-    <div className="pdf-page" style={{
-      background: pageBackground,
-      backgroundColor: '#3D2914',
-      minHeight: '100vh',
-      padding: '32px',
-      fontFamily: 'Georgia, serif'
-    }}>
-      <div style={{ position: 'relative', zIndex: 10 }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          {/* Menu paper overlay */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @page { size: A4 portrait; margin: 0; }
+        html, body { margin: 0; padding: 0; background: #3D2914; }
+        * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      ` }} />
+
+      {pages.length === 0 ? (
+        <div className="pdf-page" dir={language === 'ar' ? 'rtl' : 'ltr'} lang={language} style={{
+          width: PAGE_WIDTH,
+          height: PAGE_HEIGHT,
+          background: pageBackground,
+          padding: '32px',
+          display: 'flex',
+          flexDirection: 'column',
+          fontFamily: 'Georgia, serif',
+          overflow: 'hidden',
+        }}>
           <div style={{
             background: 'linear-gradient(to bottom right, #fffbeb, #ffedd5)',
             borderRadius: '8px',
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
             border: '8px solid rgba(146, 64, 14, 0.2)',
-            padding: '48px'
+            padding: '48px',
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column'
           }}>
-            {/* Header with Art Deco decoration */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '48px'
-            }}>
-              <div style={{ width: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <GinBottleIllustration />
-              </div>
-              
-              <div style={{ textAlign: 'center', flex: 1 }}>
-                {/* Art Deco decoration */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginBottom: '24px'
-                }}>
-                  <svg width="200" height="32" viewBox="0 0 200 32">
-                    <g fill="#2D1810" stroke="#2D1810">
-                      <polygon points="100,4 108,12 100,20 92,12" fill="#2D1810" />
-                      <polygon points="98,6 102,10 98,14 94,10" fill="#F5E6D3" />
-                      <line x1="50" y1="12" x2="85" y2="12" strokeWidth="2" />
-                      <line x1="115" y1="12" x2="150" y2="12" strokeWidth="2" />
-                      <circle cx="70" cy="12" r="2" fill="#2D1810" />
-                      <circle cx="130" cy="12" r="2" fill="#2D1810" />
-                    </g>
-                  </svg>
-                </div>
-                
-                <h1 style={{
-                  fontSize: '64px',
-                  fontWeight: '700',
-                  color: '#92400e',
-                  letterSpacing: '0.1em',
-                  marginBottom: '16px',
-                  margin: 0
-                }}>
-                  MENU
-                </h1>
-                
-                {/* Bottom Art Deco decoration */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginTop: '24px'
-                }}>
-                  <svg width="200" height="32" viewBox="0 0 200 32">
-                    <g fill="#2D1810" stroke="#2D1810">
-                      <polygon points="100,4 108,12 100,20 92,12" fill="#2D1810" />
-                      <polygon points="98,6 102,10 98,14 94,10" fill="#F5E6D3" />
-                      <line x1="50" y1="12" x2="85" y2="12" strokeWidth="2" />
-                      <line x1="115" y1="12" x2="150" y2="12" strokeWidth="2" />
-                      <polygon points="70,10 72,12 70,14 68,12" fill="#2D1810" />
-                      <polygon points="130,10 132,12 130,14 128,12" fill="#2D1810" />
-                    </g>
-                  </svg>
-                </div>
-              </div>
-              
-              <div style={{ width: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <WineBottleIllustration />
-              </div>
+            <Header restaurant={restaurant} />
+            <div style={{ flex: 1, display: 'grid', placeItems: 'center', color: '#92400e', fontSize: '24px' }}>
+              لا توجد أصناف متاحة حالياً
             </div>
+            <Footer pageNumber={1} totalPages={1} restaurant={restaurant} language={language} />
+          </div>
+        </div>
+      ) : pages.map((page, index) => {
+        const isFirst = index === 0
 
-            {/* Menu content */}
+        return (
+          <div key={index} className="pdf-page" dir={language === 'ar' ? 'rtl' : 'ltr'} lang={language} style={{
+            width: PAGE_WIDTH,
+            height: PAGE_HEIGHT,
+            background: pageBackground,
+            padding: '32px',
+            display: 'flex',
+            flexDirection: 'column',
+            fontFamily: 'Georgia, serif',
+            overflow: 'hidden',
+            pageBreakAfter: index === pages.length - 1 ? 'auto' : 'always',
+            breakAfter: index === pages.length - 1 ? 'auto' : 'page',
+          }}>
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '64px'
+              background: 'linear-gradient(to bottom right, #fffbeb, #ffedd5)',
+              borderRadius: '8px',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              border: '8px solid rgba(146, 64, 14, 0.2)',
+              padding: '48px',
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column'
             }}>
-              {categories.slice(0, 2).map((category) => (
-                <div key={category.id}>
-                  <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                    <h3 style={{
-                      fontSize: '32px',
-                      fontWeight: '700',
-                      color: '#92400e',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.2em',
-                      marginBottom: '16px'
+              <Header restaurant={restaurant} compact={!isFirst} />
+
+              <div style={{ flex: 1, minHeight: 0 }}>
+                {(() => {
+                  const { left, right } = splitColumns(page.categories)
+                  return (
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: '1fr 1fr', 
+                      gap: '48px',
+                      alignItems: 'start',
+                      minHeight: 0
                     }}>
-                      {category.name}
-                    </h3>
-                    
-                    {/* Category Art Deco decoration */}
-                    <svg width="240" height="32" viewBox="0 0 240 32">
-                      <g fill="#2D1810" stroke="#2D1810">
-                        <polygon points="120,8 126,14 120,20 114,14" fill="#2D1810" />
-                        <polygon points="118,10 122,14 118,18 114,14" fill="#F5E6D3" />
-                        <line x1="60" y1="14" x2="110" y2="14" strokeWidth="2" />
-                        <line x1="130" y1="14" x2="180" y2="14" strokeWidth="2" />
-                        <polygon points="90,12 92,14 90,16 88,14" fill="#2D1810" />
-                        <polygon points="150,12 152,14 150,16 148,14" fill="#2D1810" />
-                      </g>
-                    </svg>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    {category.menu_items.map((item) => (
-                      <div key={item.id} style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '8px 0',
-                        borderBottom: '1px dotted #2D1810'
-                      }}>
-                        <div style={{ flex: 1 }}>
-                          <h4 style={{
-                            fontSize: '16px',
-                            fontWeight: '500',
-                            color: '#1c1917',
-                            margin: 0
-                          }}>
-                            {item.name}
-                          </h4>
-                          {item.description && (
-                            <p style={{
-                              fontSize: '12px',
-                              color: '#57534e',
-                              margin: '4px 0 0 0',
-                              lineHeight: 1.4
-                            }}>
-                              {item.description}
-                            </p>
-                          )}
-                        </div>
-                        <div style={{
-                          fontSize: '16px',
-                          fontWeight: '700',
-                          color: '#1c1917',
-                          marginLeft: '16px'
-                        }}>
-                          {item.price || '0'}
-                        </div>
+                      <div>
+                        {left.map((category) => (
+                          <CategoryBlock key={`${category.id}-${category.items[0]?.id || 'empty'}-a`} category={category} currency={currency} />
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            {/* Additional categories */}
-            {categories.length > 2 && (
-              <div style={{
-                marginTop: '64px',
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '64px'
-              }}>
-                {categories.slice(2).map((category) => (
-                  <div key={category.id}>
-                    <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                      <h3 style={{
-                        fontSize: '32px',
-                        fontWeight: '700',
-                        color: '#92400e',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.2em',
-                        marginBottom: '16px'
-                      }}>
-                        {category.name}
-                      </h3>
-                      
-                      {/* Category Art Deco decoration */}
-                      <svg width="240" height="32" viewBox="0 0 240 32">
-                        <g fill="#2D1810" stroke="#2D1810">
-                          <polygon points="120,8 126,14 120,20 114,14" fill="#2D1810" />
-                          <polygon points="118,10 122,14 118,18 114,14" fill="#F5E6D3" />
-                          <line x1="60" y1="14" x2="110" y2="14" strokeWidth="2" />
-                          <line x1="130" y1="14" x2="180" y2="14" strokeWidth="2" />
-                          <polygon points="90,12 92,14 90,16 88,14" fill="#2D1810" />
-                          <polygon points="150,12 152,14 150,16 148,14" fill="#2D1810" />
-                        </g>
-                      </svg>
+                      <div>
+                        {right.map((category) => (
+                          <CategoryBlock key={`${category.id}-${category.items[0]?.id || 'empty'}-b`} category={category} currency={currency} />
+                        ))}
+                      </div>
                     </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      {category.menu_items.map((item) => (
-                        <div key={item.id} style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          padding: '8px 0',
-                          borderBottom: '1px dotted #2D1810'
-                        }}>
-                          <div style={{ flex: 1 }}>
-                            <h4 style={{
-                              fontSize: '16px',
-                              fontWeight: '500',
-                              color: '#1c1917',
-                              margin: 0
-                            }}>
-                              {item.name}
-                            </h4>
-                            {item.description && (
-                              <p style={{
-                                fontSize: '12px',
-                                color: '#57534e',
-                                margin: '4px 0 0 0',
-                                lineHeight: 1.4
-                              }}>
-                                {item.description}
-                              </p>
-                            )}
-                          </div>
-                          <div style={{
-                            fontSize: '16px',
-                            fontWeight: '700',
-                            color: '#1c1917',
-                            marginLeft: '16px'
-                          }}>
-                            {item.price || '0'}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                  )
+                })()}
               </div>
-            )}
-            
-            {/* Bottom decoration */}
-            <div style={{
-              marginTop: '64px',
-              paddingTop: '32px',
-              display: 'flex',
-              justifyContent: 'center'
-            }}>
-              <svg width="160" height="32" viewBox="0 0 160 32">
-                <g fill="#2D1810" stroke="#2D1810">
-                  <polygon points="80,4 88,12 80,20 72,12" fill="#2D1810" />
-                  <polygon points="78,6 82,10 78,14 74,10" fill="#F5E6D3" />
-                  <line x1="40" y1="12" x2="68" y2="12" strokeWidth="2" />
-                  <line x1="92" y1="12" x2="120" y2="12" strokeWidth="2" />
-                  <polygon points="56,10 58,12 56,14 54,12" fill="#2D1810" />
-                  <polygon points="104,10 106,12 104,14 102,12" fill="#2D1810" />
-                </g>
-              </svg>
+
+              <Footer pageNumber={index + 1} totalPages={totalPages} restaurant={restaurant} language={language} />
             </div>
           </div>
-        </div>
-        
-        {/* Footer */}
-        <div style={{ 
-          marginTop: '48px', 
-          textAlign: 'center'
-        }}>
-          <div style={{
-            background: 'linear-gradient(to bottom right, #fffbeb, #ffedd5)',
-            borderRadius: '8px',
-            padding: '24px',
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-            border: '8px solid rgba(146, 64, 14, 0.2)'
-          }}>
-            <p style={{ 
-              color: '#92400e', 
-              fontWeight: '600',
-              fontSize: '18px',
-              margin: '0 0 8px 0',
-              letterSpacing: '0.1em'
-            }}>
-              "Crafting moments, one cocktail at a time"
-            </p>
-            <p style={{ 
-              color: '#57534e', 
-              fontWeight: '500',
-              fontSize: '14px',
-              margin: 0
-            }}>
-              {restaurant.address || 'Experience the art of mixology'}
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
+        )
+      })}
     </>
   )
 }
