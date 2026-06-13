@@ -276,7 +276,7 @@ export default function OnboardingForm() {
 
         {/* Cinematic takeover: paste URL → watch extraction → pick design → land on prefilled step 1 */}
         {showCinematic && (
-          <div className="step-container space-y-4">
+          <div className="space-y-4">
             <button
               type="button"
               onClick={() => setShowCinematic(false)}
