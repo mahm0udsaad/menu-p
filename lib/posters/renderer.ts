@@ -13,6 +13,7 @@
 import { chromium } from "playwright-core"
 import { promises as fs } from "fs"
 import path from "path"
+import { getChromiumArgs, getChromiumExecutablePath } from "@/lib/playwright/chromium"
 
 const LAUNCH_ARGS = [
   "--no-sandbox",
@@ -59,12 +60,11 @@ async function buildFontCss(): Promise<string> {
 
 /** Render an exact width×height PNG screenshot of the given HTML document. */
 export async function renderPosterPng(html: string, width: number, height: number): Promise<Buffer> {
-  const executablePath =
-    process.env.POSTER_CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined
+  const executablePath = await getChromiumExecutablePath()
   const browser = await chromium.launch({
     headless: true,
     timeout: 30000,
-    args: LAUNCH_ARGS,
+    args: getChromiumArgs(LAUNCH_ARGS),
     ...(executablePath ? { executablePath } : {}),
   })
   try {

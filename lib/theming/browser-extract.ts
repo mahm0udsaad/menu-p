@@ -10,6 +10,7 @@
 
 import { chromium } from "playwright-core"
 import { extractBrandColorsFromPixels, type BrandColors } from "./palette"
+import { getChromiumArgs, getChromiumExecutablePath } from "@/lib/playwright/chromium"
 
 const LAUNCH_ARGS = [
   "--no-sandbox",
@@ -28,16 +29,13 @@ const SAMPLE_SIZE = 64
 export async function extractBrandColorsViaBrowser(
   logoUrl: string,
 ): Promise<BrandColors | null> {
-  const executablePath =
-    process.env.POSTER_CHROMIUM_PATH ||
-    process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ||
-    undefined
+  const executablePath = await getChromiumExecutablePath()
   let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null
   try {
     browser = await chromium.launch({
       headless: true,
       timeout: 30000,
-      args: LAUNCH_ARGS,
+      args: getChromiumArgs(LAUNCH_ARGS),
       ...(executablePath ? { executablePath } : {}),
     })
     const context = await browser.newContext({

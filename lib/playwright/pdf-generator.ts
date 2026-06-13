@@ -1,6 +1,7 @@
 import { Browser, chromium, Page, BrowserContext } from 'playwright-core';
 import path from 'path';
 import { envConfig } from '@/lib/config/env';
+import { getChromiumArgs, getChromiumExecutablePath } from '@/lib/playwright/chromium';
 
 interface PDFGenerationOptions {
   templateId: string;
@@ -116,10 +117,11 @@ async function getBrowserInstance(): Promise<Browser> {
   _connectionAttempts++;
   console.log(`🚀 Launching browser instance (attempt ${_connectionAttempts}/${MAX_CONNECTION_ATTEMPTS})...`);
 
+  const executablePath = await getChromiumExecutablePath();
   _browserInitPromise = chromium.launch({
     headless: true,
     timeout: 30000, // 30 second timeout
-    args: [
+    args: getChromiumArgs([
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
@@ -147,7 +149,8 @@ async function getBrowserInstance(): Promise<Browser> {
       '--password-store=basic',
       '--use-mock-keychain',
       '--disable-component-update'
-    ]
+    ]),
+    ...(executablePath ? { executablePath } : {}),
   });
 
   try {
