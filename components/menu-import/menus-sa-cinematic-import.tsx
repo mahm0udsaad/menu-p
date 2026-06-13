@@ -331,16 +331,27 @@ function MiniMenuList({
 function VariantPreview({
   variant,
   extraction,
+  restaurantName,
+  brandAccent,
+  brandPrimary,
   selected,
   onSelect,
   index,
 }: {
   variant: DesignVariant
   extraction: MenuExtraction
+  restaurantName?: string | null
+  /** Extracted brand accent color — overrides the variant's fixed accent */
+  brandAccent?: string | null
+  /** Extracted brand primary color — used as a subtle secondary override */
+  brandPrimary?: string | null
   selected: boolean
   onSelect: () => void
   index: number
 }) {
+  // Use the restaurant's real brand color for accents; fall back to the variant's own color
+  const accent = brandAccent || variant.accent
+
   const firstCategory = extraction.categories[0]
   const secondCategory = extraction.categories[1]
   const items = extraction.categories.flatMap((category) => category.items)
@@ -353,10 +364,14 @@ function VariantPreview({
       onClick={onSelect}
       className={`group text-right w-full rounded-2xl p-1 transition-all duration-500 animate-[fade-in-up_0.6s_ease-out] ${
         selected
-          ? "bg-gradient-to-b from-red-500 to-red-600 shadow-[0_12px_40px_rgba(220,38,38,0.25)] scale-[1.01]"
+          ? "shadow-[0_12px_40px_rgba(0,0,0,0.18)] scale-[1.01]"
           : "bg-gray-100 hover:bg-gray-200 hover:shadow-lg hover:-translate-y-0.5"
       }`}
-      style={{ animationDelay: `${index * 80}ms`, animationFillMode: "both" }}
+      style={{
+        animationDelay: `${index * 80}ms`,
+        animationFillMode: "both",
+        ...(selected ? { background: `linear-gradient(to bottom, ${accent}, ${brandPrimary || accent})` } : {}),
+      }}
     >
       <div className={`h-full w-full rounded-[calc(0.75rem-4px)] p-3 ${selected ? "bg-white" : "bg-transparent"}`}>
         <div
@@ -365,20 +380,20 @@ function VariantPreview({
         >
           <div className="h-full p-3 flex flex-col" dir="rtl">
             <div className="text-center mb-3">
-              <p className="text-[6px] font-bold tracking-[0.3em] uppercase opacity-70 mb-1" style={{ color: variant.accent }} dir="ltr">
+              <p className="text-[6px] font-bold tracking-[0.3em] uppercase opacity-70 mb-1" style={{ color: accent }} dir="ltr">
                 MENU
               </p>
               <h3 className="text-xs font-black leading-tight tracking-tight">
-                {extraction.categories[0]?.name ? "قائمة الطعام" : variant.name}
+                {restaurantName || "قائمة الطعام"}
               </h3>
-              <div className="mx-auto mt-1.5 h-[1.5px] w-8 rounded-full" style={{ background: variant.accent }} />
+              <div className="mx-auto mt-1.5 h-[1.5px] w-8 rounded-full" style={{ background: accent }} />
             </div>
 
             <div className="flex-1 overflow-hidden">
               {variant.mode === "hero" || variant.mode === "cover" ? (
                 <div
                   className={`${variant.mode === "hero" ? "rounded-t-full" : "rounded-lg"} h-24 mb-3 overflow-hidden border-[1.5px] shadow-sm`}
-                  style={{ borderColor: variant.accent }}
+                  style={{ borderColor: accent }}
                 >
                   {hero?.image_url ? (
                     <img src={hero.image_url} alt="" className="h-full w-full object-cover" />
@@ -405,8 +420,8 @@ function VariantPreview({
 
               {variant.mode === "spine" ? (
                 <div className="flex gap-2.5 h-full">
-                  <div className="w-4 rounded-full flex-shrink-0" style={{ background: variant.accent }} />
-                  <MiniMenuList category={firstCategory} accent={variant.accent} compact />
+                  <div className="w-4 rounded-full flex-shrink-0" style={{ background: accent }} />
+                  <MiniMenuList category={firstCategory} accent={accent} compact />
                 </div>
               ) : variant.mode === "dark" ? (
                 <div className="flex flex-col h-full gap-2">
@@ -415,12 +430,12 @@ function VariantPreview({
                       <img key={i} src={item.image_url || ""} alt="" className="h-full w-full object-cover rounded-sm bg-white/10" />
                     ))}
                   </div>
-                  <MiniMenuList category={firstCategory} accent={variant.accent} compact />
+                  <MiniMenuList category={firstCategory} accent={accent} compact />
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-2 h-full">
-                  <MiniMenuList category={firstCategory} accent={variant.accent} compact />
-                  <MiniMenuList category={secondCategory || firstCategory} accent={variant.accent} compact />
+                  <MiniMenuList category={firstCategory} accent={accent} compact />
+                  <MiniMenuList category={secondCategory || firstCategory} accent={accent} compact />
                 </div>
               )}
             </div>
@@ -434,8 +449,9 @@ function VariantPreview({
           </div>
           <div
             className={`mt-1 flex-shrink-0 grid h-5 w-5 place-items-center rounded-full border-2 transition-all ${
-              selected ? "bg-red-500 border-red-500 text-white shadow-sm" : "border-gray-200 text-transparent"
+              selected ? "text-white shadow-sm" : "border-gray-200 text-transparent"
             }`}
+            style={selected ? { background: accent, borderColor: accent } : {}}
           >
             <Check className="h-3 w-3" />
           </div>
@@ -451,6 +467,9 @@ function PreviewSlider({
   stage,
   selectedVariant,
   selected,
+  restaurantName,
+  brandAccent,
+  brandPrimary,
   onPrev,
   onNext,
   onDotSelect,
@@ -459,10 +478,15 @@ function PreviewSlider({
   stage: CinematicStage
   selectedVariant: string
   selected: DesignVariant
+  restaurantName?: string | null
+  brandAccent?: string | null
+  brandPrimary?: string | null
   onPrev: () => void
   onNext: () => void
   onDotSelect: (id: string) => void
 }) {
+  const activeDotColor = brandAccent || "#ef4444"
+
   if (extraction && stage === "variants") {
     return (
       <div className="flex flex-col items-center w-full">
@@ -477,7 +501,16 @@ function PreviewSlider({
           </button>
 
           <div key={selected.id} className="flex-1 max-w-[300px] xl:max-w-[360px] animate-[scale-in_0.4s_cubic-bezier(0.22,1,0.36,1)]">
-            <VariantPreview variant={selected} extraction={extraction} selected onSelect={() => {}} index={0} />
+            <VariantPreview
+              variant={selected}
+              extraction={extraction}
+              restaurantName={restaurantName}
+              brandAccent={brandAccent}
+              brandPrimary={brandPrimary}
+              selected
+              onSelect={() => {}}
+              index={0}
+            />
           </div>
 
           <button
@@ -502,9 +535,12 @@ function PreviewSlider({
               type="button"
               aria-label={v.name}
               onClick={() => onDotSelect(v.id)}
-              className={`rounded-full transition-all duration-300 ${
-                v.id === selectedVariant ? "h-2 w-6 bg-red-500" : "h-2 w-2 bg-gray-300 hover:bg-gray-400"
-              }`}
+              className="rounded-full transition-all duration-300"
+              style={
+                v.id === selectedVariant
+                  ? { height: "8px", width: "24px", background: activeDotColor }
+                  : { height: "8px", width: "8px", background: "#D1D5DB" }
+              }
             />
           ))}
         </div>
@@ -768,6 +804,9 @@ export default function MenusSaCinematicImport({
                   stage={stage}
                   selectedVariant={selectedVariant}
                   selected={selected}
+                  restaurantName={inspection?.restaurantName}
+                  brandAccent={inspection?.theme?.accent ?? inspection?.theme?.primary ?? null}
+                  brandPrimary={inspection?.theme?.primary ?? null}
                   onPrev={handlePrev}
                   onNext={handleNext}
                   onDotSelect={setSelectedVariant}
@@ -846,6 +885,9 @@ export default function MenusSaCinematicImport({
                     stage={stage}
                     selectedVariant={selectedVariant}
                     selected={selected}
+                    restaurantName={inspection?.restaurantName}
+                    brandAccent={inspection?.theme?.accent ?? inspection?.theme?.primary ?? null}
+                    brandPrimary={inspection?.theme?.primary ?? null}
                     onPrev={handlePrev}
                     onNext={handleNext}
                     onDotSelect={setSelectedVariant}
