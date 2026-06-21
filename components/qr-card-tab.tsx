@@ -1,233 +1,155 @@
-import React from 'react';
-import { Eye, Download, ExternalLink, Trash2, Plus, CheckCircle, QrCode, Palette, FileText } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import PDFPreview from '@/components/pdf-preview';
-import QrCardGenerator from '@/components/qr-card-generator';
-import { qrCardTemplates } from '@/components/qr-card-templates';
-import { QrTemplateExampleCard } from '@/components/qr-card-template-preview';
-import pdfTemplateMetadata from '@/data/pdf-templates-metadata.json';
+import React from "react"
+import {
+  CheckCircle2,
+  Download,
+  ExternalLink,
+  Plus,
+  QrCode,
+  Trash2,
+} from "lucide-react"
 
-// Types
+import PDFPreview from "@/components/pdf-preview"
+import QrCardGenerator, { type QrPublishedMenu } from "@/components/qr-card-generator"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+
 interface PublishedQrCard {
-  id: string;
-  card_name: string;
-  pdf_url: string;
-  qr_code_url: string;
-  custom_text: string;
-  card_options: any;
-  created_at: string;
+  id: string
+  card_name: string
+  pdf_url: string
+  qr_code_url: string
+  custom_text: string
+  card_options: unknown
+  created_at: string
 }
 
 interface Restaurant {
-  id: string;
-  name: string;
-  logo_url: string | null;
+  id: string
+  name: string
+  logo_url: string | null
 }
 
 interface QrCardTabProps {
-  publishedQrCards: PublishedQrCard[];
-  restaurant: Restaurant;
-  handleDeleteQrCard: (id: string, pdfUrl: string) => void;
-  getMenuPublicUrl: (id: string) => string;
+  publishedQrCards: PublishedQrCard[]
+  publishedMenus: QrPublishedMenu[]
+  restaurant: Restaurant
+  initialMenuId?: string
+  handleDeleteQrCard: (id: string, pdfUrl: string) => void
 }
 
-const existingMenuPdfTemplates = Object.values(pdfTemplateMetadata.templates).map((template) => ({
-  id: template.id,
-  name: template.name,
-  category: template.category,
-  previewImageUrl: template.previewImageUrl,
-}));
-
-const QrCardTab: React.FC<QrCardTabProps> = ({ 
-  publishedQrCards, 
+export default function QrCardTab({
+  publishedQrCards,
+  publishedMenus,
   restaurant,
+  initialMenuId,
   handleDeleteQrCard,
-  getMenuPublicUrl
-}) => {
+}: QrCardTabProps) {
   return (
-    <div className="space-y-6">
-      {/* Existing QR Cards */}
-      {publishedQrCards.length > 0 && (
-        <Card className="rounded-[18px] border-[#e8ded2] bg-white shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base text-[#2f2923]">
-              <QrCode className="h-5 w-5 text-[#b03a2e]" />
-              بطاقات QR المنشورة
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {publishedQrCards.map((card) => (
-                  <div key={card.id} className="overflow-hidden rounded-[16px] border border-[#e8ded2] bg-white shadow-sm transition-shadow hover:shadow-md">
-                    {/* PDF Preview for QR Cards */}
-                    <div className="relative group cursor-pointer">
-                      <PDFPreview 
-                        pdfUrl={card.pdf_url}
-                        className="border-b border-[#e8ded2]"
-                        aspectRatio="aspect-[3/4]" // QR cards are taller
-                        maxWidth={250}
-                        quality={0.9} // Higher quality for QR cards
-                      />
-                      
-                      {/* QR Badge */}
-                      <div className="absolute top-2 left-2">
-                        <Badge className="bg-[#143229] text-white text-xs">QR Card</Badge>
-                      </div>
-                      
-                      {/* Hover Overlay */}
-                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center">
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 shadow-lg">
-                            <Eye className="h-4 w-4 text-gray-600" />
-                            <span className="text-sm text-[#463d35]">معاينة</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Card Info */}
-                    <div className="p-4">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <h3 className="font-semibold text-[#2f2923] text-sm line-clamp-1">{card.card_name}</h3>
-                        <Badge className="bg-[#eef9f2] text-[#2f8f5b] border-[#bfe0cd] text-xs">
-                          <CheckCircle className="ml-1 h-3 w-3" />
-                          نشط
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-[#827466] mb-2 line-clamp-2">{card.custom_text}</p>
-                      <p className="text-xs text-[#827466] mb-3">
-                        تم النشر في {new Date(card.created_at).toLocaleDateString('ar-SA')}
-                      </p>
-                      
-                      {/* Actions */}
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 rounded-[10px] border-[#d9cbb9] text-xs text-[#463d35] hover:bg-[#f7f2ed]"
-                          asChild
-                        >
-                          <a href={card.pdf_url} target="_blank" rel="noopener noreferrer">
-                            <Download className="h-3 w-3 ml-1" />
-                            تحميل PDF
-                          </a>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 rounded-[10px] border-[#d9cbb9] text-xs text-[#463d35] hover:bg-[#f7f2ed]"
-                          asChild
-                        >
-                          <a href={card.qr_code_url} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="h-3 w-3 ml-1" />
-                            عرض القائمة
-                          </a>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="rounded-[10px] border-[#e4c7c2] text-[#b03a2e] hover:bg-[#fff3f1]"
-                          onClick={() => handleDeleteQrCard(card.id, card.pdf_url)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Create New QR Card */}
-      <Card className="rounded-[18px] border-[#e8ded2] bg-white shadow-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base text-[#2f2923]">
-            <Plus className="h-5 w-5 text-[#b03a2e]" />
-            إنشاء بطاقة QR جديدة
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="rounded-[16px] border border-[#e8ded2] bg-[#fbf8f4] p-4">
-            <div className="mb-3 flex items-center gap-2 text-sm font-bold text-[#463d35]">
-              <Palette className="h-4 w-4 text-[#b03a2e]" />
-              قوالب بطاقات QR المتاحة
-            </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-              {qrCardTemplates.map((template) => (
-                <QrTemplateExampleCard
-                  key={template.id}
-                  templateId={template.id}
-                  name={template.name}
-                  restaurantName={restaurant.name}
-                />
-              ))}
-            </div>
+    <div className="space-y-8">
+      <section>
+        <div className="mb-5 flex items-start gap-3">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[#171513] text-white">
+            <Plus className="h-5 w-5" />
           </div>
-
-          <div className="rounded-[16px] border border-[#e8ded2] bg-white p-4">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-sm font-bold text-[#463d35]">
-                <FileText className="h-4 w-4 text-[#b03a2e]" />
-                قوالب القوائم الموجودة في المشروع
-              </div>
-              <span className="rounded-full bg-[#f4eee7] px-3 py-1 text-xs font-bold text-[#7a4a2b]">
-                {existingMenuPdfTemplates.length} قالب PDF
-              </span>
-            </div>
-            <p className="mb-4 text-xs leading-5 text-[#827466]">
-              هذه قوالب PDF للقائمة نفسها، وليست قوالب بطاقة QR. نعرضها هنا حتى لا تضيع القوالب القديمة أثناء تصميم بطاقة QR.
+          <div>
+            <h2 className="text-lg font-bold text-[#211e1b]">إنشاء بطاقة جديدة</h2>
+            <p className="mt-1 text-sm text-[#746c66]">
+              اختر القائمة، أضف شعارك ونصك، ثم حمّل ملفاً جاهزاً للطباعة.
             </p>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-7">
-              {existingMenuPdfTemplates.map((template) => (
-                <div key={template.id} className="overflow-hidden rounded-[14px] border border-[#e2d3c1] bg-[#fbf8f4]">
-                  <div className="aspect-[3/4] bg-[#f4eee7]">
-                    <img
-                      src={template.previewImageUrl || "/placeholder.svg?height=220&width=160"}
-                      alt={template.name}
-                      className="h-full w-full object-cover"
-                    />
+          </div>
+        </div>
+
+        <QrCardGenerator
+          restaurant={restaurant}
+          publishedMenus={publishedMenus}
+          initialMenuId={initialMenuId}
+        />
+      </section>
+
+      <section className="border-t border-[#e4dfda] pt-8">
+        <div className="mb-5 flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-bold text-[#211e1b]">البطاقات المحفوظة</h2>
+            <p className="mt-1 text-sm text-[#746c66]">حمّل أو اختبر أي بطاقة سبق إنشاؤها.</p>
+          </div>
+          <Badge variant="outline" className="rounded-full border-[#d8d1ca] bg-white px-3 py-1 text-[#5f5751]">
+            {publishedQrCards.length} بطاقة
+          </Badge>
+        </div>
+
+        {publishedQrCards.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {publishedQrCards.map((card) => (
+              <article
+                key={card.id}
+                className="overflow-hidden rounded-[var(--radius-lg)] border border-[#e4dfda] bg-white"
+              >
+                <div className="relative bg-[#f3f0ed] p-4">
+                  <PDFPreview
+                    pdfUrl={card.pdf_url}
+                    className="overflow-hidden rounded-[var(--radius-md)] border border-[#ded8d1]"
+                    aspectRatio="aspect-[3/4]"
+                    maxWidth={260}
+                    quality={0.9}
+                  />
+                  <Badge className="absolute right-6 top-6 rounded-full bg-[#171513] text-white">
+                    <QrCode className="ml-1 h-3 w-3" />
+                    QR
+                  </Badge>
+                </div>
+
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="truncate text-sm font-bold text-[#211e1b]">{card.card_name}</h3>
+                      <p className="mt-1 line-clamp-2 text-xs leading-5 text-[#7b736d]">{card.custom_text}</p>
+                    </div>
+                    <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#2d7b57]">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      نشط
+                    </span>
                   </div>
-                  <div className="space-y-1 p-2">
-                    <div className="truncate text-xs font-bold text-[#2f2923]">{template.name}</div>
-                    <div className="truncate text-[11px] text-[#827466]">{template.category}</div>
+
+                  <p className="mt-3 text-[11px] text-[#938b84]">
+                    {new Date(card.created_at).toLocaleDateString("ar-EG")}
+                  </p>
+
+                  <div className="mt-4 grid grid-cols-[1fr_1fr_auto] gap-2">
+                    <Button variant="outline" size="sm" className="rounded-[var(--radius-md)]" asChild>
+                      <a href={card.pdf_url} target="_blank" rel="noopener noreferrer">
+                        <Download className="ml-1.5 h-3.5 w-3.5" />
+                        PDF
+                      </a>
+                    </Button>
+                    <Button variant="outline" size="sm" className="rounded-[var(--radius-md)]" asChild>
+                      <a href={card.qr_code_url} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+                        اختبار
+                      </a>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-9 w-9 rounded-[var(--radius-md)] border-[#e5c8c3] text-[#a53b32] hover:bg-[#fff3f1]"
+                      aria-label={`حذف ${card.card_name}`}
+                      onClick={() => handleDeleteQrCard(card.id, card.pdf_url)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-              ))}
-            </div>
+              </article>
+            ))}
           </div>
-
-          <QrCardGenerator 
-            restaurant={restaurant}
-            menuPublicUrl={getMenuPublicUrl(restaurant.id)}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Empty State */}
-      {publishedQrCards.length === 0 && (
-        <Card className="rounded-[18px] border-[#e8ded2] bg-white shadow-sm">
-          <CardContent className="py-12">
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-[#f4eee7] rounded-[18px] flex items-center justify-center">
-                <QrCode className="h-8 w-8 text-[#b03a2e]" />
-              </div>
-              <h3 className="text-lg font-semibold text-[#2f2923] mb-2">لا توجد بطاقات QR منشورة</h3>
-              <p className="text-[#6f6257] mb-4">ابدأ بإنشاء بطاقة QR الأولى لمطعمك</p>
-              <p className="text-sm text-[#827466] mb-6">
-                بطاقات QR تساعد عملائك في الوصول السريع لقائمتك الرقمية
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+        ) : (
+          <div className="rounded-[var(--radius-lg)] border border-dashed border-[#d8d1ca] bg-white px-6 py-10 text-center">
+            <QrCode className="mx-auto h-7 w-7 text-[#9c938b]" />
+            <p className="mt-3 text-sm font-semibold text-[#554e48]">لا توجد بطاقات محفوظة بعد</p>
+            <p className="mt-1 text-xs text-[#8d857e]">أول بطاقة تنشئها ستظهر هنا.</p>
+          </div>
+        )}
+      </section>
     </div>
-  );
-};
-
-export default QrCardTab; 
+  )
+}

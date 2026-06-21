@@ -1,66 +1,40 @@
-import { createClient } from '@/lib/supabase/server'
-import { notFound, redirect } from 'next/navigation'
-import { getSiteUrl } from '@/lib/config/env'
-import QrCardGenerator from '@/components/qr-card-generator'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus } from 'lucide-react'
+import { notFound, redirect } from "next/navigation"
+
+import { createClient } from "@/lib/supabase/server"
 
 interface PageProps {
-  params: { menuId: string }
+  params: Promise<{ menuId: string }>
 }
 
-export default async function QrDesignPage({ params }: PageProps) {
+/**
+ * Compatibility route for old publish-dialog links and saved bookmarks.
+ * The QR studio now lives inside the dashboard so users have one obvious
+ * place to create and manage cards.
+ */
+export default async function LegacyQrDesignPage({ params }: PageProps) {
+  const { menuId } = await params
   const supabase = createClient()
   const {
-    data: { user }
+    data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) {
-    redirect('/auth/login')
-  }
+  if (!user) redirect("/auth/login")
 
-  const { data: menu, error: menuError } = await supabase
-    .from('published_menus')
-    .select('id, restaurant_id')
-    .eq('id', params.menuId)
+  const { data: menu } = await supabase
+    .from("published_menus")
+    .select("id, restaurant_id")
+    .eq("id", menuId)
     .single()
 
-  if (menuError || !menu) {
-    notFound()
-  }
+  if (!menu) notFound()
 
-  const { data: restaurant, error: restError } = await supabase
-    .from('restaurants')
-    .select('id, name, logo_url, user_id')
-    .eq('id', menu.restaurant_id)
+  const { data: restaurant } = await supabase
+    .from("restaurants")
+    .select("user_id")
+    .eq("id", menu.restaurant_id)
     .single()
 
-  if (restError || !restaurant) {
-    notFound()
-  }
+  if (!restaurant || restaurant.user_id !== user.id) redirect("/dashboard")
 
-  if (restaurant.user_id !== user.id) {
-    redirect('/dashboard')
-  }
-
-  const menuUrl = `${getSiteUrl()}/menus/${menu.id}`
-
-  return (
-    <div className="p-4 sm:p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5 text-red-600" />
-            إنشاء بطاقة QR جديدة
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <QrCardGenerator
-            restaurant={{ id: restaurant.id, name: restaurant.name, logo_url: restaurant.logo_url }}
-            menuPublicUrl={menuUrl}
-          />
-        </CardContent>
-      </Card>
-    </div>
-  )
+  redirect(`/dashboard?tab=qr-cards&menuId=${encodeURIComponent(menu.id)}`)
 }

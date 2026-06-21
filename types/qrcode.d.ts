@@ -1,18 +1,22 @@
 /**
- * Minimal typings for the `qrcode` package (server-side PNG generation in
- * lib/social/qr-image.ts). The package ships untyped; @types/qrcode is not
- * installed — same pattern as types/pdfjs-dist.d.ts.
+ * Minimal typings for the `qrcode` package. It is used in both browser
+ * previews (`toDataURL`) and server-side social assets (`toBuffer`).
  */
 declare module "qrcode" {
-  export interface QRCodeToBufferOptions {
+  export interface QRCodeOptions {
     type?: "png"
     width?: number
     margin?: number
     errorCorrectionLevel?: "L" | "M" | "Q" | "H"
     color?: { dark?: string; light?: string }
   }
-  export function toBuffer(text: string, options?: QRCodeToBufferOptions): Promise<Buffer>
-  export function toDataURL(text: string, options?: Record<string, unknown>): Promise<string>
-  const QRCode: { toBuffer: typeof toBuffer; toDataURL: typeof toDataURL }
+
+  export function toBuffer(text: string, options?: QRCodeOptions): Promise<Buffer>
+  export function toDataURL(text: string, options?: QRCodeOptions): Promise<string>
+
+  const QRCode: {
+    toBuffer: typeof toBuffer
+    toDataURL: typeof toDataURL
+  }
   export default QRCode
 }

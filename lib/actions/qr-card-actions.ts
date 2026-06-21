@@ -37,10 +37,42 @@ export async function generateAndSaveQrCardPdf(
   if (!restaurantId) {
     return { error: "Restaurant ID is missing." }
   }
+  if (!menuId) {
+    return { error: "Published menu is missing." }
+  }
 
   try {
+    const [{ data: restaurant }, { data: publishedMenu }] = await Promise.all([
+      supabase
+        .from("restaurants")
+        .select("id")
+        .eq("id", restaurantId)
+        .eq("user_id", user.id)
+        .single(),
+      supabase
+        .from("published_menus")
+        .select("id, restaurant_id")
+        .eq("id", menuId)
+        .eq("restaurant_id", restaurantId)
+        .single(),
+    ])
+
+    if (!restaurant || !publishedMenu) {
+      return { error: "The selected published menu could not be verified." }
+    }
+
+    try {
+      const parsedQrUrl = new URL(qrCodeUrl)
+      if (parsedQrUrl.pathname !== `/menus/${publishedMenu.id}`) {
+        return { error: "The QR destination does not match the selected menu." }
+      }
+    } catch {
+      return { error: "The QR destination URL is invalid." }
+    }
+
     // Upload PDF to Supabase Storage
-    const filePath = `${restaurantId}/qr_cards/${Date.now()}_${cardName.replace(/\s+/g, "_")}.pdf`
+    const safeCardName = cardName.replace(/[^\p{L}\p{N}_-]+/gu, "_").slice(0, 80) || "QR_Card"
+    const filePath = `${restaurantId}/qr_cards/${Date.now()}_${safeCardName}.pdf`
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from("restaurant-logos") // Using the same bucket as menus
       .upload(filePath, pdfFile, {

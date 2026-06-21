@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast"
 import { SUPPORTED_LANGUAGES } from "@/lib/utils/translation-constants"
 import { useMenuEditor } from "@/contexts/menu-editor-context"
 import { saveMenuTranslation,  deleteMenuTranslation } from "@/lib/actions/menu-translation"
+import { generateAndSaveMenuPdf } from "@/lib/actions/pdf-actions"
 import ReusableFloatingControls from "@/components/ui/reusable-floating-controls"
 import { PublishingProgressBox } from "./PublishingProgressBox"
 import ModalManager from "./modal-manager"
@@ -119,8 +120,17 @@ async function generateMenuPdfWithTemplates(
     const contentType = response.headers.get('content-type')
     if (contentType && contentType.includes('application/pdf')) {
       const blob = await response.blob()
-      const url = URL.createObjectURL(blob)
-      return { pdfUrl: url, menuId: 'local-only-id' }
+      const formData = new FormData()
+      formData.append("pdfFile", blob, `${menuName}-${language}.pdf`)
+      formData.append("restaurantId", restaurant.id)
+      formData.append("menuName", menuName)
+      formData.append("languageCode", language)
+      if (parentMenuId) formData.append("parentMenuId", parentMenuId)
+
+      // The API returns the PDF body only when its own storage write failed.
+      // Persist it through the standard publish action so success always has
+      // a real published_menus ID that can safely be encoded into a QR code.
+      return generateAndSaveMenuPdf(null, formData)
     }
 
     const { pdfUrl } = await response.json()
@@ -578,12 +588,14 @@ export default function LiveMenuEditor({
   }
 
   const handleDesignQRCard = () => {
-    router.push(`/dashboard/menu/${publishResult?.menuId}/qr-design`)
+    if (!publishResult?.menuId) return
+    setShowSuccessDialog(false)
+    router.push(`/dashboard?tab=qr-cards&menuId=${encodeURIComponent(publishResult.menuId)}`)
   }
 
   const handleViewPublishedMenus = () => {
     setShowSuccessDialog(false)
-    router.push("/dashboard?tab=published-menus")
+    router.push("/dashboard?tab=menus")
   }
 
   const [languageToDelete, setLanguageToDelete] = useState<string | null>(null)

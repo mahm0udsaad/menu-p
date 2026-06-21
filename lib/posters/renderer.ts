@@ -39,7 +39,9 @@ const FONT_FILES: Array<{ family: string; weight: number; rel: string[] }> = [
 
 let cachedFontCss: string | null = null
 
-async function buildFontCss(): Promise<string> {
+/** Base64-inlined @font-face CSS for the bundled Arabic fonts (Cairo, Amiri).
+ *  Exported so other Playwright render paths (banners PDF) reuse one source. */
+export async function buildFontCss(): Promise<string> {
   if (cachedFontCss !== null) return cachedFontCss
   const rules: string[] = []
   for (const font of FONT_FILES) {

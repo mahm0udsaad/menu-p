@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, Suspense } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -40,6 +40,7 @@ import {
   ChevronDown,
   ChevronLeft,
   Image,
+  Megaphone,
   Zap,
   Store,
   Settings,
@@ -49,16 +50,25 @@ import {
   CheckCircle2,
   Activity,
   BarChart3,
+  Loader2,
 } from "lucide-react"
 import NextImage from "next/image"
 import Link from "next/link"
+import dynamic from "next/dynamic"
 import { signOut } from "@/lib/actions"
-import QrCardGenerator from "@/components/qr-card-generator"
 import { useToast } from "@/components/ui/use-toast"
 import ConfirmationModal from "@/components/ui/confirmation-modal"
 import { usePaymentStatus } from "@/lib/hooks/use-payment-status"
 import MenuTabWithPreviews from "./men-tab"
-import QrCardTab from "./qr-card-tab"
+
+const QrCardTab = dynamic(() => import("./qr-card-tab"), {
+  loading: () => (
+    <div className="grid min-h-[420px] place-items-center rounded-[var(--radius-lg)] border border-[#e4dfda] bg-white">
+      <Loader2 className="h-6 w-6 animate-spin text-[#8f857d]" />
+    </div>
+  ),
+  ssr: false,
+})
 
 const currencies = [
   { code: "EGP", name: "جنيه مصري", symbol: "ج.م" },
@@ -118,7 +128,7 @@ interface DashboardClientProps {
 
 type NavKey =
   | "overview" | "menus" | "qr-cards"
-  | "editor" | "import" | "posters" | "social"
+  | "editor" | "import" | "posters" | "banners" | "social"
   | "restaurant-info" | "languages"
 
 const NAV_GROUPS = [
@@ -141,6 +151,7 @@ const NAV_GROUPS = [
     label: "التسويق",
     items: [
       { id: "posters" as NavKey, label: "استوديو البوسترات", Icon: Image, href: "/dashboard/posters" },
+      { id: "banners" as NavKey, label: "استوديو البانرات", Icon: Megaphone, href: "/dashboard/banners" },
       { id: "social" as NavKey, label: "النشر الاجتماعي", Icon: Share2, href: "/dashboard/social" },
     ],
   },
@@ -160,6 +171,7 @@ const PAGE_TITLES: Record<NavKey, { title: string; sub: string }> = {
   editor: { title: "محرّر القوائم", sub: "صمّم وحرّر قوائمك مباشرة" },
   import: { title: "استيراد بالذكاء", sub: "حوّل قائمتك القديمة إلى رقمية" },
   posters: { title: "استوديو البوسترات", sub: "صمّم بوسترات تسويقية" },
+  banners: { title: "استوديو البانرات", sub: "بانرات عروض لشاشة الكاشير" },
   social: { title: "النشر الاجتماعي", sub: "انشر إلى منصّات التواصل" },
   "restaurant-info": { title: "معلومات المطعم", sub: "بيانات وإعدادات المطعم" },
   languages: { title: "اللغات", sub: "إدارة وترجمة لغات القوائم" },
@@ -466,6 +478,7 @@ function OverviewPage({
     { label: "إنشاء قائمة جديدة", icon: Plus, primary: true, href: "/menu-editor" },
     { label: "استيراد قائمة بالذكاء", icon: Sparkles, href: "/dashboard/import" },
     { label: "استوديو البوسترات", icon: Image, href: "/dashboard/posters" },
+    { label: "استوديو البانرات", icon: Megaphone, href: "/dashboard/banners" },
     { label: "النشر الاجتماعي", icon: Share2, href: "/dashboard/social" },
     { label: "تحميل كود QR", icon: QrCode, onClick: () => onNav("qr-cards") },
     { label: "إضافة لغة", icon: Languages, onClick: () => onNav("languages") },
@@ -991,8 +1004,16 @@ function DashboardContent({
   const [publishedQrCards, setPublishedQrCards] = useState<PublishedQrCard[]>(initialPublishedQrCards)
 
   const rawTab = searchParams.get("tab") ?? "overview"
-  const [activeKey, setActiveKey] = useState<NavKey>(rawTab as NavKey)
+  const normalizedTab: NavKey =
+    rawTab === "published-menus"
+      ? "menus"
+      : (Object.prototype.hasOwnProperty.call(PAGE_TITLES, rawTab) ? rawTab : "overview") as NavKey
+  const [activeKey, setActiveKey] = useState<NavKey>(normalizedTab)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  useEffect(() => {
+    setActiveKey(normalizedTab)
+  }, [normalizedTab])
 
   // Restaurant editing state
   const [isEditingRestaurant, setIsEditingRestaurant] = useState(false)
@@ -1272,9 +1293,10 @@ function DashboardContent({
               </div>
               <QrCardTab
                 publishedQrCards={publishedQrCards}
+                publishedMenus={publishedMenus}
                 restaurant={restaurant}
+                initialMenuId={searchParams.get("menuId") ?? undefined}
                 handleDeleteQrCard={handleDeleteQrCard}
-                getMenuPublicUrl={getMenuPublicUrl}
               />
             </div>
           )}
